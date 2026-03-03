@@ -27,19 +27,22 @@ export default function AdminDashboardPage() {
   const [lawyers, setLawyers] = useState<Lawyer[]>([]);
   const [pendingLawyers, setPendingLawyers] = useState<Lawyer[]>([]);
   const [cities, setCities] = useState<City[]>([]);
+  const [courts, setCourts] = useState<{ id: number; name: string; cityId: number }[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
       try {
-        const [allRes, pendingRes, citiesRes] = await Promise.all([
+        const [allRes, pendingRes, citiesRes, courtsRes] = await Promise.all([
           api.get('/api/admin/lawyers'),
           api.get('/api/admin/lawyers', { params: { status: 'pending' } }),
           api.get('/api/cities'),
+          api.get('/api/courts'),
         ]);
         setLawyers(allRes.data);
         setPendingLawyers(pendingRes.data);
         setCities(citiesRes.data);
+        setCourts(courtsRes.data ?? []);
       } catch (e: any) {
         setError(e?.response?.data?.message ?? 'Failed to load dashboard data');
       }
@@ -87,7 +90,7 @@ export default function AdminDashboardPage() {
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <StatCard
             title="Courts"
-            value="—"
+            value={courts.length}
             icon={AccountBalanceIcon}
             color="var(--color-primary)"
           />

@@ -6,6 +6,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import BalanceIcon from '@mui/icons-material/Balance';
+import { Link as RouterLink } from 'react-router-dom';
 import { useLang } from '../../contexts/LanguageContext';
 
 const navLinks = [
@@ -86,26 +87,50 @@ export default function Navbar() {
                             </Stack>
                         )}
 
-                        {/* Language toggle */}
-                        <Button
-                            onClick={toggleLang}
-                            variant="outlined"
-                            size="small"
-                            sx={{
-                                borderColor: 'rgba(255, 255, 255, 0.35)',
-                                color: 'var(--color-background)',
-                                textTransform: 'none',
-                                fontWeight: 600,
-                                fontSize: '0.75rem',
-                                minWidth: 48,
-                                '&:hover': {
-                                    borderColor: 'var(--color-accent)',
-                                    bgcolor: 'rgba(var(--color-accent-rgb), 0.12)',
-                                },
-                            }}
-                        >
-                            {lang === 'en' ? 'عربي' : 'EN'}
-                        </Button>
+                        <Stack direction="row" spacing={1} sx={{ ml: 2 }}>
+                            {/* Admin login (desktop) */}
+                            {!isMobile && (
+                                <Button
+                                    component={RouterLink}
+                                    to="/admin/login"
+                                    variant="text"
+                                    size="small"
+                                    sx={{
+                                        color: 'rgba(255, 255, 255, 0.8)',
+                                        textTransform: 'none',
+                                        fontWeight: 500,
+                                        fontSize: '0.8rem',
+                                        '&:hover': {
+                                            color: 'var(--color-accent)',
+                                            bgcolor: 'rgba(var(--color-accent-rgb), 0.12)',
+                                        },
+                                    }}
+                                >
+                                    {t('Admin login', 'تسجيل دخول المشرف')}
+                                </Button>
+                            )}
+
+                            {/* Language toggle */}
+                            <Button
+                                onClick={toggleLang}
+                                variant="outlined"
+                                size="small"
+                                sx={{
+                                    borderColor: 'rgba(255, 255, 255, 0.35)',
+                                    color: 'var(--color-background)',
+                                    textTransform: 'none',
+                                    fontWeight: 600,
+                                    fontSize: '0.75rem',
+                                    minWidth: 48,
+                                    '&:hover': {
+                                        borderColor: 'var(--color-accent)',
+                                        bgcolor: 'rgba(var(--color-accent-rgb), 0.12)',
+                                    },
+                                }}
+                            >
+                                {lang === 'en' ? 'عربي' : 'EN'}
+                            </Button>
+                        </Stack>
 
                         {/* Mobile menu icon */}
                         {isMobile && (
@@ -151,6 +176,21 @@ export default function Navbar() {
                             <ListItemText primary={t(link.en, link.ar)} />
                         </ListItemButton>
                     ))}
+                    {/* Admin login (mobile) */}
+                    <ListItemButton
+                        component={RouterLink}
+                        to="/admin/login"
+                        onClick={() => setDrawerOpen(false)}
+                        sx={{
+                            color: 'rgba(255, 255, 255, 0.8)',
+                            '&:hover': {
+                                color: 'var(--color-accent)',
+                                bgcolor: 'rgba(var(--color-accent-rgb), 0.12)',
+                            },
+                        }}
+                    >
+                        <ListItemText primary={t('Admin login', 'تسجيل دخول المشرف')} />
+                    </ListItemButton>
                 </List>
             </Drawer>
 

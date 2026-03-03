@@ -1,0 +1,113 @@
+using EgyptLawyers.Api.Auth;
+using EgyptLawyers.Api.Contracts;
+using EgyptLawyers.Data;
+using EgyptLawyers.Data.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
+namespace EgyptLawyers.Api.ApiRoutes;
+
+public static class LawyerRoutes
+{
+    public static void MapLawyerRoutes(this IEndpointRouteBuilder api)
+    {
+        api.MapPost("/lawyers/register", async (RegisterLawyerRequest req, AppDbContext db) =>
+        {
+            if (string.IsNullOrWhiteSpace(req.FullName) ||
+                string.IsNullOrWhiteSpace(req.SyndicateCardNumber) ||
+                string.IsNullOrWhiteSpace(req.WhatsappNumber) ||
+                string.IsNullOrWhiteSpace(req.Password))
+                return Results.BadRequest(new { message = "Missing required fields." });
+
+            var whatsapp = req.WhatsappNumber.Trim();
+            var syndicate = req.SyndicateCardNumber.Trim();
+
+            if (await db.Lawyers.AnyAsync(x => x.WhatsappNumber == whatsapp))
+                return Results.Conflict(new { message = "WhatsApp number already registered." });
+
+            if (await db.Lawyers.AnyAsync(x => x.SyndicateCardNumber == syndicate))
+                return Results.Conflict(new { message = "Syndicate card number already registered." });
+
+            var cityIds = (req.ActiveCityIds ?? Array.Empty<int>()).Distinct().ToArray();
+            if (cityIds.Length == 0)
+                return Results.BadRequest(new { message = "At least one active city is required." });
+
+            var foundCityIds = await db.Cities.Where(c => cityIds.Contains(c.Id)).Select(c => c.Id).ToListAsync();
+            if (foundCityIds.Count != cityIds.Length)
+                return Results.BadRequest(new { message = "One or more active cities are invalid." });
+
+            var lawyer = new Lawyer
+            {
+                FullName = req.FullName.Trim(),
+                ProfessionalTitle = string.IsNullOrWhiteSpace(req.ProfessionalTitle) ? null : req.ProfessionalTitle.Trim(),
+                SyndicateCardNumber = syndicate,
+                WhatsappNumber = whatsapp,
+                VerificationStatus = LawyerVerificationStatus.Pending,
+                PasswordHash = "temp",
+                CreatedAtUtc = DateTime.UtcNow,
+                UpdatedAtUtc = DateTime.UtcNow,
+            };
+
+            var hasher = new PasswordHasher<Lawyer>();
+            lawyer.PasswordHash = hasher.HashPassword(lawyer, req.Password);
+
+            db.Lawyers.Add(lawyer);
+            foreach (var cityId in cityIds)
+                db.LawyerCities.Add(new LawyerCity { LawyerId = lawyer.Id, CityId = cityId });
+
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new
+            {
+                lawyer.Id,
+                lawyer.FullName,
+                lawyer.WhatsappNumber,
+                lawyer.VerificationStatus
+            });
+        }).WithTags("Lawyers");
+
+        api.MapPost("/lawyers/login", async (LawyerLoginRequest req, AppDbContext db, JwtTokenService tokens) =>
+        {
+            var whatsapp = (req.WhatsappNumber ?? "").Trim();
+            var password = req.Password ?? "";
+
+            var lawyer = await db.Lawyers.FirstOrDefaultAsync(x => x.WhatsappNumber == whatsapp);
+            if (lawyer is null)
+                return Results.Unauthorized();
+
+            if (lawyer.IsSuspended)
+                return Results.Forbid();
+
+            if (lawyer.VerificationStatus != LawyerVerificationStatus.Approved)
+                return Results.Unauthorized();
+
+            var hasher = new PasswordHasher<Lawyer>();
+            var verified = hasher.VerifyHashedPassword(lawyer, lawyer.PasswordHash, password);
+            if (verified == PasswordVerificationResult.Failed)
+                return Results.Unauthorized();
+
+            var token = tokens.CreateLawyerToken(lawyer);
+            return Results.Ok(new { token });
+        }).WithTags("Lawyers");
+
+        api.MapGet("/lawyers/me", async (AppDbContext db, HttpContext ctx) =>
+        {
+            var lawyerId = ctx.User.GetSubjectId();
+            var lawyer = await db.Lawyers
+                .Where(x => x.Id == lawyerId)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.FullName,
+                    x.ProfessionalTitle,
+                    x.SyndicateCardNumber,
+                    x.WhatsappNumber,
+                    x.VerificationStatus,
+                    x.IsSuspended
+                })
+                .FirstOrDefaultAsync();
+
+            return lawyer is null ? Results.NotFound() : Results.Ok(lawyer);
+        }).RequireAuthorization("Lawyer").WithTags("Lawyers");
+    }
+}
