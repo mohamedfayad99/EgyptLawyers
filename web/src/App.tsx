@@ -5,12 +5,30 @@ import LandingPage from './pages/LandingPage'
 import AdminLayout from './pages/admin/AdminLayout'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import AdminLoginPage from './pages/admin/AdminLoginPage'
+import UserManagementPage from './pages/admin/UserManagementPage'
+import ContentModerationPage from './pages/admin/ContentModerationPage'
 
 const theme = createTheme({
   palette: {
     mode: 'light',
+    primary: { main: '#0F172A' },
+    secondary: { main: '#D4AF37' },
+    background: { default: '#F1F5F9' },
+  },
+  typography: {
+    fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   },
   shape: { borderRadius: 12 },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: { textTransform: 'none', fontWeight: 600 },
+      },
+    },
+    MuiPaper: {
+      defaultProps: { elevation: 0 },
+    },
+  },
 })
 
 function RequireAdmin({ children }: { children: React.ReactNode }) {
@@ -37,6 +55,8 @@ export default function App() {
             }
           >
             <Route index element={<AdminDashboardPage />} />
+            <Route path="users" element={<UserManagementPage />} />
+            <Route path="moderation" element={<ContentModerationPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

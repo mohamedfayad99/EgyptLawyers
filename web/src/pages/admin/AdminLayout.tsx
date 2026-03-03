@@ -1,34 +1,54 @@
-import { AppBar, Box, Button, Container, Stack, Toolbar, Typography } from '@mui/material'
-import { Outlet, useNavigate } from 'react-router-dom'
-import { clearAdminToken } from '../../admin/auth'
+import { useState } from 'react';
+import { Box, useMediaQuery, useTheme } from '@mui/material';
+import { Outlet, useLocation } from 'react-router-dom';
+import AdminSidebar, { DRAWER_WIDTH, DRAWER_COLLAPSED } from '../../components/admin/AdminSidebar';
+import AdminTopBar from '../../components/admin/AdminTopBar';
+
+const pageTitles: Record<string, string> = {
+  '/admin': 'Dashboard',
+  '/admin/users': 'User Management',
+  '/admin/moderation': 'Content Moderation',
+};
 
 export default function AdminLayout() {
-  const navigate = useNavigate()
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const location = useLocation();
 
-  function logout() {
-    clearAdminToken()
-    navigate('/admin/login', { replace: true })
-  }
+  const sidebarWidth = isMobile ? 0 : collapsed ? DRAWER_COLLAPSED : DRAWER_WIDTH;
+  const pageTitle = pageTitles[location.pathname] ?? 'Admin';
 
   return (
-    <Box sx={{ minHeight: '100vh' }}>
-      <AppBar position="static" elevation={0}>
-        <Toolbar>
-          <Container maxWidth="lg" disableGutters>
-            <Stack direction="row" alignItems="center" justifyContent="space-between">
-              <Typography fontWeight={800}>Egyptian Lawyers Network — Admin</Typography>
-              <Button color="inherit" onClick={logout}>
-                Logout
-              </Button>
-            </Stack>
-          </Container>
-        </Toolbar>
-      </AppBar>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#F1F5F9' }}>
+      <AdminSidebar
+        open={mobileOpen}
+        collapsed={collapsed}
+        onClose={() => setMobileOpen(false)}
+        onToggleCollapse={() => setCollapsed((c) => !c)}
+      />
 
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Outlet />
-      </Container>
+      <Box
+        component="main"
+        sx={{
+          flex: 1,
+          ml: `${sidebarWidth}px`,
+          transition: 'margin-left 0.3s',
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
+        }}
+      >
+        <AdminTopBar
+          title={pageTitle}
+          onMenuClick={() => setMobileOpen(true)}
+        />
+
+        <Box sx={{ flex: 1, p: { xs: 2, sm: 3 } }}>
+          <Outlet />
+        </Box>
+      </Box>
     </Box>
-  )
+  );
 }
-
