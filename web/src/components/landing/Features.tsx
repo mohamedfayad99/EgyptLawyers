@@ -44,19 +44,19 @@ export default function Features() {
     const { t } = useLang();
 
     return (
-        <Box id="features" sx={{ py: { xs: 10, md: 14 }, bgcolor: '#0F172A' }}>
+        <Box id="features" sx={{ py: { xs: 10, md: 14 }, bgcolor: 'var(--color-primary-dark)' }}>
             <Container maxWidth="lg">
                 {/* Header */}
                 <Stack alignItems="center" spacing={1.5} sx={{ mb: 8 }}>
                     <Typography
                         sx={{
-                            color: '#D4AF37', fontWeight: 600, fontSize: '0.8rem',
+                            color: 'var(--color-accent)', fontWeight: 600, fontSize: '0.8rem',
                             textTransform: 'uppercase', letterSpacing: 2,
                         }}
                     >
                         {t('Key Features', 'المميزات الرئيسية')}
                     </Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 800, color: '#F8FAFC', textAlign: 'center' }}>
+                    <Typography variant="h4" sx={{ fontWeight: 800, color: 'var(--color-background)', textAlign: 'center' }}>
                         {t('Everything You Need', 'كل ما تحتاجه')}
                     </Typography>
                 </Stack>
@@ -64,34 +64,39 @@ export default function Features() {
                 {/* Cards */}
                 <Grid container spacing={3}>
                     {features.map((f, i) => (
-                        <Grid key={i} size={{ xs: 12, sm: 6, lg: 4 }}>
+                        <Grid key={i} size={{ xs: 12, sm: 6, lg: 4 }} sx={{ display: 'flex' }}>
                             <Box
                                 sx={{
-                                    p: 3.5, borderRadius: 3,
-                                    border: '1px solid rgba(212,175,55,0.1)',
-                                    bgcolor: 'rgba(30,41,59,0.5)',
+                                    p: 3.5,
+                                    borderRadius: 3,
+                                    border: '1px solid rgba(var(--color-surface-rgb),0.9)',
+                                    bgcolor: 'rgba(15,23,42,0.85)',
                                     transition: 'all 0.3s',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    height: '100%',
+                                    width: '100%',
                                     '&:hover': {
-                                        borderColor: 'rgba(212,175,55,0.3)',
+                                        borderColor: 'rgba(var(--color-primary-rgb),0.6)',
                                         transform: 'translateY(-4px)',
-                                        boxShadow: '0 12px 40px rgba(212,175,55,0.06)',
+                                        boxShadow: '0 12px 40px rgba(15,23,42,0.5)',
                                     },
                                 }}
                             >
                                 <Box
                                     sx={{
                                         width: 48, height: 48, borderRadius: 2,
-                                        bgcolor: 'rgba(212,175,55,0.1)',
+                                        bgcolor: 'rgba(var(--color-primary-rgb),0.12)',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         mb: 2,
                                     }}
                                 >
-                                    <f.icon sx={{ color: '#D4AF37', fontSize: 24 }} />
+                                    <f.icon sx={{ color: 'var(--color-primary)', fontSize: 24 }} />
                                 </Box>
-                                <Typography sx={{ fontWeight: 700, color: '#F8FAFC', mb: 1, fontSize: '1.05rem' }}>
+                                <Typography sx={{ fontWeight: 700, color: 'var(--color-background)', mb: 1, fontSize: '1.05rem' }}>
                                     {t(f.en.title, f.ar.title)}
                                 </Typography>
-                                <Typography sx={{ color: 'rgba(212,175,55,0.5)', fontSize: '0.875rem', lineHeight: 1.7 }}>
+                                <Typography sx={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.875rem', lineHeight: 1.7 }}>
                                     {t(f.en.desc, f.ar.desc)}
                                 </Typography>
                             </Box>

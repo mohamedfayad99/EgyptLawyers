@@ -26,19 +26,19 @@ export default function HowItWorks() {
     const { t } = useLang();
 
     return (
-        <Box id="how-it-works" sx={{ py: { xs: 10, md: 14 }, bgcolor: '#F8FAFC' }}>
+        <Box id="how-it-works" sx={{ py: { xs: 10, md: 14 }, bgcolor: 'var(--color-background)' }}>
             <Container maxWidth="lg">
                 {/* Header */}
                 <Stack alignItems="center" spacing={1.5} sx={{ mb: 8 }}>
                     <Typography
                         sx={{
-                            color: '#D4AF37', fontWeight: 600, fontSize: '0.8rem',
+                            color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.8rem',
                             textTransform: 'uppercase', letterSpacing: 2,
                         }}
                     >
                         {t('How It Works', 'كيف يعمل')}
                     </Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 800, color: '#0F172A', textAlign: 'center' }}>
+                    <Typography variant="h4" sx={{ fontWeight: 800, color: 'var(--color-text)', textAlign: 'center' }}>
                         {t('Three Simple Steps', 'ثلاث خطوات بسيطة')}
                     </Typography>
                 </Stack>
@@ -52,30 +52,30 @@ export default function HowItWorks() {
                                 <Box
                                     sx={{
                                         width: 96, height: 96, borderRadius: 4,
-                                        bgcolor: '#0F172A', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        bgcolor: 'var(--color-primary-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         boxShadow: '0 8px 32px rgba(15,23,42,0.12)',
                                         transition: 'box-shadow 0.3s',
-                                        '&:hover': { boxShadow: '0 8px 32px rgba(212,175,55,0.15)' },
+                                        '&:hover': { boxShadow: '0 8px 32px rgba(79,142,247,0.25)' },
                                     }}
                                 >
-                                    <step.icon sx={{ fontSize: 36, color: '#D4AF37' }} />
+                                    <step.icon sx={{ fontSize: 36, color: 'var(--color-accent)' }} />
                                 </Box>
 
                                 {/* Number badge */}
                                 <Box
                                     sx={{
                                         width: 32, height: 32, borderRadius: '50%', bgcolor: '#D4AF37',
-                                        color: '#0F172A', fontWeight: 700, fontSize: '0.85rem',
+                                        color: 'var(--color-background)', fontWeight: 700, fontSize: '0.85rem',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center', mt: -1.5,
                                     }}
                                 >
                                     {i + 1}
                                 </Box>
 
-                                <Typography variant="h6" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                                <Typography variant="h6" sx={{ fontWeight: 700, color: 'var(--color-text)' }}>
                                     {t(step.en.title, step.ar.title)}
                                 </Typography>
-                                <Typography sx={{ color: '#64748B', lineHeight: 1.7, maxWidth: 320 }}>
+                                <Typography sx={{ color: 'rgba(var(--color-text-rgb),0.7)', lineHeight: 1.7, maxWidth: 320 }}>
                                     {t(step.en.desc, step.ar.desc)}
                                 </Typography>
                             </Stack>

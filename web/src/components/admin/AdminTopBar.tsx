@@ -24,18 +24,18 @@ export default function AdminTopBar({ title = 'Dashboard', onMenuClick }: AdminT
             position="sticky"
             elevation={0}
             sx={{
-                bgcolor: '#FFFFFF',
-                borderBottom: '1px solid #E2E8F0',
+                bgcolor: 'var(--color-background)',
+                borderBottom: '1px solid var(--color-surface)',
             }}
         >
             <Toolbar sx={{ height: 64 }}>
                 {isMobile && (
-                    <IconButton onClick={onMenuClick} sx={{ mr: 1, color: '#0F172A' }}>
+                    <IconButton onClick={onMenuClick} sx={{ mr: 1, color: 'var(--color-primary-dark)' }}>
                         <MenuIcon />
                     </IconButton>
                 )}
 
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#0F172A', flex: 1 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: 'var(--color-text)', flex: 1 }}>
                     {title}
                 </Typography>
 
@@ -44,10 +44,13 @@ export default function AdminTopBar({ title = 'Dashboard', onMenuClick }: AdminT
                         onClick={logout}
                         startIcon={<LogoutIcon />}
                         sx={{
-                            color: '#64748B',
+                            color: 'rgba(var(--color-text-rgb),0.7)',
                             textTransform: 'none',
                             fontWeight: 500,
-                            '&:hover': { bgcolor: '#F1F5F9', color: '#EF4444' },
+                            '&:hover': {
+                                bgcolor: 'var(--color-surface)',
+                                color: 'var(--color-accent)',
+                            },
                         }}
                     >
                         {!isMobile && 'Logout'}

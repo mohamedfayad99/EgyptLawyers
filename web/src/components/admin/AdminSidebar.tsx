@@ -42,7 +42,7 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggleCollaps
         <Box
             sx={{
                 height: '100%',
-                bgcolor: '#0F172A',
+                bgcolor: 'var(--color-primary-dark)',
                 display: 'flex',
                 flexDirection: 'column',
                 overflow: 'hidden',
@@ -56,20 +56,20 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggleCollaps
                 sx={{
                     px: collapsed && !isMobile ? 1.5 : 2.5,
                     height: 64,
-                    borderBottom: '1px solid rgba(212,175,55,0.1)',
+                    borderBottom: '1px solid rgba(var(--color-surface-rgb),0.7)',
                     justifyContent: collapsed && !isMobile ? 'center' : 'flex-start',
                 }}
             >
                 <Box
                     sx={{
-                        width: 36, height: 36, borderRadius: '50%', bgcolor: '#D4AF37',
+                        width: 36, height: 36, borderRadius: '50%', bgcolor: 'var(--color-primary)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                     }}
                 >
-                    <BalanceIcon sx={{ fontSize: 20, color: '#0F172A' }} />
+                    <BalanceIcon sx={{ fontSize: 20, color: 'var(--color-background)' }} />
                 </Box>
                 {(!collapsed || isMobile) && (
-                    <Typography sx={{ color: '#D4AF37', fontWeight: 700, fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
+                    <Typography sx={{ color: 'var(--color-background)', fontWeight: 700, fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
                         Admin Panel
                     </Typography>
                 )}
@@ -92,14 +92,14 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggleCollaps
                                 px: collapsed && !isMobile ? 1.5 : 2,
                                 py: 1.2,
                                 justifyContent: collapsed && !isMobile ? 'center' : 'flex-start',
-                                bgcolor: active ? 'rgba(212,175,55,0.12)' : 'transparent',
-                                '&:hover': { bgcolor: active ? 'rgba(212,175,55,0.16)' : 'rgba(255,255,255,0.04)' },
+                                bgcolor: active ? 'rgba(var(--color-primary-rgb),0.18)' : 'transparent',
+                                '&:hover': { bgcolor: active ? 'rgba(var(--color-primary-rgb),0.24)' : 'rgba(255,255,255,0.04)' },
                             }}
                         >
                             <ListItemIcon
                                 sx={{
                                     minWidth: collapsed && !isMobile ? 0 : 40,
-                                    color: active ? '#D4AF37' : 'rgba(255,255,255,0.45)',
+                                    color: active ? 'var(--color-primary)' : 'rgba(255,255,255,0.45)',
                                     justifyContent: 'center',
                                 }}
                             >
@@ -111,7 +111,7 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggleCollaps
                                     primaryTypographyProps={{
                                         fontWeight: active ? 600 : 400,
                                         fontSize: '0.875rem',
-                                        color: active ? '#F8FAFC' : 'rgba(255,255,255,0.6)',
+                                            color: active ? 'var(--color-background)' : 'rgba(255,255,255,0.7)',
                                     }}
                                 />
                             )}
@@ -122,14 +122,14 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggleCollaps
 
             {/* Collapse toggle (desktop only) */}
             {!isMobile && (
-                <Box sx={{ p: 1.5, borderTop: '1px solid rgba(212,175,55,0.1)' }}>
+                <Box sx={{ p: 1.5, borderTop: '1px solid rgba(var(--color-surface-rgb),0.7)' }}>
                     <IconButton
                         onClick={onToggleCollapse}
                         sx={{
                             width: '100%',
-                            color: 'rgba(255,255,255,0.4)',
+                            color: 'rgba(255,255,255,0.7)',
                             borderRadius: 2,
-                            '&:hover': { bgcolor: 'rgba(255,255,255,0.04)' },
+                            '&:hover': { bgcolor: 'rgba(255,255,255,0.06)' },
                         }}
                     >
                         <ChevronLeftIcon

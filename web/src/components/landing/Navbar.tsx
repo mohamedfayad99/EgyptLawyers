@@ -34,26 +34,26 @@ export default function Navbar() {
                 position="fixed"
                 elevation={0}
                 sx={{
-                    bgcolor: 'rgba(15, 23, 42, 0.95)',
+                    bgcolor: 'rgba(var(--color-primary-dark-rgb), 0.97)',
                     backdropFilter: 'blur(12px)',
-                    borderBottom: '1px solid rgba(212, 175, 55, 0.15)',
+                    borderBottom: '1px solid rgba(var(--color-surface-rgb), 0.8)',
                 }}
             >
                 <Container maxWidth="lg">
                     <Toolbar disableGutters sx={{ height: 64 }}>
                         {/* Logo */}
-                        <Stack direction="row" alignItems="center" spacing={1} sx={{ flexGrow: { xs: 1, md: 0 } }}>
+                        <Stack direction="row" alignItems="center" spacing={1} sx={{ flexGrow: { xs: 1, md: 0 }, gap: "8px" }}>
                             <Box
                                 sx={{
                                     width: 36, height: 36, borderRadius: '50%',
-                                    bgcolor: '#D4AF37', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    bgcolor: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 }}
                             >
-                                <BalanceIcon sx={{ fontSize: 20, color: '#0F172A' }} />
+                                <BalanceIcon sx={{ fontSize: 20, color: 'var(--color-background)' }} />
                             </Box>
                             <Typography
                                 sx={{
-                                    fontWeight: 700, color: '#D4AF37', fontSize: '1.05rem',
+                                    fontWeight: 700, color: 'var(--color-background)', fontSize: '1.05rem',
                                     display: { xs: 'none', sm: 'block' },
                                     fontFamily: '"Inter", sans-serif',
                                 }}
@@ -70,11 +70,14 @@ export default function Navbar() {
                                         key={link.href}
                                         onClick={() => scrollTo(link.href)}
                                         sx={{
-                                            color: 'rgba(212, 175, 55, 0.7)',
+                                            color: 'rgba(255, 255, 255, 0.75)',
                                             textTransform: 'none',
                                             fontWeight: 500,
                                             fontSize: '0.875rem',
-                                            '&:hover': { color: '#D4AF37', bgcolor: 'rgba(212, 175, 55, 0.08)' },
+                                            '&:hover': {
+                                                color: 'var(--color-accent)',
+                                                bgcolor: 'rgba(var(--color-accent-rgb), 0.12)',
+                                            },
                                         }}
                                     >
                                         {t(link.en, link.ar)}
@@ -89,13 +92,16 @@ export default function Navbar() {
                             variant="outlined"
                             size="small"
                             sx={{
-                                borderColor: 'rgba(212, 175, 55, 0.4)',
-                                color: '#D4AF37',
+                                borderColor: 'rgba(255, 255, 255, 0.35)',
+                                color: 'var(--color-background)',
                                 textTransform: 'none',
                                 fontWeight: 600,
                                 fontSize: '0.75rem',
                                 minWidth: 48,
-                                '&:hover': { borderColor: '#D4AF37', bgcolor: 'rgba(212, 175, 55, 0.08)' },
+                                '&:hover': {
+                                    borderColor: 'var(--color-accent)',
+                                    bgcolor: 'rgba(var(--color-accent-rgb), 0.12)',
+                                },
                             }}
                         >
                             {lang === 'en' ? 'عربي' : 'EN'}
@@ -103,7 +109,7 @@ export default function Navbar() {
 
                         {/* Mobile menu icon */}
                         {isMobile && (
-                            <IconButton onClick={() => setDrawerOpen(true)} sx={{ ml: 1, color: '#D4AF37' }}>
+                            <IconButton onClick={() => setDrawerOpen(true)} sx={{ ml: 1, color: 'var(--color-background)' }}>
                                 <MenuIcon />
                             </IconButton>
                         )}
@@ -117,11 +123,15 @@ export default function Navbar() {
                 open={drawerOpen}
                 onClose={() => setDrawerOpen(false)}
                 PaperProps={{
-                    sx: { width: 260, bgcolor: '#0F172A', borderLeft: '1px solid rgba(212, 175, 55, 0.15)' },
+                    sx: {
+                        width: 260,
+                        bgcolor: 'var(--color-primary-dark)',
+                        borderLeft: '1px solid rgba(var(--color-surface-rgb), 0.8)',
+                    },
                 }}
             >
                 <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                    <IconButton onClick={() => setDrawerOpen(false)} sx={{ color: '#D4AF37' }}>
+                    <IconButton onClick={() => setDrawerOpen(false)} sx={{ color: 'var(--color-background)' }}>
                         <CloseIcon />
                     </IconButton>
                 </Box>
@@ -131,8 +141,11 @@ export default function Navbar() {
                             key={link.href}
                             onClick={() => scrollTo(link.href)}
                             sx={{
-                                color: 'rgba(212, 175, 55, 0.7)',
-                                '&:hover': { color: '#D4AF37', bgcolor: 'rgba(212, 175, 55, 0.08)' },
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                '&:hover': {
+                                    color: 'var(--color-accent)',
+                                    bgcolor: 'rgba(var(--color-accent-rgb), 0.12)',
+                                },
                             }}
                         >
                             <ListItemText primary={t(link.en, link.ar)} />

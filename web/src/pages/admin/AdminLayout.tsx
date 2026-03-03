@@ -21,7 +21,7 @@ export default function AdminLayout() {
   const pageTitle = pageTitles[location.pathname] ?? 'Admin';
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#F1F5F9' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'var(--color-surface)' }}>
       <AdminSidebar
         open={mobileOpen}
         collapsed={collapsed}

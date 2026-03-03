@@ -65,7 +65,7 @@ export default function AdminDashboardPage() {
             title="Total Lawyers"
             value={lawyers.length}
             icon={PeopleIcon}
-            color="#3B82F6"
+            color="var(--color-primary)"
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
@@ -73,7 +73,7 @@ export default function AdminDashboardPage() {
             title="Pending Approvals"
             value={pendingLawyers.length}
             icon={HourglassTopIcon}
-            color="#F59E0B"
+            color="var(--color-accent)"
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
@@ -81,7 +81,7 @@ export default function AdminDashboardPage() {
             title="Cities"
             value={cities.length}
             icon={LocationCityIcon}
-            color="#10B981"
+            color="var(--color-primary)"
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
@@ -89,7 +89,7 @@ export default function AdminDashboardPage() {
             title="Courts"
             value="—"
             icon={AccountBalanceIcon}
-            color="#8B5CF6"
+            color="var(--color-primary)"
           />
         </Grid>
       </Grid>
@@ -97,31 +97,31 @@ export default function AdminDashboardPage() {
       {/* Recent Registrations */}
       <Paper
         elevation={0}
-        sx={{ borderRadius: 3, border: '1px solid #E2E8F0', overflow: 'hidden' }}
+        sx={{ borderRadius: 3, border: '1px solid rgba(var(--color-text-rgb),0.06)', overflow: 'hidden', bgcolor: 'var(--color-background)' }}
       >
-        <Box sx={{ px: 3, py: 2.5, borderBottom: '1px solid #E2E8F0' }}>
-          <Typography variant="h6" sx={{ fontWeight: 700, color: '#0F172A' }}>
+        <Box sx={{ px: 3, py: 2.5, borderBottom: '1px solid var(--color-surface)' }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, color: 'var(--color-text)' }}>
             Recent Registrations
           </Typography>
-          <Typography sx={{ color: '#64748B', fontSize: '0.85rem', mt: 0.5 }}>
+          <Typography sx={{ color: 'rgba(var(--color-text-rgb),0.7)', fontSize: '0.85rem', mt: 0.5 }}>
             Latest lawyer registration activity
           </Typography>
         </Box>
         <TableContainer>
           <Table>
             <TableHead>
-              <TableRow sx={{ bgcolor: '#F8FAFC' }}>
-                <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Name</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#475569' }}>WhatsApp</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Syndicate #</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Status</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Date</TableCell>
+              <TableRow sx={{ bgcolor: 'var(--color-surface)' }}>
+                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>Name</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>WhatsApp</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>Syndicate #</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>Date</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {lawyers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} sx={{ textAlign: 'center', color: '#94A3B8', py: 4 }}>
+                  <TableCell colSpan={5} sx={{ textAlign: 'center', color: 'rgba(var(--color-text-rgb),0.5)', py: 4 }}>
                     No lawyers found. Data will appear when the backend is running.
                   </TableCell>
                 </TableRow>
@@ -131,11 +131,11 @@ export default function AdminDashboardPage() {
                     <TableCell>
                       <Typography sx={{ fontWeight: 600, fontSize: '0.875rem' }}>{l.fullName}</Typography>
                       {l.professionalTitle && (
-                        <Typography sx={{ color: '#94A3B8', fontSize: '0.75rem' }}>{l.professionalTitle}</Typography>
+                        <Typography sx={{ color: 'rgba(var(--color-text-rgb),0.6)', fontSize: '0.75rem' }}>{l.professionalTitle}</Typography>
                       )}
                     </TableCell>
-                    <TableCell sx={{ color: '#64748B', fontSize: '0.875rem' }}>{l.whatsappNumber}</TableCell>
-                    <TableCell sx={{ color: '#64748B', fontSize: '0.875rem' }}>{l.syndicateCardNumber}</TableCell>
+                    <TableCell sx={{ color: 'rgba(var(--color-text-rgb),0.8)', fontSize: '0.875rem' }}>{l.whatsappNumber}</TableCell>
+                    <TableCell sx={{ color: 'rgba(var(--color-text-rgb),0.8)', fontSize: '0.875rem' }}>{l.syndicateCardNumber}</TableCell>
                     <TableCell>
                       <Chip
                         label={String(l.verificationStatus)}
@@ -145,7 +145,7 @@ export default function AdminDashboardPage() {
                         sx={{ fontWeight: 600, fontSize: '0.75rem' }}
                       />
                     </TableCell>
-                    <TableCell sx={{ color: '#94A3B8', fontSize: '0.8rem' }}>
+                    <TableCell sx={{ color: 'rgba(var(--color-text-rgb),0.6)', fontSize: '0.8rem' }}>
                       {new Date(l.createdAtUtc).toLocaleDateString()}
                     </TableCell>
                   </TableRow>
