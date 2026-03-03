@@ -1,13 +1,12 @@
-import axios from 'axios'
-import { getAdminToken } from '../admin/auth'
+import axios from "axios";
+import { getAdminToken } from "../admin/auth";
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5215',
-})
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5215",
+});
 
 api.interceptors.request.use((config) => {
-  const token = getAdminToken()
-  if (token) config.headers.Authorization = `Bearer ${token}`
-  return config
-})
-
+  const token = getAdminToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
