@@ -26,22 +26,22 @@ export default function WhyJoin() {
     const { t } = useLang();
 
     return (
-        <Box id="why-join" sx={{ py: { xs: 10, md: 14 }, bgcolor: '#F8FAFC' }}>
+        <Box id="why-join" sx={{ py: { xs: 10, md: 14 }, bgcolor: 'var(--color-background)' }}>
             <Container maxWidth="lg">
                 {/* Header */}
                 <Stack alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
                     <Typography
                         sx={{
-                            color: '#D4AF37', fontWeight: 600, fontSize: '0.8rem',
+                            color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.8rem',
                             textTransform: 'uppercase', letterSpacing: 2,
                         }}
                     >
                         {t('Why Join', 'لماذا تنضم')}
                     </Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 800, color: '#0F172A', textAlign: 'center' }}>
+                    <Typography variant="h4" sx={{ fontWeight: 800, color: 'var(--color-text)', textAlign: 'center' }}>
                         {t('Built for Egyptian Lawyers', 'مصمم للمحامين المصريين')}
                     </Typography>
-                    <Typography sx={{ color: '#64748B', maxWidth: 600, textAlign: 'center', lineHeight: 1.7 }}>
+                    <Typography sx={{ color: 'rgba(var(--color-text-rgb),0.7)', maxWidth: 600, textAlign: 'center', lineHeight: 1.7 }}>
                         {t(
                             'Join a growing community of licensed lawyers who trust the network to find reliable legal assistance anywhere in Egypt.',
                             'انضم إلى مجتمع متنامٍ من المحامين المرخصين الذين يثقون بالشبكة للعثور على مساعدة قانونية موثوقة في أي مكان في مصر.',
@@ -56,29 +56,29 @@ export default function WhyJoin() {
                             <Box
                                 sx={{
                                     textAlign: 'center', p: 5, borderRadius: 4,
-                                    bgcolor: '#FFFFFF',
-                                    border: '1px solid #E2E8F0',
+                                        bgcolor: 'var(--color-surface)',
+                                        border: '1px solid rgba(var(--color-text-rgb),0.06)',
                                     transition: 'all 0.3s',
-                                    '&:hover': {
-                                        borderColor: 'rgba(212,175,55,0.3)',
-                                        boxShadow: '0 16px 48px rgba(15,23,42,0.06)',
-                                        transform: 'translateY(-4px)',
-                                    },
+                                        '&:hover': {
+                                            borderColor: 'rgba(var(--color-primary-rgb),0.5)',
+                                            boxShadow: '0 16px 48px rgba(15,23,42,0.06)',
+                                            transform: 'translateY(-4px)',
+                                        },
                                 }}
                             >
                                 <Box
                                     sx={{
                                         width: 64, height: 64, borderRadius: 4, mx: 'auto', mb: 3,
-                                        bgcolor: '#0F172A',
+                                            bgcolor: 'var(--color-primary-dark)',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     }}
                                 >
-                                    <b.icon sx={{ color: '#D4AF37', fontSize: 28 }} />
+                                    <b.icon sx={{ color: 'var(--color-accent)', fontSize: 28 }} />
                                 </Box>
-                                <Typography variant="h6" sx={{ fontWeight: 700, color: '#0F172A', mb: 1.5 }}>
+                                <Typography variant="h6" sx={{ fontWeight: 700, color: 'var(--color-text)', mb: 1.5 }}>
                                     {t(b.en.title, b.ar.title)}
                                 </Typography>
-                                <Typography sx={{ color: '#64748B', lineHeight: 1.7 }}>
+                                <Typography sx={{ color: 'rgba(var(--color-text-rgb),0.7)', lineHeight: 1.7 }}>
                                     {t(b.en.desc, b.ar.desc)}
                                 </Typography>
                             </Box>

@@ -97,7 +97,8 @@ export default function UserManagementPage() {
                 elevation={0}
                 sx={{
                     p: 2.5, borderRadius: 3,
-                    border: '1px solid #E2E8F0',
+                    border: '1px solid rgba(var(--color-text-rgb),0.06)',
+                    bgcolor: 'var(--color-background)',
                     display: 'flex',
                     flexDirection: { xs: 'column', sm: 'row' },
                     gap: 2,
@@ -113,7 +114,7 @@ export default function UserManagementPage() {
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
-                                <SearchIcon sx={{ color: '#94A3B8' }} />
+                                <SearchIcon sx={{ color: 'rgba(var(--color-text-rgb),0.5)' }} />
                             </InputAdornment>
                         ),
                     }}
@@ -136,24 +137,29 @@ export default function UserManagementPage() {
             {/* Table */}
             <Paper
                 elevation={0}
-                sx={{ borderRadius: 3, border: '1px solid #E2E8F0', overflow: 'hidden' }}
+                sx={{
+                    borderRadius: 3,
+                    border: '1px solid rgba(var(--color-text-rgb),0.06)',
+                    overflow: 'hidden',
+                    bgcolor: 'var(--color-background)',
+                }}
             >
                 <TableContainer>
                     <Table>
                         <TableHead>
-                            <TableRow sx={{ bgcolor: '#F8FAFC' }}>
-                                <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Lawyer</TableCell>
-                                <TableCell sx={{ fontWeight: 600, color: '#475569' }}>WhatsApp</TableCell>
-                                <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Syndicate #</TableCell>
-                                <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Status</TableCell>
-                                <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Registered</TableCell>
-                                <TableCell sx={{ fontWeight: 600, color: '#475569' }} align="right">Actions</TableCell>
+                            <TableRow sx={{ bgcolor: 'var(--color-surface)' }}>
+                                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>Lawyer</TableCell>
+                                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>WhatsApp</TableCell>
+                                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>Syndicate #</TableCell>
+                                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>Status</TableCell>
+                                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>Registered</TableCell>
+                                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }} align="right">Actions</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {filtered.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} sx={{ textAlign: 'center', color: '#94A3B8', py: 6 }}>
+                                    <TableCell colSpan={6} sx={{ textAlign: 'center', color: 'rgba(var(--color-text-rgb),0.6)', py: 6 }}>
                                         {lawyers.length === 0
                                             ? 'No lawyers found. Data will appear when the backend is running.'
                                             : 'No results match your search.'}
@@ -165,11 +171,11 @@ export default function UserManagementPage() {
                                         <TableCell>
                                             <Typography sx={{ fontWeight: 600, fontSize: '0.875rem' }}>{l.fullName}</Typography>
                                             {l.professionalTitle && (
-                                                <Typography sx={{ color: '#94A3B8', fontSize: '0.75rem' }}>{l.professionalTitle}</Typography>
+                                                <Typography sx={{ color: 'rgba(var(--color-text-rgb),0.6)', fontSize: '0.75rem' }}>{l.professionalTitle}</Typography>
                                             )}
                                         </TableCell>
-                                        <TableCell sx={{ color: '#64748B', fontSize: '0.875rem' }}>{l.whatsappNumber}</TableCell>
-                                        <TableCell sx={{ color: '#64748B', fontSize: '0.875rem' }}>{l.syndicateCardNumber}</TableCell>
+                                        <TableCell sx={{ color: 'rgba(var(--color-text-rgb),0.8)', fontSize: '0.875rem' }}>{l.whatsappNumber}</TableCell>
+                                        <TableCell sx={{ color: 'rgba(var(--color-text-rgb),0.8)', fontSize: '0.875rem' }}>{l.syndicateCardNumber}</TableCell>
                                         <TableCell>
                                             <Stack direction="row" spacing={0.5} alignItems="center">
                                                 <Chip
@@ -184,7 +190,7 @@ export default function UserManagementPage() {
                                                 )}
                                             </Stack>
                                         </TableCell>
-                                        <TableCell sx={{ color: '#94A3B8', fontSize: '0.8rem' }}>
+                                        <TableCell sx={{ color: 'rgba(var(--color-text-rgb),0.6)', fontSize: '0.8rem' }}>
                                             {new Date(l.createdAtUtc).toLocaleDateString()}
                                         </TableCell>
                                         <TableCell align="right">
@@ -203,7 +209,7 @@ export default function UserManagementPage() {
                                                     <IconButton
                                                         size="small"
                                                         onClick={() => toggleSuspend(l.id, !l.isSuspended)}
-                                                        sx={{ color: l.isSuspended ? '#22C55E' : '#F59E0B' }}
+                                                        sx={{ color: l.isSuspended ? 'var(--color-primary)' : 'var(--color-accent)' }}
                                                     >
                                                         {l.isSuspended ? <LockOpenIcon fontSize="small" /> : <BlockIcon fontSize="small" />}
                                                     </IconButton>

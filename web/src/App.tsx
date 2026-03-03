@@ -11,9 +11,9 @@ import ContentModerationPage from './pages/admin/ContentModerationPage'
 const theme = createTheme({
   palette: {
     mode: 'light',
-    primary: { main: '#0F172A' },
-    secondary: { main: '#D4AF37' },
-    background: { default: '#F1F5F9' },
+    primary: { main: '#4F8EF7' },
+    secondary: { main: '#FF9B51' },
+    background: { default: '#FFFFFF' },
   },
   typography: {
     fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',

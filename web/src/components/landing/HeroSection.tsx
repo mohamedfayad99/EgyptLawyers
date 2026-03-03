@@ -14,7 +14,7 @@ export default function HeroSection() {
                 minHeight: '100vh',
                 display: 'flex',
                 alignItems: 'center',
-                bgcolor: '#0F172A',
+                bgcolor: 'var(--color-primary-dark)',
                 position: 'relative',
                 overflow: 'hidden',
                 pt: { xs: 4, md: 0 },
@@ -24,8 +24,8 @@ export default function HeroSection() {
             <Box
                 sx={{
                     position: 'absolute', inset: 0, opacity: 0.08,
-                    background: `radial-gradient(circle at 25% 25%, rgba(212,175,55,0.25) 0%, transparent 50%),
-                       radial-gradient(circle at 75% 75%, rgba(212,175,55,0.15) 0%, transparent 50%)`,
+                    background: `radial-gradient(circle at 25% 25%, rgba(var(--color-primary-rgb),0.28) 0%, transparent 50%),
+                       radial-gradient(circle at 75% 75%, rgba(var(--color-accent-rgb),0.2) 0%, transparent 50%)`,
                 }}
             />
 
@@ -38,10 +38,11 @@ export default function HeroSection() {
                                 sx={{
                                     display: 'inline-flex', alignSelf: 'flex-start',
                                     px: 2.5, py: 0.75, borderRadius: 50,
-                                    bgcolor: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.3)',
+                                    bgcolor: 'rgba(var(--color-primary-rgb),0.08)',
+                                    border: '1px solid rgba(var(--color-primary-rgb),0.4)',
                                 }}
                             >
-                                <Typography sx={{ color: '#D4AF37', fontSize: '0.85rem', fontWeight: 600 }}>
+                                <Typography sx={{ color: 'var(--color-primary)', fontSize: '0.85rem', fontWeight: 600 }}>
                                     {t('For Licensed Lawyers Only', 'للمحامين المرخصين فقط')}
                                 </Typography>
                             </Box>
@@ -49,7 +50,7 @@ export default function HeroSection() {
                             <Typography
                                 variant="h2"
                                 sx={{
-                                    fontWeight: 800, color: '#F8FAFC',
+                                    fontWeight: 800, color: 'var(--color-background)',
                                     fontSize: { xs: '2.2rem', sm: '2.8rem', md: '3.4rem' },
                                     lineHeight: 1.15,
                                 }}
@@ -57,7 +58,14 @@ export default function HeroSection() {
                                 {t('Connect with Trusted Lawyers Across Egypt', 'تواصل مع محامين موثوقين في جميع أنحاء مصر')}
                             </Typography>
 
-                            <Typography sx={{ color: 'rgba(212,175,55,0.6)', fontSize: '1.1rem', maxWidth: 520, lineHeight: 1.7 }}>
+                            <Typography
+                                sx={{
+                                    color: 'rgba(255,255,255,0.75)',
+                                    fontSize: '1.1rem',
+                                    maxWidth: 520,
+                                    lineHeight: 1.7,
+                                }}
+                            >
                                 {t(
                                     'A professional network built exclusively for Egyptian lawyers. Find legal support by court and city, collaborate efficiently, and grow your practice.',
                                     'شبكة مهنية حصرية للمحامين المصريين. ابحث عن دعم قانوني حسب المحكمة والمدينة، وتعاون بكفاءة، وطوّر ممارستك المهنية.',
@@ -69,9 +77,12 @@ export default function HeroSection() {
                                     variant="contained"
                                     startIcon={<AppleIcon />}
                                     sx={{
-                                        bgcolor: '#D4AF37', color: '#0F172A', fontWeight: 700,
+                                        bgcolor: 'var(--color-primary)', color: 'var(--color-background)', fontWeight: 700,
                                         px: 4, py: 1.5, fontSize: '1rem', borderRadius: 2,
-                                        '&:hover': { bgcolor: '#B8962E' },
+                                        '& .MuiButton-startIcon': {
+                                            ml: 0.5
+                                        },
+                                        '&:hover': { bgcolor: '#346fda' },
                                     }}
                                 >
                                     {t('App Store', 'آب ستور')}
@@ -80,9 +91,12 @@ export default function HeroSection() {
                                     variant="contained"
                                     startIcon={<PlayArrowIcon />}
                                     sx={{
-                                        bgcolor: '#D4AF37', color: '#0F172A', fontWeight: 700,
+                                        bgcolor: 'var(--color-accent)', color: 'var(--color-background)', fontWeight: 700,
                                         px: 4, py: 1.5, fontSize: '1rem', borderRadius: 2,
-                                        '&:hover': { bgcolor: '#B8962E' },
+                                        '& .MuiButton-startIcon': {
+                                            ml: 0.5
+                                        },
+                                        '&:hover': { bgcolor: '#e68336' },
                                     }}
                                 >
                                     {t('Google Play', 'جوجل بلاي')}
@@ -98,15 +112,15 @@ export default function HeroSection() {
                                 sx={{
                                     width: 256, height: 500,
                                     borderRadius: '3rem', border: '2px solid rgba(212,175,55,0.3)',
-                                    bgcolor: '#1E293B',
+                                    bgcolor: 'var(--color-primary-dark)',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    boxShadow: '0 25px 50px rgba(212,175,55,0.08)',
+                                    boxShadow: '0 25px 50px rgba(15,23,42,0.35)',
                                 }}
                             >
                                 <Box
                                     sx={{
                                         width: 224, height: 470, borderRadius: '2.5rem',
-                                        background: 'linear-gradient(135deg, #0B1120, #0F172A)',
+                                        background: 'linear-gradient(135deg, var(--color-primary-dark), #111827)',
                                         display: 'flex', flexDirection: 'column', alignItems: 'center',
                                         justifyContent: 'center', gap: 2, p: 3,
                                     }}
@@ -114,13 +128,13 @@ export default function HeroSection() {
                                     <Box
                                         sx={{
                                             width: 64, height: 64, borderRadius: '50%',
-                                            bgcolor: 'rgba(212,175,55,0.15)',
+                                            bgcolor: 'rgba(var(--color-primary-rgb),0.12)',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         }}
                                     >
-                                        <BalanceIcon sx={{ fontSize: 32, color: '#D4AF37' }} />
+                                        <BalanceIcon sx={{ fontSize: 32, color: 'var(--color-primary)' }} />
                                     </Box>
-                                    <Typography sx={{ color: '#D4AF37', fontWeight: 700, fontSize: '0.85rem', textAlign: 'center' }}>
+                                    <Typography sx={{ color: 'var(--color-background)', fontWeight: 700, fontSize: '0.85rem', textAlign: 'center' }}>
                                         {t('Egyptian Lawyers Network', 'شبكة المحامين المصريين')}
                                     </Typography>
                                     <Stack spacing={1.5} sx={{ width: '100%', mt: 2 }}>
@@ -129,8 +143,8 @@ export default function HeroSection() {
                                                 key={i}
                                                 sx={{
                                                     height: 48, borderRadius: 3,
-                                                    bgcolor: 'rgba(212,175,55,0.04)',
-                                                    border: '1px solid rgba(212,175,55,0.08)',
+                                                        bgcolor: 'rgba(15,23,42,0.6)',
+                                                        border: '1px solid rgba(15,23,42,0.85)',
                                                 }}
                                             />
                                         ))}
@@ -141,7 +155,7 @@ export default function HeroSection() {
                             <Box
                                 sx={{
                                     position: 'absolute', inset: -40, borderRadius: '50%',
-                                    bgcolor: 'rgba(212,175,55,0.04)', filter: 'blur(40px)', zIndex: -1,
+                                    bgcolor: 'rgba(var(--color-primary-rgb),0.16)', filter: 'blur(40px)', zIndex: -1,
                                 }}
                             />
                         </Box>
