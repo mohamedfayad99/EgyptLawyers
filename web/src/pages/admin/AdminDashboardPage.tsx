@@ -27,8 +27,9 @@ export default function AdminDashboardPage() {
   const [lawyers, setLawyers] = useState<Lawyer[]>([]);
   const [pendingLawyers, setPendingLawyers] = useState<Lawyer[]>([]);
   const [cities, setCities] = useState<City[]>([]);
-  const [courts, setCourts] = useState<{ id: number; name: string; cityId: number }[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  const [courts, setCourts] = useState<any[]>([]);
 
   useEffect(() => {
     async function load() {
@@ -42,7 +43,7 @@ export default function AdminDashboardPage() {
         setLawyers(allRes.data);
         setPendingLawyers(pendingRes.data);
         setCities(citiesRes.data);
-        setCourts(courtsRes.data ?? []);
+        setCourts(courtsRes.data);
       } catch (e: any) {
         setError(e?.response?.data?.message ?? 'Failed to load dashboard data');
       }

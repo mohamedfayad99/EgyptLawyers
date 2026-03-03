@@ -6,7 +6,9 @@ import AdminLayout from './pages/admin/AdminLayout'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import AdminLoginPage from './pages/admin/AdminLoginPage'
 import UserManagementPage from './pages/admin/UserManagementPage'
-import ContentModerationPage from './pages/admin/ContentModerationPage'
+import CitiesPage from './pages/admin/CitiesPage'
+import CourtsPage from './pages/admin/CourtsPage'
+import HelpPostsPage from './pages/admin/HelpPostsPage'
 
 const theme = createTheme({
   palette: {
@@ -55,8 +57,10 @@ export default function App() {
             }
           >
             <Route index element={<AdminDashboardPage />} />
-            <Route path="users" element={<UserManagementPage />} />
-            <Route path="moderation" element={<ContentModerationPage />} />
+            <Route path="lawyers" element={<UserManagementPage />} />
+            <Route path="cities" element={<CitiesPage />} />
+            <Route path="courts" element={<CourtsPage />} />
+            <Route path="moderation" element={<HelpPostsPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

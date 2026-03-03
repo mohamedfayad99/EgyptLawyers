@@ -16,7 +16,7 @@ export default function AdminLoginPage() {
     setError(null)
     setLoading(true)
     try {
-      const res = await api.post('/api/admin/login', { email, password })
+      const res = await api.post('/api/admin/login', { email: email.trim().toLowerCase(), password })
       setAdminToken(res.data.token)
       navigate('/admin', { replace: true })
     } catch (err: any) {
