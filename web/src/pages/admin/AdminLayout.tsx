@@ -6,8 +6,10 @@ import AdminTopBar from '../../components/admin/AdminTopBar';
 
 const pageTitles: Record<string, string> = {
   '/admin': 'Dashboard',
-  '/admin/users': 'User Management',
-  '/admin/moderation': 'Content Moderation',
+  '/admin/lawyers': 'Lawyers',
+  '/admin/cities': 'Cities',
+  '/admin/courts': 'Courts',
+  '/admin/moderation': 'Moderation',
 };
 
 export default function AdminLayout() {
