@@ -20,5 +20,16 @@ public static class LookupRoutes
             var courts = await q.OrderBy(x => x.Name).Select(x => new { x.Id, x.Name, x.CityId }).ToListAsync();
             return Results.Ok(courts);
         }).WithTags("Lookup");
+
+        // Additional route pattern used by mobile app: /cities/{id}/courts
+        api.MapGet("/cities/{id:int}/courts", async (int id, AppDbContext db) =>
+        {
+            var courts = await db.Courts
+                .Where(x => x.CityId == id)
+                .OrderBy(x => x.Name)
+                .Select(x => new { x.Id, x.Name, x.CityId })
+                .ToListAsync();
+            return Results.Ok(courts);
+        }).WithTags("Lookup");
     }
 }

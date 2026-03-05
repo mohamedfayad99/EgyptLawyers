@@ -50,11 +50,15 @@ public static class HelpPostRoutes
                 {
                     x.Id,
                     x.CityId,
+                    CityName = x.City.Name,
                     x.CourtId,
+                    CourtName = x.Court.Name,
                     x.Description,
                     x.Status,
                     x.CreatedAtUtc,
-                    x.LawyerId
+                    x.LawyerId,
+                    LawyerName = x.Lawyer.FullName,
+                    ReplyCount = x.Replies.Count
                 })
                 .ToListAsync();
 
@@ -69,15 +73,22 @@ public static class HelpPostRoutes
                 {
                     x.Id,
                     x.CityId,
+                    CityName = x.City.Name,
                     x.CourtId,
+                    CourtName = x.Court.Name,
                     x.Description,
                     x.Status,
                     x.CreatedAtUtc,
                     x.LawyerId,
+                    LawyerName = x.Lawyer.FullName,
+                    LawyerWhatsapp = x.Lawyer.WhatsappNumber,
                     Replies = x.Replies.OrderBy(r => r.CreatedAtUtc).Select(r => new
                     {
                         r.Id,
                         r.LawyerId,
+                        LawyerName = r.Lawyer.FullName,
+                        LawyerWhatsapp = r.Lawyer.WhatsappNumber,
+                        LawyerTitle = r.Lawyer.ProfessionalTitle,
                         r.Message,
                         r.CreatedAtUtc
                     }).ToList()

@@ -103,11 +103,59 @@ public static class LawyerRoutes
                     x.SyndicateCardNumber,
                     x.WhatsappNumber,
                     x.VerificationStatus,
-                    x.IsSuspended
+                    x.IsSuspended,
+                    ActiveCities = x.ActiveCities.Select(c => new { c.City.Id, c.City.Name }).ToList()
                 })
                 .FirstOrDefaultAsync();
 
             return lawyer is null ? Results.NotFound() : Results.Ok(lawyer);
+        }).RequireAuthorization("Lawyer").WithTags("Lawyers");
+
+        api.MapGet("/lawyers/{id:guid}", async (Guid id, AppDbContext db) =>
+        {
+            var lawyer = await db.Lawyers
+                .Where(x => x.Id == id && x.VerificationStatus == LawyerVerificationStatus.Approved && !x.IsSuspended)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.FullName,
+                    x.ProfessionalTitle,
+                    x.SyndicateCardNumber,
+                    x.WhatsappNumber,
+                    x.VerificationStatus,
+                    ActiveCities = x.ActiveCities.Select(c => new { c.City.Id, c.City.Name }).ToList()
+                })
+                .FirstOrDefaultAsync();
+
+            return lawyer is null ? Results.NotFound() : Results.Ok(lawyer);
+        }).RequireAuthorization("Lawyer").WithTags("Lawyers");
+
+        api.MapPost("/lawyers/devices", async (RegisterDeviceRequest req, AppDbContext db, HttpContext ctx) =>
+        {
+            if (string.IsNullOrWhiteSpace(req.DeviceToken))
+                return Results.BadRequest(new { message = "DeviceToken is required." });
+
+            var lawyerId = ctx.User.GetSubjectId();
+            var token = req.DeviceToken.Trim();
+
+            var existing = await db.DeviceRegistrations.FirstOrDefaultAsync(x => x.DeviceToken == token);
+            if (existing is not null)
+            {
+                existing.LawyerId = lawyerId;
+            }
+            else
+            {
+                db.DeviceRegistrations.Add(new DeviceRegistration
+                {
+                    LawyerId = lawyerId,
+                    DeviceToken = token,
+                    Platform = req.Platform ?? DevicePlatform.Unknown,
+                    CreatedAtUtc = DateTime.UtcNow
+                });
+            }
+
+            await db.SaveChangesAsync();
+            return Results.Ok();
         }).RequireAuthorization("Lawyer").WithTags("Lawyers");
     }
 }

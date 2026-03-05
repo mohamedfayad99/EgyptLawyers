@@ -1,3 +1,5 @@
+using EgyptLawyers.Data.Entities;
+
 namespace EgyptLawyers.Api.Contracts;
 
 public sealed record RegisterLawyerRequest(
@@ -12,4 +14,6 @@ public sealed record RegisterLawyerRequest(
 public sealed record LawyerLoginRequest(string WhatsappNumber, string Password);
 
 public sealed record AdminLoginRequest(string Email, string Password);
+
+public sealed record RegisterDeviceRequest(string DeviceToken, DevicePlatform? Platform);
 

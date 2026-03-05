@@ -89,6 +89,21 @@ public static class AdminRoutes
             return Results.Ok();
         }).WithTags("Admin");
 
+        admin.MapPatch("/lawyers/{id:guid}/reset-password", async (Guid id, ResetLawyerPasswordRequest req, AppDbContext db) =>
+        {
+            if (string.IsNullOrWhiteSpace(req.NewPassword) || req.NewPassword.Length < 6)
+                return Results.BadRequest(new { message = "Password must be at least 6 characters." });
+
+            var lawyer = await db.Lawyers.FirstOrDefaultAsync(x => x.Id == id);
+            if (lawyer is null) return Results.NotFound();
+
+            var hasher = new PasswordHasher<Lawyer>();
+            lawyer.PasswordHash = hasher.HashPassword(lawyer, req.NewPassword);
+            lawyer.UpdatedAtUtc = DateTime.UtcNow;
+            await db.SaveChangesAsync();
+            return Results.Ok(new { message = "Password reset successfully." });
+        }).WithTags("Admin");
+
         admin.MapPost("/cities", async (CreateCityRequest req, AppDbContext db) =>
         {
             if (string.IsNullOrWhiteSpace(req.Name))
