@@ -5,19 +5,17 @@ import {
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
-import BlockIcon from '@mui/icons-material/Block';
-import LockOpenIcon from '@mui/icons-material/LockOpen';
 import AdminTable, { type Column } from '../../components/admin/AdminTable';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import {
-    getLawyers, approveLawyer, rejectLawyer, suspendLawyer,
+    getLawyers, approveLawyer, rejectLawyer,
     type Lawyer,
 } from '../../admin/services/lawyerService';
 
 type LawyerRow = Lawyer & Record<string, unknown>;
 
 type ConfirmAction = {
-    type: 'approve' | 'reject' | 'suspend' | 'unsuspend';
+    type: 'approve' | 'reject';
     lawyer: Lawyer;
 } | null;
 
@@ -63,14 +61,6 @@ export default function UserManagementPage() {
                     await rejectLawyer(lawyer.id);
                     setInfo('Lawyer rejected.');
                     break;
-                case 'suspend':
-                    await suspendLawyer(lawyer.id, true);
-                    setInfo('Lawyer suspended.');
-                    break;
-                case 'unsuspend':
-                    await suspendLawyer(lawyer.id, false);
-                    setInfo('Lawyer unsuspended.');
-                    break;
             }
             await load();
         } catch (e: unknown) {
@@ -79,11 +69,19 @@ export default function UserManagementPage() {
         }
     }
 
+    // Map numeric enum values (0=Pending, 1=Approved, 2=Rejected) to readable labels
+    const statusLabel = (status: string | number): string => {
+        if (status === 0 || String(status).toLowerCase() === 'pending')  return 'Pending';
+        if (status === 1 || String(status).toLowerCase() === 'approved') return 'Approved';
+        if (status === 2 || String(status).toLowerCase() === 'rejected') return 'Rejected';
+        return String(status);
+    };
+
     const statusColor = (status: string | number) => {
-        const s = String(status).toLowerCase();
-        if (s === 'approved') return 'success';
-        if (s === 'rejected') return 'error';
-        return 'warning';
+        const label = statusLabel(status).toLowerCase();
+        if (label === 'approved') return 'success';
+        if (label === 'rejected') return 'error';
+        return 'warning'; // Pending
     };
 
     const confirmDialogConfig = useMemo(() => {
@@ -94,10 +92,6 @@ export default function UserManagementPage() {
                 return { title: 'Approve Lawyer', message: `Are you sure you want to approve ${name}?`, color: 'success' as const, label: 'Approve' };
             case 'reject':
                 return { title: 'Reject Lawyer', message: `Are you sure you want to reject ${name}?`, color: 'error' as const, label: 'Reject' };
-            case 'suspend':
-                return { title: 'Suspend Lawyer', message: `Are you sure you want to suspend ${name}?`, color: 'warning' as const, label: 'Suspend' };
-            case 'unsuspend':
-                return { title: 'Unsuspend Lawyer', message: `Are you sure you want to unsuspend ${name}?`, color: 'primary' as const, label: 'Unsuspend' };
         }
     }, [confirmAction]);
 
@@ -130,7 +124,7 @@ export default function UserManagementPage() {
             render: (row) => (
                 <Stack direction="row" spacing={0.5} alignItems="center">
                     <Chip
-                        label={String(row.verificationStatus)}
+                        label={statusLabel(row.verificationStatus)}
                         size="small"
                         color={statusColor(row.verificationStatus)}
                         variant="outlined"
@@ -164,15 +158,6 @@ export default function UserManagementPage() {
                     <Tooltip title="Reject">
                         <IconButton size="small" color="error" onClick={() => setConfirmAction({ type: 'reject', lawyer: row })}>
                             <CancelIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title={row.isSuspended ? 'Unsuspend' : 'Suspend'}>
-                        <IconButton
-                            size="small"
-                            onClick={() => setConfirmAction({ type: row.isSuspended ? 'unsuspend' : 'suspend', lawyer: row })}
-                            sx={{ color: row.isSuspended ? 'var(--color-primary)' : 'var(--color-accent)' }}
-                        >
-                            {row.isSuspended ? <LockOpenIcon fontSize="small" /> : <BlockIcon fontSize="small" />}
                         </IconButton>
                     </Tooltip>
                 </Stack>

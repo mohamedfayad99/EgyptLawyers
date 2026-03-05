@@ -1,6 +1,7 @@
 using System.Text;
 using EgyptLawyers.Api.ApiRoutes;
 using EgyptLawyers.Api.Auth;
+using EgyptLawyers.Api.Services;
 using EgyptLawyers.Api.Startup;
 using EgyptLawyers.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -51,6 +52,9 @@ builder.Services.AddOptions<JwtOptions>()
     .ValidateOnStart();
 
 builder.Services.AddSingleton<JwtTokenService>();
+
+// Register ExpoPushService with an HttpClient
+builder.Services.AddHttpClient<ExpoPushService>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

@@ -5,9 +5,10 @@ import React, {
   useEffect,
   ReactNode,
 } from 'react';
-import { getToken, setToken, clearToken } from './authToken';
+import { getToken, clearToken, setToken } from './authToken';
 import { LawyerProfile } from './types';
 import { getLawyerProfile } from './services';
+import { registerForPushNotifications } from './notifications';
 
 interface AuthContextType {
   isLoading: boolean;
@@ -36,6 +37,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const profileData = await getLawyerProfile();
         setProfile(profileData);
         setIsSignedIn(true);
+        // Re-register push token in case the token rotated or a new device
+        registerForPushNotifications();
       }
     } catch (e) {
       await clearToken();
@@ -48,6 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await setToken(token);
     setProfile(profileData);
     setIsSignedIn(true);
+    // Register push token immediately after a successful login
+    registerForPushNotifications();
   };
 
   const signOut = async () => {

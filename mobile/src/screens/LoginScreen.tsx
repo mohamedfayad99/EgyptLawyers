@@ -8,6 +8,14 @@ import { setToken } from '../lib/authToken';
 
 type Props = NativeStackScreenProps<any, 'Login'>;
 
+/** Ensures Egyptian numbers are sent as +2XXXXXXXXXX to the API. */
+function normalizeEgyptianPhone(raw: string): string {
+  const trimmed = raw.trim().replace(/\s+/g, '');
+  if (trimmed.startsWith('+2')) return trimmed;
+  if (trimmed.startsWith('2') && trimmed.length >= 11) return '+' + trimmed;
+  return '+2' + trimmed;
+}
+
 export function LoginScreen({ navigation }: Props) {
   const { signIn } = useAuth();
   const [whatsapp, setWhatsapp] = useState('');
@@ -25,7 +33,8 @@ export function LoginScreen({ navigation }: Props) {
     setError('');
 
     try {
-      const response = await loginLawyer(whatsapp, password);
+      const normalizedWhatsapp = normalizeEgyptianPhone(whatsapp);
+      const response = await loginLawyer(normalizedWhatsapp, password);
       // Store the token FIRST so the profile request is authenticated
       await setToken(response.token);
       const profile = await getLawyerProfile();
@@ -64,7 +73,7 @@ export function LoginScreen({ navigation }: Props) {
       {error && <ErrorMessage message={error} onRetry={() => setError('')} />}
 
       <TextInput
-        placeholder='WhatsApp Number'
+        placeholder='WhatsApp Number (e.g. 01012345678)'
         value={whatsapp}
         onChangeText={setWhatsapp}
         editable={!loading}

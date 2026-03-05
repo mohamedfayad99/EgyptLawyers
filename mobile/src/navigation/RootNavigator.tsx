@@ -6,6 +6,9 @@ import { Text } from 'react-native';
 import { useAuth } from '../lib/AuthContext';
 import { Loading } from '../components/common';
 
+// Import the shared navigation ref created in App.tsx
+import { navigationRef } from '../../App';
+
 // Auth Screens
 import { LoginScreen } from '../screens/LoginScreen';
 import { RegisterScreen } from '../screens/RegisterScreen';
@@ -21,11 +24,7 @@ const Tab = createBottomTabNavigator();
 
 function AuthStack() {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name='Login' component={LoginScreen} />
       <Stack.Screen name='Register' component={RegisterScreen} />
     </Stack.Navigator>
@@ -37,33 +36,13 @@ function HomeStack() {
     <Stack.Navigator
       screenOptions={{
         headerShown: true,
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
+        headerTitleStyle: { fontWeight: 'bold' },
         headerBackTitle: 'Back',
       }}
     >
-      <Stack.Screen
-        name='Home'
-        component={HomeScreen}
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name='PostDetails'
-        component={PostDetailsScreen}
-        options={{
-          title: 'Post Details',
-        }}
-      />
-      <Stack.Screen
-        name='CreatePost'
-        component={CreatePostScreen}
-        options={{
-          title: 'Create Post',
-        }}
-      />
+      <Stack.Screen name='Home' component={HomeScreen} options={{ headerShown: false }} />
+      <Stack.Screen name='PostDetails' component={PostDetailsScreen} options={{ title: 'Post Details' }} />
+      <Stack.Screen name='CreatePost' component={CreatePostScreen} options={{ title: 'Create Post' }} />
     </Stack.Navigator>
   );
 }
@@ -73,18 +52,10 @@ function ProfileStack() {
     <Stack.Navigator
       screenOptions={{
         headerShown: true,
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
+        headerTitleStyle: { fontWeight: 'bold' },
       }}
     >
-      <Stack.Screen
-        name='Profile'
-        component={ProfileScreen}
-        options={{
-          title: 'My Profile',
-        }}
-      />
+      <Stack.Screen name='Profile' component={ProfileScreen} options={{ title: 'My Profile' }} />
     </Stack.Navigator>
   );
 }
@@ -96,19 +67,12 @@ function AppTabs() {
         headerShown: false,
         tabBarActiveTintColor: '#0066cc',
         tabBarInactiveTintColor: '#999',
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '500',
-        },
-        tabBarStyle: {
-          borderTopWidth: 1,
-          borderTopColor: '#eee',
-          paddingBottom: 4,
-        },
+        tabBarLabelStyle: { fontSize: 12, fontWeight: '500' },
+        tabBarStyle: { borderTopWidth: 1, borderTopColor: '#eee', paddingBottom: 4 },
       }}
     >
       <Tab.Screen
-        name='Home'
+        name='HomeTab'
         component={HomeStack}
         options={{
           tabBarLabel: 'Feed',
@@ -118,7 +82,7 @@ function AppTabs() {
         }}
       />
       <Tab.Screen
-        name='Profile'
+        name='ProfileTab'
         component={ProfileStack}
         options={{
           tabBarLabel: 'Profile',
@@ -139,7 +103,8 @@ export function RootNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    // The shared ref lets App.tsx drive navigation from the notification listener
+    <NavigationContainer ref={navigationRef}>
       {isSignedIn ? <AppTabs /> : <AuthStack />}
     </NavigationContainer>
   );

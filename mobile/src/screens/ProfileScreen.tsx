@@ -32,17 +32,24 @@ export function ProfileScreen({ navigation }: Props) {
     return <Loading message='Loading profile...' />;
   }
 
-  const statusColors: Record<string, string> = {
-    Pending: '#ff9800',
-    Approved: '#4caf50',
-    Rejected: '#f44336',
-    pending: '#ff9800',
-    approved: '#4caf50',
-    rejected: '#f44336',
+  const statusColors: Record<string | number, string> = {
+    0: '#ff9800', Pending: '#ff9800', pending: '#ff9800',
+    1: '#4caf50', Approved: '#4caf50', approved: '#4caf50',
+    2: '#f44336', Rejected: '#f44336', rejected: '#f44336',
   };
 
-  const statusColor =
-    statusColors[profile.verificationStatus as string] || '#999';
+  const statusColor = statusColors[profile.verificationStatus as string | number] || '#999';
+
+  // Normalize to a readable label regardless of whether the backend returns number or string
+  const statusLabel = (() => {
+    const s = profile.verificationStatus;
+    if (s === 1 || s === 'Approved' || s === 'approved') return 'Approved';
+    if (s === 2 || s === 'Rejected' || s === 'rejected') return 'Rejected';
+    return 'Pending';
+  })();
+
+  const isApproved = statusLabel === 'Approved';
+  const isRejected = statusLabel === 'Rejected';
 
   return (
     <ScrollView
@@ -60,7 +67,7 @@ export function ProfileScreen({ navigation }: Props) {
 
         <View style={styles.statusContainer}>
           <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-            <Text style={styles.statusText}>{profile.verificationStatus}</Text>
+            <Text style={styles.statusText}>{statusLabel}</Text>
           </View>
         </View>
       </View>
@@ -130,15 +137,30 @@ export function ProfileScreen({ navigation }: Props) {
         </View>
       </View>
 
-      <View style={styles.infoBox}>
-        <Text style={styles.infoTitle}>Account Information</Text>
-        <Text style={styles.infoText}>
-          {profile.verificationStatus === 'Approved' ||
-          profile.verificationStatus === 'approved'
-            ? 'Your account is verified and you can create help posts and replies.'
-            : 'Your account is pending verification. Please wait for admin approval.'}
-        </Text>
-      </View>
+      {/* Status info box – only shown for non-approved accounts */}
+      {!isApproved && (
+        <View style={[
+          styles.infoBox,
+          isRejected
+            ? { backgroundColor: '#fce4ec', borderLeftColor: '#f44336' }
+            : { backgroundColor: '#fff8e1', borderLeftColor: '#ff9800' },
+        ]}>
+          <Text style={[
+            styles.infoTitle,
+            { color: isRejected ? '#c62828' : '#e65100' },
+          ]}>
+            {isRejected ? '❌ Account Rejected' : '⏳ Pending Verification'}
+          </Text>
+          <Text style={[
+            styles.infoText,
+            { color: isRejected ? '#b71c1c' : '#bf360c' },
+          ]}>
+            {isRejected
+              ? 'Your registration was rejected by the admin. Please contact support for more information.'
+              : 'Your account is pending admin approval. You will be able to use all features once approved.'}
+          </Text>
+        </View>
+      )}
 
       <Button
         title={loggingOut ? 'Logging out...' : 'Logout'}

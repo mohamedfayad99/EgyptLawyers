@@ -64,7 +64,11 @@ export function PostDetailsScreen({ route, navigation }: Props) {
   };
 
   const openWhatsApp = (whatsappNumber: string, lawyerName?: string) => {
-    const phone = whatsappNumber.replace(/\D/g, '');
+    // Keep only digits and leading + so country code is preserved.
+    // Numbers are stored as +2XXXXXXXXXX – wa.me needs digits only (no +).
+    const digits = whatsappNumber.replace(/[^0-9]/g, '');
+    // If the stored number somehow lacks the country code, prepend 2 (Egypt)
+    const phone = digits.startsWith('2') ? digits : '2' + digits;
     const message = encodeURIComponent(
       `Hello ${lawyerName || ''}, I saw your reply on EgyptLawyers network and would like to discuss further.`
     );
@@ -79,6 +83,7 @@ export function PostDetailsScreen({ route, navigation }: Props) {
       })
       .catch(() => Alert.alert('Error', 'Could not open WhatsApp.'));
   };
+
 
   const viewLawyerProfile = async (lawyerId: string, lawyerName?: string) => {
     try {

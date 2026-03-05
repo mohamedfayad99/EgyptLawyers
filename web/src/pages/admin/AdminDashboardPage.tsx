@@ -51,11 +51,18 @@ export default function AdminDashboardPage() {
     load();
   }, []);
 
+  const statusLabel = (status: string | number): string => {
+    if (status === 0 || String(status).toLowerCase() === 'pending')  return 'Pending';
+    if (status === 1 || String(status).toLowerCase() === 'approved') return 'Approved';
+    if (status === 2 || String(status).toLowerCase() === 'rejected') return 'Rejected';
+    return String(status);
+  };
+
   const statusColor = (status: string | number) => {
-    const s = String(status).toLowerCase();
-    if (s === 'approved') return 'success';
-    if (s === 'rejected') return 'error';
-    return 'warning';
+    const label = statusLabel(status).toLowerCase();
+    if (label === 'approved') return 'success';
+    if (label === 'rejected') return 'error';
+    return 'warning'; // Pending
   };
 
   return (
@@ -142,7 +149,7 @@ export default function AdminDashboardPage() {
                     <TableCell sx={{ color: 'rgba(var(--color-text-rgb),0.8)', fontSize: '0.875rem' }}>{l.syndicateCardNumber}</TableCell>
                     <TableCell>
                       <Chip
-                        label={String(l.verificationStatus)}
+                        label={statusLabel(l.verificationStatus)}
                         size="small"
                         color={statusColor(l.verificationStatus)}
                         variant="outlined"

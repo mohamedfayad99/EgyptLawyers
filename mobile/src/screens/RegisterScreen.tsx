@@ -17,6 +17,14 @@ import { City } from '../lib/types';
 
 type Props = NativeStackScreenProps<any, 'Register'>;
 
+/** Ensures Egyptian numbers are sent as +2XXXXXXXXXX to the API. */
+function normalizeEgyptianPhone(raw: string): string {
+  const trimmed = raw.trim().replace(/\s+/g, '');
+  if (trimmed.startsWith('+2')) return trimmed;
+  if (trimmed.startsWith('2') && trimmed.length >= 11) return '+' + trimmed;
+  return '+2' + trimmed;
+}
+
 export function RegisterScreen({ navigation }: Props) {
   const [fullName, setFullName] = useState('');
   const [professionalTitle, setProfessionalTitle] = useState('');
@@ -90,7 +98,7 @@ export function RegisterScreen({ navigation }: Props) {
         fullName: fullName.trim(),
         professionalTitle: professionalTitle.trim() || undefined,
         syndicateCardNumber: syndicateCard.trim(),
-        whatsappNumber: whatsapp.trim(),
+        whatsappNumber: normalizeEgyptianPhone(whatsapp),
         password,
         activeCityIds: selectedCities,
       });
@@ -153,7 +161,7 @@ export function RegisterScreen({ navigation }: Props) {
 
       <Text style={styles.fieldLabel}>WhatsApp Number *</Text>
       <TextInput
-        placeholder='e.g. 01012345678'
+        placeholder='e.g. 01012345678  (or +201012345678)'
         value={whatsapp}
         onChangeText={setWhatsapp}
         editable={!loading}
