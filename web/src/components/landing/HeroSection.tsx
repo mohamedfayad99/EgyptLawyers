@@ -72,13 +72,14 @@ export default function HeroSection() {
                                 <Chip
                                     icon={<VerifiedIcon sx={{ fontSize: '14px !important', color: '#22C55E !important' }} />}
                                     label={t("Egypt's #1 Legal Network", 'شبكة قانونية رقم 1 في مصر')}
-                                    size="small"
+                                    size="medium"
                                     sx={{
                                         bgcolor: 'rgba(34,197,94,0.1)',
                                         border: '1px solid rgba(34,197,94,0.3)',
                                         color: '#22C55E',
-                                        fontWeight: 600,
-                                        fontSize: '0.78rem',
+                                        fontWeight: 700,
+                                        fontSize: '0.82rem',
+                                        paddingRight: '15px !important',
                                     }}
                                 />
                             </Box>
