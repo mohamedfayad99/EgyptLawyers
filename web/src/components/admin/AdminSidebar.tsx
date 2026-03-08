@@ -13,23 +13,17 @@ import {
 } from "@mui/material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PeopleIcon from "@mui/icons-material/People";
+import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import LocationCityIcon from "@mui/icons-material/LocationCity";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import GavelIcon from "@mui/icons-material/Gavel";
+import ArticleIcon from "@mui/icons-material/Article";
 import BalanceIcon from "@mui/icons-material/Balance";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useLang } from "../../contexts/LanguageContext";
 
 const DRAWER_WIDTH = 260;
 const DRAWER_COLLAPSED = 72;
-
-const navItems = [
-  { label: "Dashboard", icon: DashboardIcon, path: "/admin" },
-  { label: "Lawyers", icon: PeopleIcon, path: "/admin/lawyers" },
-  { label: "Cities", icon: LocationCityIcon, path: "/admin/cities" },
-  { label: "Courts", icon: AccountBalanceIcon, path: "/admin/courts" },
-  { label: "Moderation", icon: GavelIcon, path: "/admin/moderation" },
-];
 
 interface AdminSidebarProps {
   open: boolean;
@@ -48,6 +42,16 @@ export default function AdminSidebar({
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const location = useLocation();
   const navigate = useNavigate();
+  const { t, lang } = useLang();
+
+  const navItems = [
+    { labelKey: "dashboard" as const, icon: DashboardIcon, path: "/admin" },
+    { labelKey: "lawyers" as const, icon: PeopleIcon, path: "/admin/lawyers" },
+    { labelKey: "pendingApprovals" as const, icon: HourglassTopIcon, path: "/admin/pending-approvals" },
+    { labelKey: "cities" as const, icon: LocationCityIcon, path: "/admin/cities" },
+    { labelKey: "courts" as const, icon: AccountBalanceIcon, path: "/admin/courts" },
+    { labelKey: "posts" as const, icon: ArticleIcon, path: "/admin/posts" },
+  ];
 
   const isActive = (path: string) => {
     if (path === "/admin") return location.pathname === "/admin";
@@ -103,7 +107,7 @@ export default function AdminSidebar({
               whiteSpace: "nowrap",
             }}
           >
-            Admin Panel
+            {t("adminPanel")}
           </Typography>
         )}
       </Stack>
@@ -149,13 +153,14 @@ export default function AdminSidebar({
               </ListItemIcon>
               {(!collapsed || isMobile) && (
                 <ListItemText
-                  primary={item.label}
+                  primary={t(item.labelKey)}
                   primaryTypographyProps={{
                     fontWeight: active ? 600 : 400,
                     fontSize: "0.875rem",
                     color: active
                       ? "var(--color-background)"
                       : "rgba(255,255,255,0.7)",
+                    textAlign: lang === "ar" ? "right" : "left",
                   }}
                 />
               )}

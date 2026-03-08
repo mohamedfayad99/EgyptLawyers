@@ -24,9 +24,9 @@ interface AdminTableProps<T> {
     searchPlaceholder?: string;
     emptyMessage?: string;
     getRowKey: (row: T) => string | number;
-    /** Extra toolbar content (e.g. filters, add buttons) */
     toolbar?: React.ReactNode;
     rowsPerPageOptions?: number[];
+    onRowClick?: (row: T) => void;
 }
 
 export default function AdminTable<T extends Record<string, unknown>>({
@@ -40,6 +40,7 @@ export default function AdminTable<T extends Record<string, unknown>>({
     getRowKey,
     toolbar,
     rowsPerPageOptions = [10, 25, 50],
+    onRowClick,
 }: AdminTableProps<T>) {
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(0);
@@ -159,7 +160,12 @@ export default function AdminTable<T extends Record<string, unknown>>({
                                 </TableRow>
                             ) : (
                                 paged.map((row) => (
-                                    <TableRow key={getRowKey(row)} hover>
+                                    <TableRow
+                                        key={getRowKey(row)}
+                                        hover
+                                        onClick={onRowClick ? () => onRowClick(row) : undefined}
+                                        sx={{ cursor: onRowClick ? 'pointer' : 'default' }}
+                                    >
                                         {columns.map((col, j) => (
                                             <TableCell
                                                 key={j}

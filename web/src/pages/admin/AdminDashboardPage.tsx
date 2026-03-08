@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   Alert, Box, Grid, Paper, Stack, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Typography, Chip,
@@ -9,6 +9,7 @@ import LocationCityIcon from '@mui/icons-material/LocationCity';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import { api } from '../../api/client';
 import StatCard from '../../components/admin/StatCard';
+import { useLang } from '../../contexts/LanguageContext';
 
 type Lawyer = {
   id: string;
@@ -25,34 +26,32 @@ type City = { id: number; name: string };
 
 export default function AdminDashboardPage() {
   const [lawyers, setLawyers] = useState<Lawyer[]>([]);
-  const [pendingLawyers, setPendingLawyers] = useState<Lawyer[]>([]);
   const [cities, setCities] = useState<City[]>([]);
+  const [courts, setCourts] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const [courts, setCourts] = useState<any[]>([]);
+  const { t } = useLang();
 
   useEffect(() => {
     async function load() {
       try {
-        const [allRes, pendingRes, citiesRes, courtsRes] = await Promise.all([
+        const [allRes, citiesRes, courtsRes] = await Promise.all([
           api.get('/api/admin/lawyers'),
-          api.get('/api/admin/lawyers', { params: { status: 'pending' } }),
           api.get('/api/cities'),
           api.get('/api/courts'),
         ]);
-        setLawyers(allRes.data);
-        setPendingLawyers(pendingRes.data);
+        setLawyers((allRes.data as Lawyer[]).filter(l => l.id !== 'string'));
         setCities(citiesRes.data);
         setCourts(courtsRes.data);
       } catch (e: any) {
-        setError(e?.response?.data?.message ?? 'Failed to load dashboard data');
+        setError(e?.response?.data?.message ?? t('failedToLoadDashboard'));
       }
     }
     load();
   }, []);
 
   const statusLabel = (status: string | number): string => {
-    if (status === 0 || String(status).toLowerCase() === 'pending')  return 'Pending';
+    if (status === 0 || String(status).toLowerCase() === 'pending') return 'Pending';
     if (status === 1 || String(status).toLowerCase() === 'approved') return 'Approved';
     if (status === 2 || String(status).toLowerCase() === 'rejected') return 'Rejected';
     return String(status);
@@ -65,6 +64,16 @@ export default function AdminDashboardPage() {
     return 'warning'; // Pending
   };
 
+  const approvedLawyers = useMemo(() => lawyers.filter(l => statusLabel(l.verificationStatus) === 'Approved'), [lawyers]);
+  const pendingLawyers = useMemo(() => lawyers.filter(l => statusLabel(l.verificationStatus) === 'Pending'), [lawyers]);
+
+  const latestPendingRegistrations = useMemo(() => {
+    return pendingLawyers
+      .slice()
+      .sort((a, b) => new Date(b.createdAtUtc).getTime() - new Date(a.createdAtUtc).getTime())
+      .slice(0, 5);
+  }, [pendingLawyers]);
+
   return (
     <Stack spacing={3}>
       {error && <Alert severity="error">{error}</Alert>}
@@ -73,15 +82,15 @@ export default function AdminDashboardPage() {
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <StatCard
-            title="Total Lawyers"
-            value={lawyers.length}
+            title={t('totalLawyers')}
+            value={approvedLawyers.length}
             icon={PeopleIcon}
             color="var(--color-primary)"
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <StatCard
-            title="Pending Approvals"
+            title={t('pendingApprovalsCard')}
             value={pendingLawyers.length}
             icon={HourglassTopIcon}
             color="var(--color-accent)"
@@ -89,7 +98,7 @@ export default function AdminDashboardPage() {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <StatCard
-            title="Cities"
+            title={t('citiesCard')}
             value={cities.length}
             icon={LocationCityIcon}
             color="var(--color-primary)"
@@ -97,7 +106,7 @@ export default function AdminDashboardPage() {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <StatCard
-            title="Courts"
+            title={t('courtsCard')}
             value={courts.length}
             icon={AccountBalanceIcon}
             color="var(--color-primary)"
@@ -110,34 +119,42 @@ export default function AdminDashboardPage() {
         elevation={0}
         sx={{ borderRadius: 3, border: '1px solid rgba(var(--color-text-rgb),0.06)', overflow: 'hidden', bgcolor: 'var(--color-background)' }}
       >
-        <Box sx={{ px: 3, py: 2.5, borderBottom: '1px solid var(--color-surface)' }}>
-          <Typography variant="h6" sx={{ fontWeight: 700, color: 'var(--color-text)' }}>
-            Recent Registrations
-          </Typography>
-          <Typography sx={{ color: 'rgba(var(--color-text-rgb),0.7)', fontSize: '0.85rem', mt: 0.5 }}>
-            Latest lawyer registration activity
-          </Typography>
-        </Box>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={2}
+          alignItems={{ sm: 'center' }}
+          justifyContent="space-between"
+          sx={{ px: 3, py: 2.5, borderBottom: '1px solid var(--color-surface)' }}
+        >
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: 'var(--color-text)' }}>
+              {t('recentRegistrations')}
+            </Typography>
+            <Typography sx={{ color: 'rgba(var(--color-text-rgb),0.7)', fontSize: '0.85rem', mt: 0.5 }}>
+              {t('latestActivity')}
+            </Typography>
+          </Box>
+        </Stack>
         <TableContainer>
           <Table>
             <TableHead>
               <TableRow sx={{ bgcolor: 'var(--color-surface)' }}>
-                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>Name</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>WhatsApp</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>Syndicate #</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>Status</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>Date</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>{t('name')}</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>{t('whatsapp')}</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>{t('syndicateNo')}</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>{t('status')}</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>{t('date')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {lawyers.length === 0 ? (
+              {latestPendingRegistrations.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} sx={{ textAlign: 'center', color: 'rgba(var(--color-text-rgb),0.5)', py: 4 }}>
-                    No lawyers found. Data will appear when the backend is running.
+                    {t('noNewRegistrations')}
                   </TableCell>
                 </TableRow>
               ) : (
-                lawyers.slice(0, 10).map((l) => (
+                latestPendingRegistrations.map((l) => (
                   <TableRow key={l.id} hover>
                     <TableCell>
                       <Typography sx={{ fontWeight: 600, fontSize: '0.875rem' }}>{l.fullName}</Typography>
@@ -149,7 +166,7 @@ export default function AdminDashboardPage() {
                     <TableCell sx={{ color: 'rgba(var(--color-text-rgb),0.8)', fontSize: '0.875rem' }}>{l.syndicateCardNumber}</TableCell>
                     <TableCell>
                       <Chip
-                        label={statusLabel(l.verificationStatus)}
+                        label={t(statusLabel(l.verificationStatus).toLowerCase() as any) ?? statusLabel(l.verificationStatus)}
                         size="small"
                         color={statusColor(l.verificationStatus)}
                         variant="outlined"
