@@ -5,7 +5,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useLang } from '../../contexts/LanguageContext';
 
 // QR code pointing to the play store link — update once the app is live
-const QR_CODE_URL = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&bgcolor=1a2332&color=4F8EF7&data=https://play.google.com/store&format=svg`;
+const QR_CODE_URL = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&bgcolor=1E3A5F&color=FFFFFF&data=https://play.google.com/store&format=svg`;
 
 const APP_STORE_URL = '#';
 const PLAY_STORE_URL = '#';
@@ -133,7 +133,7 @@ export default function DownloadCTA() {
                                         px: 3.5, py: 1.5, fontSize: '1rem', borderRadius: 2,
                                         '& .MuiButton-startIcon': { ml: 0.5 },
                                         '&:hover': {
-                                            bgcolor: '#e68336',
+                                            bgcolor: '#1d4ed8',
                                             transform: 'translateY(-2px)',
                                             boxShadow: '0 8px 24px rgba(var(--color-accent-rgb),0.45)',
                                         },
@@ -153,9 +153,8 @@ export default function DownloadCTA() {
                                 sx={{
                                     p: 2.5,
                                     borderRadius: 4,
-                                    bgcolor: 'rgba(255,255,255,0.05)',
-                                    border: '1px solid rgba(255,255,255,0.1)',
-                                    backdropFilter: 'blur(8px)',
+                                    bgcolor: 'rgba(255,255,255,0.08)',
+                                    border: '1px solid rgba(255,255,255,0.15)',
                                     boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
                                 }}
                             >
