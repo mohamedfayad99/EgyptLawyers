@@ -3,6 +3,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useNavigate } from 'react-router-dom';
 import { clearAdminToken } from '../../admin/auth';
+import { useLang } from '../../contexts/LanguageContext';
 
 interface AdminTopBarProps {
     title?: string;
@@ -13,6 +14,7 @@ export default function AdminTopBar({ title = 'Dashboard', onMenuClick }: AdminT
     const navigate = useNavigate();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const { lang, toggleLang, t } = useLang();
 
     function logout() {
         clearAdminToken();
@@ -30,7 +32,7 @@ export default function AdminTopBar({ title = 'Dashboard', onMenuClick }: AdminT
         >
             <Toolbar sx={{ height: 64 }}>
                 {isMobile && (
-                    <IconButton onClick={onMenuClick} sx={{ mr: 1, color: 'var(--color-primary-dark)' }}>
+                    <IconButton onClick={onMenuClick} sx={{ mr: lang === 'ar' ? 0 : 1, ml: lang === 'ar' ? 1 : 0, color: 'var(--color-primary-dark)' }}>
                         <MenuIcon />
                     </IconButton>
                 )}
@@ -40,9 +42,32 @@ export default function AdminTopBar({ title = 'Dashboard', onMenuClick }: AdminT
                 </Typography>
 
                 <Stack direction="row" alignItems="center" spacing={1}>
+                    {/* Language Toggle */}
+                    <Button
+                        onClick={toggleLang}
+                        size="small"
+                        variant="outlined"
+                        sx={{
+                            minWidth: 48,
+                            fontWeight: 700,
+                            fontSize: '0.75rem',
+                            borderRadius: 2,
+                            borderColor: 'var(--color-primary)',
+                            color: 'var(--color-primary)',
+                            textTransform: 'none',
+                            px: 1.5,
+                            '&:hover': {
+                                bgcolor: 'rgba(var(--color-primary-rgb),0.08)',
+                            },
+                        }}
+                    >
+                        {lang === 'en' ? 'عربي' : 'EN'}
+                    </Button>
+
                     <Button
                         onClick={logout}
-                        startIcon={<LogoutIcon />}
+                        startIcon={lang !== 'ar' ? <LogoutIcon /> : undefined}
+                        endIcon={lang === 'ar' ? <LogoutIcon /> : undefined}
                         sx={{
                             color: 'rgba(var(--color-text-rgb),0.7)',
                             textTransform: 'none',
@@ -53,7 +78,7 @@ export default function AdminTopBar({ title = 'Dashboard', onMenuClick }: AdminT
                             },
                         }}
                     >
-                        {!isMobile && 'Logout'}
+                        {!isMobile && t('logout')}
                     </Button>
                 </Stack>
             </Toolbar>

@@ -3,13 +3,15 @@ import { Box, useMediaQuery, useTheme } from '@mui/material';
 import { Outlet, useLocation } from 'react-router-dom';
 import AdminSidebar, { DRAWER_WIDTH, DRAWER_COLLAPSED } from '../../components/admin/AdminSidebar';
 import AdminTopBar from '../../components/admin/AdminTopBar';
+import { useLang } from '../../contexts/LanguageContext';
 
-const pageTitles: Record<string, string> = {
-  '/admin': 'Dashboard',
-  '/admin/lawyers': 'Lawyers',
-  '/admin/cities': 'Cities',
-  '/admin/courts': 'Courts',
-  '/admin/moderation': 'Moderation',
+const pageTitleKeys: Record<string, 'dashboard' | 'lawyers' | 'pendingApprovals' | 'cities' | 'courts' | 'posts'> = {
+  '/admin': 'dashboard',
+  '/admin/lawyers': 'lawyers',
+  '/admin/pending-approvals': 'pendingApprovals',
+  '/admin/cities': 'cities',
+  '/admin/courts': 'courts',
+  '/admin/posts': 'posts',
 };
 
 export default function AdminLayout() {
@@ -18,12 +20,21 @@ export default function AdminLayout() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
+  const { t, lang } = useLang();
 
   const sidebarWidth = isMobile ? 0 : collapsed ? DRAWER_COLLAPSED : DRAWER_WIDTH;
-  const pageTitle = pageTitles[location.pathname] ?? 'Admin';
+  const titleKey = pageTitleKeys[location.pathname];
+  const pageTitle = titleKey ? t(titleKey) : 'Admin';
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'var(--color-surface)' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        minHeight: '100vh',
+        bgcolor: 'var(--color-surface)',
+        direction: lang === 'ar' ? 'rtl' : 'ltr',
+      }}
+    >
       <AdminSidebar
         open={mobileOpen}
         collapsed={collapsed}
@@ -35,8 +46,9 @@ export default function AdminLayout() {
         component="main"
         sx={{
           flex: 1,
-          ml: `${sidebarWidth}px`,
-          transition: 'margin-left 0.3s',
+          ml: lang === 'ar' ? 0 : `${sidebarWidth}px`,
+          mr: lang === 'ar' ? `${sidebarWidth}px` : 0,
+          transition: 'margin 0.3s',
           display: 'flex',
           flexDirection: 'column',
           minHeight: '100vh',
