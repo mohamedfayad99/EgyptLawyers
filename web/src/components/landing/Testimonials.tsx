@@ -48,20 +48,21 @@ export default function Testimonials() {
     const { ref, visible } = useScrollAnimation();
 
     return (
+        // Light section (was dark navy) — uses --color-surface (#F3F4F6)
         <Box
             id="testimonials"
             sx={{
                 py: { xs: 10, md: 14 },
-                bgcolor: 'var(--color-primary-dark)',
+                bgcolor: 'var(--color-surface)',
                 position: 'relative',
                 overflow: 'hidden',
             }}
         >
-            {/* subtle bg pattern */}
+            {/* Subtle dot pattern — light on light bg, very low opacity */}
             <Box
                 sx={{
-                    position: 'absolute', inset: 0, opacity: 0.04,
-                    backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.8) 1px, transparent 0)`,
+                    position: 'absolute', inset: 0, opacity: 0.018,
+                    backgroundImage: `radial-gradient(circle at 1px 1px, rgba(var(--color-primary-dark-rgb),1) 1px, transparent 0)`,
                     backgroundSize: '40px 40px',
                 }}
             />
@@ -71,16 +72,16 @@ export default function Testimonials() {
                 <Stack alignItems="center" spacing={1.5} sx={{ mb: 8 }}>
                     <Typography
                         sx={{
-                            color: 'var(--color-accent)', fontWeight: 600, fontSize: '0.8rem',
+                            color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.8rem',
                             textTransform: 'uppercase', letterSpacing: 2,
                         }}
                     >
                         {t('Trusted by Lawyers', 'موثوق به من المحامين')}
                     </Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 800, color: 'var(--color-background)', textAlign: 'center' }}>
+                    <Typography variant="h4" sx={{ fontWeight: 800, color: 'var(--color-text)', textAlign: 'center' }}>
                         {t('What Lawyers Are Saying', 'ماذا يقول المحامون')}
                     </Typography>
-                    <Typography sx={{ color: 'rgba(255,255,255,0.65)', textAlign: 'center', maxWidth: 500, lineHeight: 1.7, fontSize: '0.95rem' }}>
+                    <Typography sx={{ color: 'var(--color-secondary-text)', textAlign: 'center', maxWidth: 500, lineHeight: 1.7, fontSize: '0.95rem' }}>
                         {t(
                             'Join thousands of verified lawyers who rely on the network every day.',
                             'انضم إلى آلاف المحامين الموثقين الذين يعتمدون على الشبكة كل يوم.',
@@ -96,9 +97,8 @@ export default function Testimonials() {
                                 sx={{
                                     p: 4,
                                     borderRadius: 4,
-                                    border: '1px solid rgba(255,255,255,0.08)',
-                                    bgcolor: 'rgba(255,255,255,0.04)',
-                                    backdropFilter: 'blur(8px)',
+                                    border: '1px solid var(--color-border)',
+                                    bgcolor: 'var(--color-background)',
                                     display: 'flex',
                                     flexDirection: 'column',
                                     gap: 2,
@@ -108,14 +108,14 @@ export default function Testimonials() {
                                     opacity: visible ? 1 : 0,
                                     transform: visible ? 'translateY(0)' : 'translateY(32px)',
                                     '&:hover': {
-                                        border: '1px solid rgba(var(--color-accent-rgb),0.3)',
+                                        borderColor: 'rgba(var(--color-primary-rgb),0.35)',
                                         transform: 'translateY(-6px)',
-                                        boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+                                        boxShadow: '0 20px 48px rgba(0,0,0,0.08)',
                                     },
                                 }}
                             >
                                 {/* Quote icon */}
-                                <FormatQuoteIcon sx={{ fontSize: 36, color: 'var(--color-accent)', opacity: 0.8 }} />
+                                <FormatQuoteIcon sx={{ fontSize: 36, color: 'var(--color-primary)', opacity: 0.7 }} />
 
                                 {/* Stars */}
                                 <Stack direction="row" spacing={0.25}>
@@ -127,9 +127,9 @@ export default function Testimonials() {
                                 {/* Quote text */}
                                 <Typography
                                     sx={{
-                                        color: 'rgba(255,255,255,0.82)',
+                                        color: 'rgba(var(--color-text-rgb),0.75)',
                                         fontSize: '0.925rem',
-                                        lineHeight: 1.8,
+                                        lineHeight: 1.85,
                                         fontStyle: 'italic',
                                         flex: 1,
                                     }}
@@ -141,13 +141,13 @@ export default function Testimonials() {
                                 <Box
                                     sx={{
                                         pt: 2,
-                                        borderTop: '1px solid rgba(255,255,255,0.08)',
+                                        borderTop: '1px solid var(--color-border)',
                                     }}
                                 >
-                                    <Typography sx={{ color: 'var(--color-background)', fontWeight: 700, fontSize: '0.9rem' }}>
+                                    <Typography sx={{ color: 'var(--color-text)', fontWeight: 700, fontSize: '0.9rem' }}>
                                         {t(item.en.name, item.ar.name)}
                                     </Typography>
-                                    <Typography sx={{ color: 'var(--color-accent)', fontSize: '0.78rem', mt: 0.25 }}>
+                                    <Typography sx={{ color: 'var(--color-primary)', fontSize: '0.78rem', mt: 0.25 }}>
                                         {t(item.en.title, item.ar.title)}
                                     </Typography>
                                 </Box>

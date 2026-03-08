@@ -1,21 +1,26 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Cairo:wght@400;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Cairo:wght@400;600;700;800&display=swap");
 
 :root {
-  --color-background: #FFFFFF;
-  --color-surface: #EAEFEF;
-  --color-primary: #4F8EF7;
-  --color-accent: #FF9B51;
-  --color-text: #1E293B;
-  --color-primary-dark: #25343F;
+  --color-background: #ffffff;
+  --color-surface: #f3f4f6;
+  --color-primary: #2563eb;
+  --color-accent: #2563eb;
+  --color-text: #111827;
+  --color-primary-dark: #1e3a5f;
+  --color-secondary-text: #6b7280;
+  --color-border: #e5e7eb;
 
-  --color-primary-rgb: 79, 142, 247;
-  --color-accent-rgb: 255, 155, 81;
-  --color-text-rgb: 30, 41, 59;
-  --color-surface-rgb: 234, 239, 239;
-  --color-primary-dark-rgb: 37, 52, 63;
+  --color-primary-rgb: 37, 99, 235;
+  --color-accent-rgb: 37, 99, 235;
+  --color-text-rgb: 17, 24, 39;
+  --color-surface-rgb: 243, 244, 246;
+  --color-primary-dark-rgb: 30, 58, 95;
+  --color-border-rgb: 229, 231, 235;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -27,7 +32,13 @@ html {
 
 body {
   margin: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-width: 320px;
@@ -37,7 +48,7 @@ body {
 
 [dir="rtl"] body,
 [dir="rtl"] {
-  font-family: 'Cairo', 'Inter', sans-serif;
+  font-family: "Cairo", "Inter", sans-serif;
 }
 
 #root {
@@ -61,5 +72,3 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(var(--color-primary-rgb), 0.6);
 }
-
-

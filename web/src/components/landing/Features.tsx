@@ -11,7 +11,7 @@ import { useScrollAnimation } from '../../hooks/useScrollAnimation';
 const features = [
     {
         icon: VerifiedUserIcon,
-        color: '#22C55E',
+        color: '#22C55E',                          // ← green preserved
         en: { title: 'Verified Members Only', desc: 'Every lawyer is verified through their Egyptian Bar Association Syndicate Card before joining. No unverified accounts.' },
         ar: { title: 'أعضاء موثقون فقط', desc: 'يتم التحقق من كل محامٍ من خلال بطاقة نقابة المحامين المصريين قبل الانضمام. لا حسابات غير موثقة.' },
     },
@@ -29,19 +29,19 @@ const features = [
     },
     {
         icon: WhatsAppIcon,
-        color: '#25D366',
+        color: '#25D366',                          // ← WhatsApp green preserved
         en: { title: 'WhatsApp Direct Connect', desc: 'Review responder profiles and contact the right lawyer instantly through WhatsApp — no middlemen.' },
         ar: { title: 'تواصل مباشر عبر واتساب', desc: 'راجع ملفات المستجيبين واتصل بالمحامي المناسب فوراً عبر واتساب — بدون وسطاء.' },
     },
     {
         icon: UploadFileIcon,
-        color: '#A78BFA',
+        color: '#A78BFA',                          // ← purple preserved
         en: { title: 'Secure Document Sharing', desc: 'Share legal documents, court papers, and case files securely within the verified network.' },
         ar: { title: 'مشاركة المستندات بأمان', desc: 'شارك المستندات القانونية وأوراق المحكمة وملفات القضايا بأمان داخل الشبكة الموثقة.' },
     },
     {
         icon: LockIcon,
-        color: '#F59E0B',
+        color: '#F59E0B',                          // ← amber preserved
         en: { title: 'Privacy Protected', desc: 'Your contact details are never publicly exposed. Only lawyers who respond to your request can see your information.' },
         ar: { title: 'خصوصية محمية', desc: 'بيانات اتصالك لا تكون مرئية للعامة أبداً. فقط المحامون الذين يستجيبون لطلبك يمكنهم رؤية معلوماتك.' },
     },
@@ -52,22 +52,23 @@ export default function Features() {
     const { ref, visible } = useScrollAnimation();
 
     return (
-        <Box id="features" sx={{ py: { xs: 10, md: 14 }, bgcolor: 'var(--color-primary-dark)' }}>
+        // Light section (was dark navy) — now uses --color-surface (#F3F4F6)
+        <Box id="features" sx={{ py: { xs: 10, md: 14 }, bgcolor: 'var(--color-surface)' }}>
             <Container maxWidth="lg">
                 {/* Header */}
                 <Stack alignItems="center" spacing={1.5} sx={{ mb: 8 }}>
                     <Typography
                         sx={{
-                            color: 'var(--color-accent)', fontWeight: 600, fontSize: '0.8rem',
+                            color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.8rem',
                             textTransform: 'uppercase', letterSpacing: 2,
                         }}
                     >
                         {t('Key Features', 'المميزات الرئيسية')}
                     </Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 800, color: 'var(--color-background)', textAlign: 'center' }}>
+                    <Typography variant="h4" sx={{ fontWeight: 800, color: 'var(--color-text)', textAlign: 'center' }}>
                         {t('Everything You Need to Collaborate', 'كل ما تحتاجه للتعاون')}
                     </Typography>
-                    <Typography sx={{ color: 'rgba(255,255,255,0.6)', textAlign: 'center', maxWidth: 520, lineHeight: 1.7, fontSize: '0.95rem' }}>
+                    <Typography sx={{ color: 'var(--color-secondary-text)', textAlign: 'center', maxWidth: 520, lineHeight: 1.7, fontSize: '0.95rem' }}>
                         {t(
                             'Built specifically for Egyptian legal professionals — every feature is designed around how lawyers actually work.',
                             'مبني خصيصاً للمهنيين القانونيين المصريين — كل ميزة مصممة حول الطريقة التي يعمل بها المحامون فعلياً.',
@@ -83,9 +84,8 @@ export default function Features() {
                                 sx={{
                                     p: 3.5,
                                     borderRadius: 3,
-                                    border: '1px solid rgba(255,255,255,0.06)',
-                                    bgcolor: 'rgba(255,255,255,0.03)',
-                                    backdropFilter: 'blur(4px)',
+                                    border: '1px solid var(--color-border)',
+                                    bgcolor: 'var(--color-background)',
                                     display: 'flex',
                                     flexDirection: 'column',
                                     height: '100%',
@@ -95,10 +95,9 @@ export default function Features() {
                                     opacity: visible ? 1 : 0,
                                     transform: visible ? 'translateY(0)' : 'translateY(28px)',
                                     '&:hover': {
-                                        borderColor: `${f.color}40`,
+                                        borderColor: `${f.color}60`,
                                         transform: 'translateY(-6px)',
-                                        boxShadow: `0 20px 48px rgba(0,0,0,0.4), 0 0 0 1px ${f.color}20`,
-                                        bgcolor: 'rgba(255,255,255,0.05)',
+                                        boxShadow: `0 16px 40px rgba(0,0,0,0.08), 0 0 0 1px ${f.color}20`,
                                     },
                                 }}
                             >
@@ -108,15 +107,15 @@ export default function Features() {
                                         bgcolor: `${f.color}15`,
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         mb: 2.5,
-                                        border: `1px solid ${f.color}25`,
+                                        border: `1px solid ${f.color}30`,
                                     }}
                                 >
                                     <f.icon sx={{ color: f.color, fontSize: 26 }} />
                                 </Box>
-                                <Typography sx={{ fontWeight: 700, color: 'var(--color-background)', mb: 1, fontSize: '1.05rem' }}>
+                                <Typography sx={{ fontWeight: 700, color: 'var(--color-text)', mb: 1, fontSize: '1.05rem' }}>
                                     {t(f.en.title, f.ar.title)}
                                 </Typography>
-                                <Typography sx={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem', lineHeight: 1.75 }}>
+                                <Typography sx={{ color: 'var(--color-secondary-text)', fontSize: '0.875rem', lineHeight: 1.75 }}>
                                     {t(f.en.desc, f.ar.desc)}
                                 </Typography>
                             </Box>

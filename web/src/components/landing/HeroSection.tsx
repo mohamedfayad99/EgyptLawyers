@@ -171,7 +171,7 @@ export default function HeroSection() {
                                         px: 3, py: 1.4, fontSize: '0.95rem', borderRadius: 2,
                                         '& .MuiButton-startIcon': { ml: 0.5 },
                                         '&:hover': {
-                                            bgcolor: '#e68336',
+                                            bgcolor: '#1d4ed8',
                                             transform: 'translateY(-2px)',
                                             boxShadow: '0 8px 24px rgba(var(--color-accent-rgb),0.4)',
                                         },
@@ -220,38 +220,38 @@ export default function HeroSection() {
                                     position: 'relative', zIndex: 1,
                                     width: 270, height: 520,
                                     borderRadius: '3.5rem',
-                                    border: '2px solid rgba(255,255,255,0.12)',
-                                    bgcolor: '#111827',
-                                    boxShadow: '0 32px 80px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05)',
+                                    border: '2px solid rgba(var(--color-border-rgb),0.8)',
+                                    bgcolor: 'var(--color-background)',
+                                    boxShadow: '0 32px 80px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(var(--color-border-rgb),0.5)',
                                     overflow: 'hidden',
                                     display: 'flex', flexDirection: 'column',
                                 }}
                             >
                                 {/* Status bar */}
                                 <Box sx={{ height: 44, px: 3, pt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexShrink: 0 }}>
-                                    <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.7rem', fontWeight: 600 }}>9:41</Typography>
+                                    <Typography sx={{ color: 'rgba(var(--color-text-rgb),0.6)', fontSize: '0.7rem', fontWeight: 600 }}>9:41</Typography>
                                     <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
                                         {[3, 4, 5, 4].map((h, i) => (
-                                            <Box key={i} sx={{ width: 3, height: h, bgcolor: 'rgba(255,255,255,0.7)', borderRadius: 1 }} />
+                                            <Box key={i} sx={{ width: 3, height: h, bgcolor: 'rgba(var(--color-text-rgb),0.5)', borderRadius: 1 }} />
                                         ))}
                                     </Box>
                                 </Box>
 
                                 {/* App header */}
-                                <Box sx={{ px: 2.5, pt: 1.5, pb: 2 }}>
+                                <Box sx={{ px: 2.5, pt: 1.5, pb: 2, borderBottom: '1px solid var(--color-border)' }}>
                                     <Stack direction="row" alignItems="center" spacing={1}>
                                         <Box sx={{ width: 28, height: 28, borderRadius: '50%', bgcolor: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                             <BalanceIcon sx={{ fontSize: 14, color: '#fff' }} />
                                         </Box>
-                                        <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: '0.8rem' }}>
+                                        <Typography sx={{ color: 'var(--color-text)', fontWeight: 700, fontSize: '0.8rem' }}>
                                             {t('Lawyers Network', 'شبكة المحامين')}
                                         </Typography>
                                     </Stack>
                                 </Box>
 
                                 {/* Search bar */}
-                                <Box sx={{ mx: 2.5, mb: 2, bgcolor: 'rgba(255,255,255,0.06)', borderRadius: 2, px: 2, py: 1, border: '1px solid rgba(255,255,255,0.08)' }}>
-                                    <Typography sx={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.72rem' }}>
+                                <Box sx={{ mx: 2.5, mb: 2, bgcolor: 'var(--color-surface)', borderRadius: 2, px: 2, py: 1, border: '1px solid var(--color-border)' }}>
+                                    <Typography sx={{ color: 'var(--color-secondary-text)', fontSize: '0.72rem' }}>
                                         {t('Search by court or city...', 'ابحث بالمحكمة أو المدينة...')}
                                     </Typography>
                                 </Box>
@@ -266,17 +266,17 @@ export default function HeroSection() {
                                         <Box
                                             key={i}
                                             sx={{
-                                                bgcolor: 'rgba(255,255,255,0.05)',
+                                                bgcolor: 'rgba(37,99,235,0.06)',
                                                 borderRadius: 2.5,
                                                 p: 2,
-                                                border: '1px solid rgba(255,255,255,0.07)',
+                                                border: '1px solid rgba(37,99,235,0.18)',
                                             }}
                                         >
                                             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={0.75}>
-                                                <Typography sx={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.73rem', fontWeight: 600 }}>
+                                                <Typography sx={{ color: 'var(--color-text)', fontSize: '0.73rem', fontWeight: 600 }}>
                                                     {card.court}
                                                 </Typography>
-                                                <Box sx={{ bgcolor: `${card.color}20`, border: `1px solid ${card.color}50`, borderRadius: 50, px: 1, py: 0.15 }}>
+                                                <Box sx={{ bgcolor: `${card.color}15`, border: `1px solid ${card.color}40`, borderRadius: 50, px: 1, py: 0.15 }}>
                                                     <Typography sx={{ color: card.color, fontSize: '0.62rem', fontWeight: 700 }}>
                                                         {card.tag}
                                                     </Typography>
@@ -284,14 +284,14 @@ export default function HeroSection() {
                                             </Stack>
                                             <Stack direction="row" spacing={1} alignItems="center">
                                                 <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: card.color, flexShrink: 0 }} />
-                                                <Typography sx={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.65rem' }}>
+                                                <Typography sx={{ color: 'var(--color-secondary-text)', fontSize: '0.65rem' }}>
                                                     {card.city}
                                                 </Typography>
                                             </Stack>
                                             {/* skeleton lines */}
                                             <Stack spacing={0.5} mt={1}>
-                                                <Box sx={{ height: 4, borderRadius: 1, bgcolor: 'rgba(255,255,255,0.08)', width: '85%' }} />
-                                                <Box sx={{ height: 4, borderRadius: 1, bgcolor: 'rgba(255,255,255,0.05)', width: '60%' }} />
+                                                <Box sx={{ height: 4, borderRadius: 1, bgcolor: 'rgba(37,99,235,0.18)', width: '85%' }} />
+                                                <Box sx={{ height: 4, borderRadius: 1, bgcolor: 'rgba(37,99,235,0.1)', width: '60%' }} />
                                             </Stack>
                                         </Box>
                                     ))}
@@ -301,7 +301,8 @@ export default function HeroSection() {
                                 <Box
                                     sx={{
                                         height: 60, mt: 'auto', flexShrink: 0,
-                                        borderTop: '1px solid rgba(255,255,255,0.06)',
+                                        borderTop: '1px solid var(--color-border)',
+                                        bgcolor: 'var(--color-background)',
                                         display: 'flex', alignItems: 'center', justifyContent: 'space-around', px: 1,
                                     }}
                                 >
@@ -326,7 +327,7 @@ export default function HeroSection() {
                                 sx={{
                                     position: 'absolute',
                                     bottom: 80, right: { xs: -20, lg: -60 },
-                                    bgcolor: 'rgba(37,52,63,0.95)',
+                                    bgcolor: 'rgba(var(--color-primary-dark-rgb),0.95)',
                                     backdropFilter: 'blur(12px)',
                                     border: '1px solid rgba(255,255,255,0.1)',
                                     borderRadius: 3, p: 1.5,
