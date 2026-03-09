@@ -195,7 +195,7 @@ export default function PostDetailsModal({ open, post, onClose, onDeleteSuccess,
                                 {t('reject')}
                             </Button>
                             <Button onClick={onClose} variant="outlined" sx={{ minWidth: 100 }}>
-                                {t('cancel', 'إلغاء')}
+                                {t('close')}
                             </Button>
                         </Stack>
                     )}
