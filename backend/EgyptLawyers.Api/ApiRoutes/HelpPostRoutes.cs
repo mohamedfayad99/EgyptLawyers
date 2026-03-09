@@ -28,7 +28,7 @@ public static class HelpPostRoutes
                 CourtId = court.Id,
                 CityId = court.CityId,
                 Description = req.Description.Trim(),
-                Status = HelpPostStatus.Open,
+                Status = HelpPostStatus.Pending,
                 CreatedAtUtc = DateTime.UtcNow,
             };
 
@@ -100,7 +100,7 @@ public static class HelpPostRoutes
 
         api.MapGet("/help-posts", async (int? cityId, int? courtId, AppDbContext db) =>
         {
-            var q = db.HelpPosts.AsNoTracking();
+            var q = db.HelpPosts.AsNoTracking().Where(x => x.Status == HelpPostStatus.Open);
             if (cityId is not null) q = q.Where(x => x.CityId == cityId);
             if (courtId is not null) q = q.Where(x => x.CourtId == courtId);
 
@@ -245,5 +245,100 @@ public static class HelpPostRoutes
 
             return Results.Ok();
         }).RequireAuthorization("Lawyer").WithTags("Help Posts");
+
+        // --- Admin Routes ---
+
+        api.MapGet("/admin/help-posts/pending", async (AppDbContext db) =>
+        {
+            var posts = await db.HelpPosts.AsNoTracking()
+                .Where(x => x.Status == HelpPostStatus.Pending)
+                .OrderByDescending(x => x.CreatedAtUtc)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.CityId,
+                    CityName = x.City.Name,
+                    x.CourtId,
+                    CourtName = x.Court.Name,
+                    x.Description,
+                    x.Status,
+                    x.CreatedAtUtc,
+                    x.LawyerId,
+                    LawyerName = x.Lawyer.FullName,
+                    ReplyCount = x.Replies.Count
+                })
+                .ToListAsync();
+
+            return Results.Ok(posts);
+        }).RequireAuthorization("Admin").WithTags("Admin Help Posts");
+
+        api.MapGet("/admin/help-posts", async (int? cityId, int? courtId, AppDbContext db) =>
+        {
+            var q = db.HelpPosts.AsNoTracking()
+                .Where(x => x.Status == HelpPostStatus.Pending || x.Status == HelpPostStatus.Open);
+
+            if (cityId is not null) q = q.Where(x => x.CityId == cityId);
+            if (courtId is not null) q = q.Where(x => x.CourtId == courtId);
+
+            var posts = await q
+                .OrderByDescending(x => x.CreatedAtUtc)
+                .Take(100)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.CityId,
+                    CityName = x.City.Name,
+                    x.CourtId,
+                    CourtName = x.Court.Name,
+                    x.Description,
+                    x.Status,
+                    x.CreatedAtUtc,
+                    x.LawyerId,
+                    LawyerName = x.Lawyer.FullName,
+                    ReplyCount = x.Replies.Count
+                })
+                .ToListAsync();
+
+            return Results.Ok(posts);
+        }).RequireAuthorization("Admin").WithTags("Admin Help Posts");
+
+        api.MapPost("/admin/help-posts/{id:guid}/approve", async (Guid id, AppDbContext db) =>
+        {
+            var post = await db.HelpPosts.FirstOrDefaultAsync(x => x.Id == id);
+            if (post is null) return Results.NotFound();
+
+            post.Status = HelpPostStatus.Open;
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { message = "Post approved successfully." });
+        }).RequireAuthorization("Admin").WithTags("Admin Help Posts");
+
+        api.MapPost("/admin/help-posts/{id:guid}/reject", async (Guid id, AppDbContext db) =>
+        {
+            var post = await db.HelpPosts.FirstOrDefaultAsync(x => x.Id == id);
+            if (post is null) return Results.NotFound();
+
+            post.Status = HelpPostStatus.Rejected;
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { message = "Post rejected successfully." });
+        }).RequireAuthorization("Admin").WithTags("Admin Help Posts");
+
+        api.MapDelete("/admin/help-posts/{id:guid}", async (Guid id, AppDbContext db) =>
+        {
+            var post = await db.HelpPosts
+                .Include(x => x.Replies)
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (post is null)
+                return Results.NotFound();
+
+            db.HelpPostReplies.RemoveRange(post.Replies);
+            db.HelpPosts.Remove(post);
+
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { message = "Post deleted successfully." });
+        }).RequireAuthorization("Admin").WithTags("Admin Help Posts");
     }
 }

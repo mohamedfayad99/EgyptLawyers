@@ -9,8 +9,11 @@ public enum LawyerVerificationStatus
 
 public enum HelpPostStatus
 {
-    Open = 0,
-    Closed = 1,
+    Pending = 0,
+    Approved = 1,
+    Rejected = 2,
+    Open = 3,
+    Closed = 4,
 }
 
 public enum DevicePlatform

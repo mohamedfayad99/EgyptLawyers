@@ -3,6 +3,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useNavigate } from 'react-router-dom';
 import { clearAdminToken } from '../../admin/auth';
+import { useLang } from '../../contexts/LanguageContext';
 
 interface AdminTopBarProps {
     title?: string;
@@ -13,6 +14,7 @@ export default function AdminTopBar({ title = 'Dashboard', onMenuClick }: AdminT
     const navigate = useNavigate();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const { t } = useLang();
 
     function logout() {
         clearAdminToken();
@@ -30,7 +32,7 @@ export default function AdminTopBar({ title = 'Dashboard', onMenuClick }: AdminT
         >
             <Toolbar sx={{ height: 64 }}>
                 {isMobile && (
-                    <IconButton onClick={onMenuClick} sx={{ mr: 1, color: 'var(--color-primary-dark)' }}>
+                    <IconButton onClick={onMenuClick} sx={{ mr: 1, ml: 0, color: 'var(--color-primary-dark)' }}>
                         <MenuIcon />
                     </IconButton>
                 )}
@@ -53,7 +55,7 @@ export default function AdminTopBar({ title = 'Dashboard', onMenuClick }: AdminT
                             },
                         }}
                     >
-                        {!isMobile && 'Logout'}
+                        {!isMobile && t('logout')}
                     </Button>
                 </Stack>
             </Toolbar>
