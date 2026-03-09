@@ -10,6 +10,7 @@ export type LawyerProfile = {
   verificationStatus: string | number;
   isSuspended: boolean;
   activeCities?: City[];
+  profileImageUrl?: string;
 };
 
 export type LawyerPublicProfile = {
@@ -20,6 +21,7 @@ export type LawyerPublicProfile = {
   whatsappNumber: string;
   verificationStatus: string | number;
   activeCities: City[];
+  profileImageUrl?: string;
 };
 
 export type HelpPost = {
@@ -32,21 +34,36 @@ export type HelpPost = {
   status: string | number;
   createdAtUtc: string;
   lawyerId: string;
-  lawyerName?: string;
-  replyCount?: number;
+  lawyerName: string;
+  lawyerProfileImageUrl?: string;
+  replyCount: number;
 };
 
 export type HelpPostReply = {
   id: string;
   lawyerId: string;
-  lawyerName?: string;
+  lawyerName: string;
+  lawyerTitle?: string;
   lawyerWhatsapp?: string;
-  lawyerTitle?: string | null;
+  lawyerProfileImageUrl?: string;
   message: string;
   createdAtUtc: string;
+  rating?: number;
 };
 
 export type HelpPostDetails = HelpPost & {
+  lawyerName: string;
   lawyerWhatsapp?: string;
+  lawyerProfileImageUrl?: string;
   replies: HelpPostReply[];
+};
+
+export type AppNotification = {
+  id: string;
+  postId: string;
+  postDescription: string;
+  replierName: string;
+  message: string;
+  isRead: boolean;
+  createdAtUtc: string;
 };

@@ -4,6 +4,7 @@ using EgyptLawyers.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EgyptLawyers.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260308123508_AddProfileImageUrl")]
+    partial class AddProfileImageUrl
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -215,9 +218,6 @@ namespace EgyptLawyers.Data.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
 
-                    b.Property<int?>("Rating")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("HelpPostId");
@@ -328,43 +328,6 @@ namespace EgyptLawyers.Data.Migrations
                     b.ToTable("LawyerCities");
                 });
 
-            modelBuilder.Entity("EgyptLawyers.Data.Entities.Notification", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("LawyerId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<Guid>("PostId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ReplierName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("LawyerId");
-
-                    b.HasIndex("PostId");
-
-                    b.ToTable("Notifications");
-                });
-
             modelBuilder.Entity("EgyptLawyers.Data.Entities.Court", b =>
                 {
                     b.HasOne("EgyptLawyers.Data.Entities.City", "City")
@@ -470,25 +433,6 @@ namespace EgyptLawyers.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("City");
-
-                    b.Navigation("Lawyer");
-                });
-
-            modelBuilder.Entity("EgyptLawyers.Data.Entities.Notification", b =>
-                {
-                    b.HasOne("EgyptLawyers.Data.Entities.Lawyer", "Lawyer")
-                        .WithMany()
-                        .HasForeignKey("LawyerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EgyptLawyers.Data.Entities.HelpPost", "HelpPost")
-                        .WithMany()
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("HelpPost");
 
                     b.Navigation("Lawyer");
                 });

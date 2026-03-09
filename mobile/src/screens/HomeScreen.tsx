@@ -6,11 +6,17 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
+  TextInput,
+  Image,
+  SafeAreaView,
+  StatusBar,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Loading, ErrorMessage } from '../components/common';
-import { getHelpPosts } from '../lib/services';
+import { useAuth } from '../lib/AuthContext';
+import { getHelpPosts, getNotifications } from '../lib/services';
 import { HelpPost } from '../lib/types';
+import { BASE_URL } from '../lib/config';
 
 type Props = NativeStackScreenProps<any, 'Home'>;
 
@@ -18,10 +24,13 @@ export function HomeScreen({ navigation }: Props) {
   const [posts, setPosts] = useState<HelpPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState('');
+  const [hasUnread, setHasUnread] = useState(false);
 
   useEffect(() => {
     loadPosts();
+    checkNotifications();
   }, []);
 
   const loadPosts = async () => {
@@ -29,265 +38,294 @@ export function HomeScreen({ navigation }: Props) {
       setError('');
       const postsList = await getHelpPosts();
       setPosts(postsList);
-      setLoading(false);
     } catch (err: any) {
       setError(err.message || 'Failed to load posts');
+    } finally {
       setLoading(false);
     }
   };
 
+  const checkNotifications = async () => {
+    try {
+      const data = await getNotifications();
+      setHasUnread(data.some(n => !n.isRead));
+    } catch { /* ignore */ }
+  };
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
+    checkNotifications();
     loadPosts().finally(() => setRefreshing(false));
   }, []);
 
   const handlePostPress = (postId: string) => {
-    navigation.navigate('PostDetails', { postId });
+    navigation.navigate('PostDetails', { id: postId });
   };
 
-  if (loading) {
-    return <Loading message='Loading posts...' />;
-  }
-
-  if (error) {
-    return <ErrorMessage message={error} onRetry={loadPosts} />;
-  }
-
-  const statusLabel = (status: string | number) => {
-    if (status === 0 || status === 'Open') return 'Open';
-    if (status === 1 || status === 'Closed') return 'Closed';
-    return String(status);
-  };
+  const filteredPosts = posts.filter(post => {
+    const query = searchQuery.toLowerCase();
+    return (
+      post.cityName?.toLowerCase().includes(query) ||
+      post.courtName?.toLowerCase().includes(query)
+    );
+  });
 
   const renderPostItem = ({ item }: { item: HelpPost }) => {
-    const createdDate = new Date(item.createdAtUtc).toLocaleDateString('en-GB');
-    const description =
-      item.description.substring(0, 100) +
-      (item.description.length > 100 ? '...' : '');
-
     return (
       <TouchableOpacity
-        style={styles.postCard}
+        style={styles.card}
         onPress={() => handlePostPress(item.id)}
         activeOpacity={0.7}
       >
-        <View style={styles.postHeader}>
-          <View style={styles.courtBadge}>
-            <Text style={styles.courtIcon}>⚖️</Text>
-            <Text style={styles.postCourt} numberOfLines={1}>
-              {item.courtName || `Court #${item.courtId}`}
-            </Text>
+        <View style={styles.cardHeader}>
+          <View style={styles.userInfo}>
+            <View style={styles.avatarMini}>
+              {item.lawyerProfileImageUrl ? (
+                <Image 
+                  source={{ uri: `${BASE_URL}${item.lawyerProfileImageUrl}` }} 
+                  style={styles.avatarImage} 
+                />
+              ) : (
+                <Text style={styles.avatarText}>{item.lawyerName?.charAt(0) || '?'}</Text>
+              )}
+            </View>
+            <View>
+              <Text style={styles.lawyerName}>{item.lawyerName}</Text>
+              <Text style={styles.postDate}>{new Date(item.createdAtUtc).toLocaleDateString()}</Text>
+            </View>
           </View>
-          <Text style={styles.postDate}>{createdDate}</Text>
+          <View style={styles.locationBadge}>
+            <Text style={styles.locationText}>📍 {item.cityName}</Text>
+          </View>
         </View>
 
-        {item.cityName ? (
-          <View style={styles.cityRow}>
-            <Text style={styles.cityIcon}>📍</Text>
-            <Text style={styles.cityName}>{item.cityName}</Text>
-          </View>
-        ) : null}
-
-        <Text style={styles.postDescription} numberOfLines={3}>
-          {description}
+        <Text style={styles.courtName}>{item.courtName}</Text>
+        <Text style={styles.description} numberOfLines={3}>
+          {item.description}
         </Text>
 
-        <View style={styles.postFooter}>
-          <View style={styles.footerLeft}>
-            {item.lawyerName ? (
-              <Text style={styles.lawyerName}>👤 {item.lawyerName}</Text>
-            ) : null}
-            {item.replyCount !== undefined ? (
-              <Text style={styles.replyCount}>
-                💬 {item.replyCount} {item.replyCount === 1 ? 'reply' : 'replies'}
-              </Text>
-            ) : null}
-          </View>
-          <View style={[styles.statusBadge,
-            (item.status === 0 || item.status === 'Open') ? styles.statusOpen : styles.statusClosed
-          ]}>
-            <Text style={styles.statusText}>{statusLabel(item.status)}</Text>
-          </View>
+        <View style={styles.cardFooter}>
+             <Text style={styles.replyCountText}>💬 {item.replyCount || 0} Replies</Text>
         </View>
       </TouchableOpacity>
     );
   };
 
+  const { profile } = useAuth();
+
+  if (loading && !refreshing) return <Loading message='Loading feed...' />;
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>⚖️ Help Posts Feed</Text>
-        <TouchableOpacity
-          style={styles.createButton}
-          onPress={() => navigation.navigate('CreatePost')}
-        >
-          <Text style={styles.createButtonText}>+ New Post</Text>
-        </TouchableOpacity>
+        <View style={styles.headerRow}>
+          <Text style={styles.headerTitle}>EgyptLawyers</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity 
+              style={styles.notifButton} 
+              onPress={() => navigation.navigate('Notifications')}
+            >
+               <Text style={{ fontSize: 24 }}>🔔</Text>
+               {hasUnread && <View style={styles.notifBadge} />}
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={{ marginLeft: 15 }} 
+              onPress={() => navigation.navigate('ProfileTab')}
+            >
+               {profile?.profileImageUrl ? (
+                 <Image 
+                    source={{ uri: `${BASE_URL}${profile.profileImageUrl}` }} 
+                    style={{ width: 36, height: 36, borderRadius: 18 }} 
+                  />
+               ) : (
+                 <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#E9ECEF', justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{ fontSize: 16 }}>👤</Text>
+                 </View>
+               )}
+            </TouchableOpacity>
+          </View>
+        </View>
+        
+        <View style={styles.searchContainer}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search lawyers, cities, courts..."
+            placeholderTextColor="#AAB2C1"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
       </View>
 
       <FlatList
-        data={posts}
+        data={filteredPosts}
         renderItem={renderPostItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#5C7CFA" />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>📋</Text>
-            <Text style={styles.emptyText}>No posts yet</Text>
-            <Text style={styles.emptySubtext}>Be the first to request help!</Text>
+            <Text style={styles.emptyText}>{error || 'No requests found'}</Text>
+            {error ? <ErrorMessage message={error} onRetry={loadPosts} /> : null}
           </View>
         }
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F8F9FA',
   },
   header: {
-    backgroundColor: '#fff',
-    paddingTop: 12,
-    paddingBottom: 12,
-    paddingHorizontal: 16,
+    padding: 20,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#EEEEEE',
+  },
+  headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 15,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#000',
+    color: '#1E1E1E',
   },
-  createButton: {
-    backgroundColor: '#0066cc',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
+  notifButton: {
+    padding: 5,
   },
-  createButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
+  notifBadge: {
+    position: 'absolute',
+    right: 5,
+    top: 5,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#FF6B6B',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F1F3F5',
+    borderRadius: 12,
+    paddingHorizontal: 15,
+  },
+  searchIcon: {
+    marginRight: 10,
+    fontSize: 16,
+  },
+  searchInput: {
+    flex: 1,
+    height: 45,
+    color: '#1E1E1E',
+    fontSize: 16,
   },
   listContent: {
-    padding: 12,
+    padding: 16,
+    paddingBottom: 40,
   },
-  postCard: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 12,
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  postHeader: {
+  cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
+    alignItems: 'flex-start',
+    marginBottom: 12,
   },
-  courtBadge: {
+  userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
-    marginRight: 8,
   },
-  courtIcon: {
-    fontSize: 14,
-    marginRight: 4,
+  avatarMini: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E9ECEF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+    overflow: 'hidden',
   },
-  postCourt: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0066cc',
-    flex: 1,
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  avatarText: {
+    color: '#495057',
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
+  lawyerName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1E1E1E',
   },
   postDate: {
     fontSize: 12,
-    color: '#999',
+    color: '#868E96',
   },
-  cityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  cityIcon: {
-    fontSize: 12,
-    marginRight: 4,
-  },
-  cityName: {
-    fontSize: 13,
-    color: '#666',
-  },
-  postDescription: {
-    fontSize: 15,
-    color: '#333',
-    lineHeight: 22,
-    marginBottom: 12,
-  },
-  postFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-  },
-  footerLeft: {
-    flex: 1,
-    marginRight: 8,
-  },
-  lawyerName: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 2,
-  },
-  replyCount: {
-    fontSize: 12,
-    color: '#888',
-  },
-  statusBadge: {
-    paddingVertical: 3,
+  locationBadge: {
+    backgroundColor: '#E7F5FF',
+    paddingVertical: 4,
     paddingHorizontal: 8,
-    borderRadius: 12,
+    borderRadius: 8,
   },
-  statusOpen: {
-    backgroundColor: '#e8f5e9',
-  },
-  statusClosed: {
-    backgroundColor: '#fce4ec',
-  },
-  statusText: {
+  locationText: {
+    color: '#228BE6',
     fontSize: 11,
-    fontWeight: '700',
-    color: '#333',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 60,
-  },
-  emptyIcon: {
-    fontSize: 48,
-    marginBottom: 12,
-  },
-  emptyText: {
-    fontSize: 18,
-    color: '#444',
     fontWeight: '600',
+  },
+  courtName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#5C7CFA',
     marginBottom: 6,
   },
-  emptySubtext: {
+  description: {
     fontSize: 14,
-    color: '#999',
+    color: '#495057',
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  cardFooter: {
+    borderTopWidth: 1,
+    borderTopColor: '#F1F3F5',
+    paddingTop: 10,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  replyCountText: {
+    color: '#868E96',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    marginTop: 50,
+  },
+  emptyText: {
+    color: '#868E96',
+    fontSize: 16,
   },
 });

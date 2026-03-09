@@ -86,6 +86,8 @@ var app = builder.Build();
 
 app.UseCors("DevCors");
 
+app.UseStaticFiles();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -100,7 +102,7 @@ if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.EnsureCreatedAsync();
+    await db.Database.MigrateAsync();
 }
 
 await AdminSeedService.SeedDefaultAdminAsync(app.Services, app.Configuration);
@@ -111,6 +113,7 @@ var api = app.MapGroup("/api");
 api.MapLookupRoutes();
 api.MapLawyerRoutes();
 api.MapHelpPostRoutes();
+api.MapNotificationRoutes();
 api.MapAdminRoutes();
 
 app.Run();

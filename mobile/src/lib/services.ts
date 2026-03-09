@@ -1,5 +1,5 @@
 import { api, toErrorMessage } from './api';
-import { City, Court, LawyerProfile, LawyerPublicProfile, HelpPost, HelpPostDetails } from './types';
+import { City, Court, LawyerProfile, LawyerPublicProfile, HelpPost, HelpPostDetails, AppNotification } from './types';
 
 // ============== Auth Services ==============
 export async function registerLawyer(data: {
@@ -9,6 +9,7 @@ export async function registerLawyer(data: {
   whatsappNumber: string;
   password: string;
   activeCityIds: number[];
+  profileImageBase64?: string;
 }) {
   try {
     const res = await api.post('/lawyers/register', {
@@ -18,6 +19,7 @@ export async function registerLawyer(data: {
       whatsappNumber: data.whatsappNumber,
       password: data.password,
       activeCityIds: data.activeCityIds,
+      profileImageBase64: data.profileImageBase64,
     });
     return res.data;
   } catch (e) {
@@ -43,6 +45,27 @@ export async function getLawyerProfile(): Promise<LawyerProfile> {
     return res.data;
   } catch (e) {
     throw new Error(toErrorMessage(e, 'Failed to load profile'));
+  }
+}
+
+export async function updateLawyerProfile(data: {
+  fullName: string;
+  professionalTitle?: string;
+  whatsappNumber: string;
+  activeCityIds: number[];
+  profileImageBase64?: string;
+}) {
+  try {
+    const res = await api.put('/lawyers/me', {
+      fullName: data.fullName,
+      professionalTitle: data.professionalTitle || null,
+      whatsappNumber: data.whatsappNumber,
+      activeCityIds: data.activeCityIds,
+      profileImageBase64: data.profileImageBase64,
+    });
+    return res.data;
+  } catch (e) {
+    throw new Error(toErrorMessage(e, 'Failed to update profile'));
   }
 }
 
@@ -129,5 +152,49 @@ export async function replyToHelpPost(id: string, message: string) {
     return res.data;
   } catch (e) {
     throw new Error(toErrorMessage(e, 'Failed to send reply'));
+  }
+}
+
+export async function rateReply(postId: string, replyId: string, rating: number) {
+  try {
+    await api.post(`/help-posts/${postId}/replies/${replyId}/rate`, {
+      rating,
+    });
+  } catch (e) {
+    throw new Error(toErrorMessage(e, 'Failed to rate reply'));
+  }
+}
+
+export async function deleteReply(postId: string, replyId: string) {
+  try {
+    await api.delete(`/help-posts/${postId}/replies/${replyId}`);
+  } catch (e) {
+    throw new Error(toErrorMessage(e, 'Failed to delete reply'));
+  }
+}
+
+// ============== Notification Services ==============
+export async function getNotifications(): Promise<AppNotification[]> {
+  try {
+    const res = await api.get('/notifications');
+    return res.data;
+  } catch (e) {
+    throw new Error(toErrorMessage(e, 'Failed to load notifications'));
+  }
+}
+
+export async function markNotificationAsRead(id: string) {
+  try {
+    await api.put(`/notifications/${id}/read`);
+  } catch (e) {
+    // Best effort
+  }
+}
+
+export async function deleteNotification(id: string) {
+  try {
+    await api.delete(`/notifications/${id}`);
+  } catch (e) {
+    throw new Error(toErrorMessage(e, 'Failed to delete notification'));
   }
 }

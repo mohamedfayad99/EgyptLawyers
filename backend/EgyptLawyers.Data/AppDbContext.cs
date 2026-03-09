@@ -17,6 +17,7 @@ public sealed class AppDbContext : DbContext
     public DbSet<HelpPostReply> HelpPostReplies => Set<HelpPostReply>();
     public DbSet<HelpPostReplyAttachment> HelpPostReplyAttachments => Set<HelpPostReplyAttachment>();
     public DbSet<DeviceRegistration> DeviceRegistrations => Set<DeviceRegistration>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

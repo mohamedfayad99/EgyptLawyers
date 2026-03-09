@@ -9,7 +9,10 @@ import {
   Modal,
   FlatList,
   SafeAreaView,
+  Image,
+  StatusBar,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Button, TextInput, Loading, ErrorMessage } from '../components/common';
 import { registerLawyer, getCities } from '../lib/services';
@@ -17,11 +20,19 @@ import { City } from '../lib/types';
 
 type Props = NativeStackScreenProps<any, 'Register'>;
 
-/** Ensures Egyptian numbers are sent as +2XXXXXXXXXX to the API. */
+function isValidEgyptianPhone(phone: string): boolean {
+  const cleaned = phone.trim().replace(/\s+/g, '');
+  // Matches 010, 011, 012, 015 followed by 8 digits
+  // Also supports optional +2 or 2 prefix
+  const egRegex = /^(\+2|2)?01[0125][0-9]{8}$/;
+  return egRegex.test(cleaned);
+}
+
 function normalizeEgyptianPhone(raw: string): string {
   const trimmed = raw.trim().replace(/\s+/g, '');
   if (trimmed.startsWith('+2')) return trimmed;
   if (trimmed.startsWith('2') && trimmed.length >= 11) return '+' + trimmed;
+  if (trimmed.startsWith('01') && trimmed.length === 11) return '+2' + trimmed;
   return '+2' + trimmed;
 }
 
@@ -32,10 +43,12 @@ export function RegisterScreen({ navigation }: Props) {
   const [whatsapp, setWhatsapp] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [profileImage, setProfileImage] = useState<string | null>(null);
 
   const [cities, setCities] = useState<City[]>([]);
-  const [selectedCities, setSelectedCities] = useState<number[]>([]);
+  const [selectedCity, setSelectedCity] = useState<number | null>(null);
   const [cityModalVisible, setCityModalVisible] = useState(false);
+  const [citySearch, setCitySearch] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [loadingCities, setLoadingCities] = useState(true);
@@ -56,37 +69,37 @@ export function RegisterScreen({ navigation }: Props) {
     }
   };
 
-  const toggleCity = (cityId: number) => {
-    setSelectedCities((prev) =>
-      prev.includes(cityId)
-        ? prev.filter((c) => c !== cityId)
-        : [...prev, cityId],
-    );
+  const selectedCityName = cities.find((c) => c.id === selectedCity)?.name || '';
+
+  const handlePickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+      base64: true,
+    });
+    
+    if (!result.canceled && result.assets[0].base64) {
+      setProfileImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+    }
   };
 
-  const selectedCityNames = cities
-    .filter((c) => selectedCities.includes(c.id))
-    .map((c) => c.name)
-    .join(', ');
-
   const handleRegister = async () => {
-    if (
-      !fullName.trim() ||
-      !syndicateCard.trim() ||
-      !whatsapp.trim() ||
-      !password.trim()
-    ) {
+    if (!fullName.trim() || !syndicateCard.trim() || !whatsapp.trim() || !password.trim()) {
       setError('Please fill in all required fields');
       return;
     }
-
+    if (!isValidEgyptianPhone(whatsapp)) {
+      setError('Please enter a valid Egyptian WhatsApp number (e.g. 01012345678)');
+      return;
+    }
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-
-    if (selectedCities.length === 0) {
-      setError('Please select at least one active city');
+    if (!selectedCity) {
+      setError('Please select your city');
       return;
     }
 
@@ -100,18 +113,14 @@ export function RegisterScreen({ navigation }: Props) {
         syndicateCardNumber: syndicateCard.trim(),
         whatsappNumber: normalizeEgyptianPhone(whatsapp),
         password,
-        activeCityIds: selectedCities,
+        activeCityIds: [selectedCity],
+        profileImageBase64: profileImage || undefined,
       });
 
       Alert.alert(
-        '✅ Registration Submitted',
-        'Your registration has been received. Your account is pending admin verification.\n\nYou will be able to log in once approved.',
-        [
-          {
-            text: 'Go to Login',
-            onPress: () => navigation.navigate('Login'),
-          },
-        ],
+        'Success',
+        'Account created! Pending admin approval.',
+        [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
       );
     } catch (err: any) {
       setError(err.message || 'Registration failed');
@@ -120,340 +129,290 @@ export function RegisterScreen({ navigation }: Props) {
     }
   };
 
-  if (loadingCities) {
-    return <Loading message='Loading cities...' />;
-  }
+  if (loadingCities) return <Loading message='Loading cities...' />;
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-      keyboardShouldPersistTaps='handled'
-    >
-      <Text style={styles.title}>Register as Lawyer</Text>
-      <Text style={styles.subtitle}>Join EgyptLawyers Network</Text>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <ScrollView contentContainerStyle={styles.contentContainer} keyboardShouldPersistTaps='handled'>
+        <Text style={styles.title}>Register</Text>
+        <Text style={styles.subtitle}>Join EgyptLawyers professional network</Text>
 
-      {error ? <ErrorMessage message={error} onRetry={() => setError('')} /> : null}
+        {error ? <ErrorMessage message={error} onRetry={() => setError('')} /> : null}
 
-      <Text style={styles.fieldLabel}>Full Name *</Text>
-      <TextInput
-        placeholder='e.g. Mohamed Fayad'
-        value={fullName}
-        onChangeText={setFullName}
-        editable={!loading}
-      />
-
-      <Text style={styles.fieldLabel}>Professional Title (optional)</Text>
-      <TextInput
-        placeholder='e.g. Criminal Law Specialist'
-        value={professionalTitle}
-        onChangeText={setProfessionalTitle}
-        editable={!loading}
-      />
-
-      <Text style={styles.fieldLabel}>Syndicate Card Number *</Text>
-      <TextInput
-        placeholder='e.g. 12345'
-        value={syndicateCard}
-        onChangeText={setSyndicateCard}
-        editable={!loading}
-      />
-
-      <Text style={styles.fieldLabel}>WhatsApp Number *</Text>
-      <TextInput
-        placeholder='e.g. 01012345678  (or +201012345678)'
-        value={whatsapp}
-        onChangeText={setWhatsapp}
-        editable={!loading}
-      />
-
-      <Text style={styles.fieldLabel}>Password *</Text>
-      <TextInput
-        placeholder='Min. 6 characters'
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        editable={!loading}
-      />
-
-      <Text style={styles.fieldLabel}>Confirm Password *</Text>
-      <TextInput
-        placeholder='Repeat your password'
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry
-        editable={!loading}
-      />
-
-      {/* ── Cities dropdown ── */}
-      <Text style={styles.fieldLabel}>Active Cities * <Text style={styles.hint}>(cities where you work in courts)</Text></Text>
-      <TouchableOpacity
-        style={[styles.dropdown, loading && styles.dropdownDisabled]}
-        onPress={() => !loading && setCityModalVisible(true)}
-        activeOpacity={0.7}
-      >
-        <Text style={selectedCities.length > 0 ? styles.dropdownValue : styles.dropdownPlaceholder} numberOfLines={2}>
-          {selectedCities.length > 0 ? selectedCityNames : 'Tap to select cities…'}
-        </Text>
-        <Text style={styles.dropdownArrow}>▼</Text>
-      </TouchableOpacity>
-      {selectedCities.length > 0 && (
-        <View style={styles.selectedChips}>
-          {cities.filter((c) => selectedCities.includes(c.id)).map((c) => (
-            <View key={c.id} style={styles.chip}>
-              <Text style={styles.chipText}>📍 {c.name}</Text>
-              <TouchableOpacity
-                onPress={() => toggleCity(c.id)}
-                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-              >
-                <Text style={styles.chipRemove}>✕</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
+        <View style={styles.imageSection}>
+          <TouchableOpacity style={styles.imagePicker} onPress={handlePickImage} disabled={loading}>
+            {profileImage ? (
+              <Image source={{ uri: profileImage }} style={styles.profileImage} />
+            ) : (
+              <View style={styles.imagePlaceholder}>
+                 <Text style={{ fontSize: 40 }}>👤</Text>
+                 <View style={styles.addIconBadge}>
+                    <Text style={{ fontSize: 16, color: '#fff', fontWeight: 'bold' }}>+</Text>
+                 </View>
+              </View>
+            )}
+          </TouchableOpacity>
         </View>
-      )}
 
-      <Button
-        title={loading ? 'Registering...' : 'Register'}
-        onPress={handleRegister}
-        loading={loading}
-      />
+        <View style={styles.formCard}>
+          <Text style={styles.fieldLabel}>Full Name *</Text>
+          <TextInput placeholder='e.g. Mohamed Fayad' value={fullName} onChangeText={setFullName} />
 
-      <View style={styles.loginLink}>
-        <Text style={styles.loginText}>Already have an account? </Text>
-        <Text
-          style={styles.loginButton}
-          onPress={() => navigation.navigate('Login')}
-        >
-          Login
-        </Text>
-      </View>
+          <Text style={styles.fieldLabel}>Professional Title</Text>
+          <TextInput placeholder='e.g. Criminal Lawyer' value={professionalTitle} onChangeText={setProfessionalTitle} />
 
-      {/* ── City picker modal ── */}
-      <Modal
-        visible={cityModalVisible}
-        animationType='slide'
-        presentationStyle='pageSheet'
-        onRequestClose={() => setCityModalVisible(false)}
-      >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Select Active Cities</Text>
-            <TouchableOpacity
-              style={styles.modalDone}
-              onPress={() => setCityModalVisible(false)}
-            >
-              <Text style={styles.modalDoneText}>Done ({selectedCities.length})</Text>
+          <Text style={styles.fieldLabel}>Syndicate Card Number *</Text>
+          <TextInput placeholder='e.g. 123456' value={syndicateCard} onChangeText={setSyndicateCard} keyboardType='numeric' />
+
+          <Text style={styles.fieldLabel}>WhatsApp Number *</Text>
+          <TextInput placeholder='e.g. 01012345678' value={whatsapp} onChangeText={setWhatsapp} keyboardType='phone-pad' />
+
+          <Text style={styles.fieldLabel}>Password *</Text>
+          <TextInput placeholder='Min. 6 characters' value={password} onChangeText={setPassword} secureTextEntry />
+
+          <Text style={styles.fieldLabel}>Confirm Password *</Text>
+          <TextInput placeholder='Repeat password' value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
+
+          <Text style={styles.fieldLabel}>City *</Text>
+          <TouchableOpacity style={styles.dropdown} onPress={() => setCityModalVisible(true)}>
+            <Text style={selectedCity ? styles.dropdownValue : styles.dropdownPlaceholder}>
+              {selectedCity ? `📍 ${selectedCityName}` : 'Select your city'}
+            </Text>
+            <Text style={styles.dropdownArrow}>▼</Text>
+          </TouchableOpacity>
+
+          <Button title={loading ? 'Registering...' : 'Create Account'} onPress={handleRegister} loading={loading} style={{ marginTop: 25 }} />
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Already have an account? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <Text style={styles.linkText}>Login</Text>
             </TouchableOpacity>
           </View>
+        </View>
+      </ScrollView>
 
-          <Text style={styles.modalSubtitle}>
-            Select all cities where you regularly work in courts
-          </Text>
+      <Modal visible={cityModalVisible} animationType='slide' transparent>
+        <SafeAreaView style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select City</Text>
+              <TouchableOpacity onPress={() => { setCityModalVisible(false); setCitySearch(''); }}>
+                <Text style={styles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.modalSearchContainer}>
+              <TextInput 
+                placeholder="Search your city..." 
+                value={citySearch} 
+                onChangeText={setCitySearch}
+                style={styles.modalSearchInput}
+              />
+            </View>
 
-          <FlatList
-            data={cities}
-            keyExtractor={(item) => String(item.id)}
-            renderItem={({ item }) => {
-              const isSelected = selectedCities.includes(item.id);
-              return (
-                <TouchableOpacity
-                  style={[styles.cityRow, isSelected && styles.cityRowSelected]}
-                  onPress={() => toggleCity(item.id)}
-                  activeOpacity={0.7}
-                >
+            <FlatList
+              data={cities.filter(c => c.name.toLowerCase().includes(citySearch.toLowerCase()))}
+              keyExtractor={item => String(item.id)}
+              renderItem={({ item }) => (
+                <TouchableOpacity style={styles.cityRow} onPress={() => { setSelectedCity(item.id); setCityModalVisible(false); setCitySearch(''); }}>
                   <Text style={styles.cityRowName}>📍 {item.name}</Text>
-                  <View style={[styles.checkbox, isSelected && styles.checkboxChecked]}>
-                    {isSelected && <Text style={styles.checkmark}>✓</Text>}
-                  </View>
+                  {selectedCity === item.id && <Text style={{color:'#5C7CFA', fontWeight:'bold'}}>✓</Text>}
                 </TouchableOpacity>
-              );
-            }}
-            ItemSeparatorComponent={() => <View style={styles.separator} />}
-          />
+              )}
+            />
+          </View>
         </SafeAreaView>
       </Modal>
-    </ScrollView>
+
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
   },
   contentContainer: {
-    padding: 16,
-    paddingTop: 20,
-    paddingBottom: 40,
+    padding: 24,
+    paddingTop: 40,
+    paddingBottom: 60,
+    flexGrow: 1,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 6,
+    color: '#1E1E1E',
+    marginBottom: 8,
   },
   subtitle: {
-    fontSize: 15,
-    color: '#666',
-    marginBottom: 20,
+    fontSize: 16,
+    color: '#868E96',
+    marginBottom: 32,
+  },
+  imagePicker: {
+    alignSelf: 'center',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#F8F9FA',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 32,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
+  },
+  imagePlaceholder: {
+    alignItems: 'center',
+  },
+  imagePlaceholderText: {
+    fontSize: 30,
+  },
+  imagePlaceholderSubText: {
+    fontSize: 10,
+    color: '#ADB5BD',
+    marginTop: 4,
+  },
+  formCard: {
+    backgroundColor: '#FFFFFF',
+    padding: 24,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 15,
+    elevation: 3,
   },
   fieldLabel: {
+    color: '#495057',
     fontSize: 14,
+    marginBottom: 8,
     fontWeight: '600',
-    color: '#333',
-    marginTop: 4,
-    marginBottom: 2,
+    marginTop: 12,
   },
-  hint: {
-    fontWeight: '400',
-    color: '#999',
-    fontSize: 12,
-  },
-  // Dropdown
   dropdown: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    marginVertical: 8,
-    backgroundColor: '#fff',
-    minHeight: 48,
-  },
-  dropdownDisabled: {
-    opacity: 0.5,
+    borderColor: '#E9ECEF',
   },
   dropdownValue: {
     flex: 1,
+    color: '#1E1E1E',
     fontSize: 15,
-    color: '#000',
   },
   dropdownPlaceholder: {
     flex: 1,
+    color: '#ADB5BD',
     fontSize: 15,
-    color: '#aaa',
   },
   dropdownArrow: {
+    color: '#ADB5BD',
     fontSize: 12,
-    color: '#666',
-    marginLeft: 8,
   },
-  // Selected city chips
-  selectedChips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 8,
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#e3f2fd',
-    borderRadius: 16,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    gap: 6,
-  },
-  chipText: {
-    fontSize: 13,
-    color: '#0066cc',
-    fontWeight: '500',
-  },
-  chipRemove: {
-    fontSize: 12,
-    color: '#0066cc',
-    fontWeight: 'bold',
-  },
-  loginLink: {
+  footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 16,
-    marginBottom: 16,
+    marginTop: 24,
   },
-  loginText: {
+  footerText: {
+    color: '#868E96',
     fontSize: 14,
-    color: '#666',
   },
-  loginButton: {
+  linkText: {
+    color: '#5C7CFA',
     fontSize: 14,
-    color: '#0066cc',
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
-  // Modal
-  modalContainer: {
+  modalOverlay: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    height: '80%',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    padding: 24,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#F1F3F5',
+    alignItems: 'center',
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#000',
+    color: '#1E1E1E',
   },
-  modalDone: {
-    backgroundColor: '#0066cc',
-    borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
+  cancelBtnText: {
+    color: '#5C7CFA',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
-  modalDoneText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 14,
+  modalSearchContainer: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F3F5',
   },
-  modalSubtitle: {
-    fontSize: 13,
-    color: '#888',
+  modalSearchInput: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 10,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
   },
   cityRow: {
     flexDirection: 'row',
+    padding: 20,
     alignItems: 'center',
-    paddingVertical: 15,
-    paddingHorizontal: 16,
-    backgroundColor: '#fff',
-  },
-  cityRowSelected: {
-    backgroundColor: '#f0f7ff',
+    justifyContent: 'space-between',
   },
   cityRowName: {
-    flex: 1,
     fontSize: 16,
-    color: '#000',
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: '#ccc',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: '#0066cc',
-    borderColor: '#0066cc',
-  },
-  checkmark: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
+    color: '#1E1E1E',
   },
   separator: {
     height: 1,
-    backgroundColor: '#f0f0f0',
-    marginLeft: 16,
+    backgroundColor: '#F1F3F5',
+    marginLeft: 20,
+  },
+  imageSection: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  addIconBadge: {
+    position: 'absolute',
+    bottom: -5,
+    right: -5,
+    backgroundColor: '#5C7CFA',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#FFF',
   },
 });

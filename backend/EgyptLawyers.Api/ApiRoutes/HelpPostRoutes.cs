@@ -119,6 +119,7 @@ public static class HelpPostRoutes
                     x.CreatedAtUtc,
                     x.LawyerId,
                     LawyerName = x.Lawyer.FullName,
+                    LawyerProfileImageUrl = x.Lawyer.ProfileImageUrl,
                     ReplyCount = x.Replies.Count
                 })
                 .ToListAsync();
@@ -143,6 +144,7 @@ public static class HelpPostRoutes
                     x.LawyerId,
                     LawyerName = x.Lawyer.FullName,
                     LawyerWhatsapp = x.Lawyer.WhatsappNumber,
+                    LawyerProfileImageUrl = x.Lawyer.ProfileImageUrl,
                     Replies = x.Replies.OrderBy(r => r.CreatedAtUtc).Select(r => new
                     {
                         r.Id,
@@ -150,8 +152,10 @@ public static class HelpPostRoutes
                         LawyerName = r.Lawyer.FullName,
                         LawyerWhatsapp = r.Lawyer.WhatsappNumber,
                         LawyerTitle = r.Lawyer.ProfessionalTitle,
+                        LawyerProfileImageUrl = r.Lawyer.ProfileImageUrl,
                         r.Message,
-                        r.CreatedAtUtc
+                        r.CreatedAtUtc,
+                        r.Rating
                     }).ToList()
                 })
                 .FirstOrDefaultAsync();
@@ -179,9 +183,67 @@ public static class HelpPostRoutes
             };
 
             db.HelpPostReplies.Add(reply);
+
+            // Create notification for the post author
+            var post = await db.HelpPosts.FirstOrDefaultAsync(x => x.Id == id);
+            if (post != null && post.LawyerId != lawyerId)
+            {
+                var replierName = await db.Lawyers.Where(x => x.Id == lawyerId).Select(x => x.FullName).FirstOrDefaultAsync() ?? "A lawyer";
+                db.Notifications.Add(new Notification
+                {
+                    LawyerId = post.LawyerId,
+                    PostId = post.Id,
+                    Message = req.Message.Trim(),
+                    ReplierName = replierName,
+                });
+            }
+
             await db.SaveChangesAsync();
 
             return Results.Ok(new { reply.Id });
+        }).RequireAuthorization("Lawyer").WithTags("Help Posts");
+
+        api.MapPost("/help-posts/{id:guid}/replies/{replyId:guid}/rate", async (Guid id, Guid replyId, RateReplyRequest req, AppDbContext db, HttpContext ctx) =>
+        {
+            if (req.Rating < 1 || req.Rating > 5)
+                return Results.BadRequest(new { message = "Rating must be between 1 and 5." });
+
+            var lawyerId = ctx.User.GetSubjectId();
+
+            var post = await db.HelpPosts.FirstOrDefaultAsync(x => x.Id == id);
+            if (post is null) return Results.NotFound();
+
+            // Only the person who created the post can evaluate the replies
+            if (post.LawyerId != lawyerId)
+                return Results.Json(new { message = "Only the post owner can evaluate replies." }, statusCode: 403);
+
+            var reply = await db.HelpPostReplies.FirstOrDefaultAsync(x => x.Id == replyId && x.HelpPostId == id);
+            if (reply is null) return Results.NotFound();
+
+            reply.Rating = req.Rating;
+            await db.SaveChangesAsync();
+
+            return Results.Ok();
+        }).RequireAuthorization("Lawyer").WithTags("Help Posts");
+
+        api.MapDelete("/help-posts/{id:guid}/replies/{replyId:guid}", async (Guid id, Guid replyId, AppDbContext db, HttpContext ctx) =>
+        {
+            var lawyerId = ctx.User.GetSubjectId();
+
+            var post = await db.HelpPosts.FirstOrDefaultAsync(x => x.Id == id);
+            if (post is null) return Results.NotFound();
+
+            // Only the post owner can delete any reply
+            if (post.LawyerId != lawyerId)
+                return Results.Json(new { message = "Only the post owner can delete replies." }, statusCode: 403);
+
+            var reply = await db.HelpPostReplies.FirstOrDefaultAsync(x => x.Id == replyId && x.HelpPostId == id);
+            if (reply is null) return Results.NotFound();
+
+            db.HelpPostReplies.Remove(reply);
+            await db.SaveChangesAsync();
+
+            return Results.Ok();
         }).RequireAuthorization("Lawyer").WithTags("Help Posts");
     }
 }

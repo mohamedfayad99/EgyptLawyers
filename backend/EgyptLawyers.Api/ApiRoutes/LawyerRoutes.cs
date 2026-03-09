@@ -55,6 +55,23 @@ public static class LawyerRoutes
             foreach (var cityId in cityIds)
                 db.LawyerCities.Add(new LawyerCity { LawyerId = lawyer.Id, CityId = cityId });
 
+            if (!string.IsNullOrWhiteSpace(req.ProfileImageBase64))
+            {
+                try
+                {
+                    var base64Data = req.ProfileImageBase64.Contains(",") 
+                        ? req.ProfileImageBase64.Split(',')[1] 
+                        : req.ProfileImageBase64;
+                    var bytes = Convert.FromBase64String(base64Data);
+                    var dir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "profile_images");
+                    if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                    var fileName = $"{lawyer.Id}.jpg";
+                    await File.WriteAllBytesAsync(Path.Combine(dir, fileName), bytes);
+                    lawyer.ProfileImageUrl = $"/profile_images/{fileName}";
+                }
+                catch { /* Ignore invalid base64 */ }
+            }
+
             await db.SaveChangesAsync();
 
             return Results.Ok(new
@@ -62,7 +79,8 @@ public static class LawyerRoutes
                 lawyer.Id,
                 lawyer.FullName,
                 lawyer.WhatsappNumber,
-                lawyer.VerificationStatus
+                lawyer.VerificationStatus,
+                lawyer.ProfileImageUrl
             });
         }).WithTags("Lawyers");
 
@@ -73,18 +91,21 @@ public static class LawyerRoutes
 
             var lawyer = await db.Lawyers.FirstOrDefaultAsync(x => x.WhatsappNumber == whatsapp);
             if (lawyer is null)
-                return Results.Unauthorized();
+                return Results.Json(new { message = "not exist" }, statusCode: 401);
 
             if (lawyer.IsSuspended)
-                return Results.Forbid();
+                return Results.Json(new { message = "suspended" }, statusCode: 403);
 
-            if (lawyer.VerificationStatus != LawyerVerificationStatus.Approved)
-                return Results.Unauthorized();
+            if (lawyer.VerificationStatus == LawyerVerificationStatus.Pending)
+                return Results.Json(new { message = "pending" }, statusCode: 401);
+
+            if (lawyer.VerificationStatus == LawyerVerificationStatus.Rejected)
+                return Results.Json(new { message = "rejected" }, statusCode: 401);
 
             var hasher = new PasswordHasher<Lawyer>();
             var verified = hasher.VerifyHashedPassword(lawyer, lawyer.PasswordHash, password);
             if (verified == PasswordVerificationResult.Failed)
-                return Results.Unauthorized();
+                return Results.Json(new { message = "invalid credentials" }, statusCode: 401);
 
             var token = tokens.CreateLawyerToken(lawyer);
             return Results.Ok(new { token });
@@ -104,6 +125,7 @@ public static class LawyerRoutes
                     x.WhatsappNumber,
                     x.VerificationStatus,
                     x.IsSuspended,
+                    x.ProfileImageUrl,
                     ActiveCities = x.ActiveCities.Select(c => new { c.City.Id, c.City.Name }).ToList()
                 })
                 .FirstOrDefaultAsync();
@@ -123,11 +145,66 @@ public static class LawyerRoutes
                     x.SyndicateCardNumber,
                     x.WhatsappNumber,
                     x.VerificationStatus,
+                    x.ProfileImageUrl,
                     ActiveCities = x.ActiveCities.Select(c => new { c.City.Id, c.City.Name }).ToList()
                 })
                 .FirstOrDefaultAsync();
 
             return lawyer is null ? Results.NotFound() : Results.Ok(lawyer);
+        }).RequireAuthorization("Lawyer").WithTags("Lawyers");
+
+        api.MapPut("/lawyers/me", async (UpdateLawyerProfileRequest req, AppDbContext db, HttpContext ctx) =>
+        {
+            var lawyerId = ctx.User.GetSubjectId();
+            var lawyer = await db.Lawyers
+                .Include(x => x.ActiveCities)
+                .FirstOrDefaultAsync(x => x.Id == lawyerId);
+
+            if (lawyer is null) return Results.NotFound();
+
+            if (string.IsNullOrWhiteSpace(req.FullName) || string.IsNullOrWhiteSpace(req.WhatsappNumber))
+                return Results.BadRequest(new { message = "Full name and WhatsApp number are required." });
+            
+            var whatsapp = req.WhatsappNumber.Trim();
+            if (lawyer.WhatsappNumber != whatsapp && await db.Lawyers.AnyAsync(x => x.WhatsappNumber == whatsapp))
+                return Results.Conflict(new { message = "WhatsApp number already registered by another account." });
+
+            var cityIds = (req.ActiveCityIds ?? Array.Empty<int>()).Distinct().ToArray();
+            if (cityIds.Length == 0)
+                return Results.BadRequest(new { message = "At least one active city is required." });
+
+            var foundCityIds = await db.Cities.Where(c => cityIds.Contains(c.Id)).Select(c => c.Id).ToListAsync();
+            if (foundCityIds.Count != cityIds.Length)
+                return Results.BadRequest(new { message = "One or more active cities are invalid." });
+
+            lawyer.FullName = req.FullName.Trim();
+            lawyer.ProfessionalTitle = string.IsNullOrWhiteSpace(req.ProfessionalTitle) ? null : req.ProfessionalTitle.Trim();
+            lawyer.WhatsappNumber = whatsapp;
+            lawyer.UpdatedAtUtc = DateTime.UtcNow;
+
+            db.LawyerCities.RemoveRange(lawyer.ActiveCities);
+            foreach (var cityId in cityIds)
+                db.LawyerCities.Add(new LawyerCity { LawyerId = lawyer.Id, CityId = cityId });
+
+            if (!string.IsNullOrWhiteSpace(req.ProfileImageBase64))
+            {
+                try
+                {
+                    var base64Data = req.ProfileImageBase64.Contains(",") 
+                        ? req.ProfileImageBase64.Split(',')[1] 
+                        : req.ProfileImageBase64;
+                    var bytes = Convert.FromBase64String(base64Data);
+                    var dir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "profile_images");
+                    if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                    var fileName = $"{lawyer.Id}.jpg";
+                    await File.WriteAllBytesAsync(Path.Combine(dir, fileName), bytes);
+                    lawyer.ProfileImageUrl = $"/profile_images/{fileName}";
+                }
+                catch { /* Ignore invalid base64 */ }
+            }
+
+            await db.SaveChangesAsync();
+            return Results.Ok();
         }).RequireAuthorization("Lawyer").WithTags("Lawyers");
 
         api.MapPost("/lawyers/devices", async (RegisterDeviceRequest req, AppDbContext db, HttpContext ctx) =>

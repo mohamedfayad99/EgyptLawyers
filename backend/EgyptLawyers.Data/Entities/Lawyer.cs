@@ -25,6 +25,9 @@ public sealed class Lawyer
 
     public bool IsSuspended { get; set; }
 
+    [MaxLength(1000)]
+    public string? ProfileImageUrl { get; set; }
+
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
 

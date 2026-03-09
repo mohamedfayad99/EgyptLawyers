@@ -8,7 +8,16 @@ public sealed record RegisterLawyerRequest(
     string SyndicateCardNumber,
     string WhatsappNumber,
     string Password,
-    int[] ActiveCityIds
+    int[] ActiveCityIds,
+    string? ProfileImageBase64
+);
+
+public sealed record UpdateLawyerProfileRequest(
+    string FullName,
+    string? ProfessionalTitle,
+    string WhatsappNumber,
+    int[] ActiveCityIds,
+    string? ProfileImageBase64
 );
 
 public sealed record LawyerLoginRequest(string WhatsappNumber, string Password);

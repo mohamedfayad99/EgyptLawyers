@@ -1,46 +1,98 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, ScrollView, Alert } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Text,
+  ScrollView,
+  Alert,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  SafeAreaView,
+  StatusBar,
+} from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Button, Loading } from '../components/common';
 import { useAuth } from '../lib/AuthContext';
+import { updateLawyerProfile } from '../lib/services';
+import { BASE_URL } from '../lib/config';
 
 type Props = NativeStackScreenProps<any, 'Profile'>;
 
 export function ProfileScreen({ navigation }: Props) {
-  const { profile, signOut, isLoading } = useAuth();
+  const { profile, signOut, refreshProfile, isLoading } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const [editFullName, setEditFullName] = useState('');
+  const [editWhatsapp, setEditWhatsapp] = useState('');
+  const [editProfileImage, setEditProfileImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (profile) {
+      setEditFullName(profile.fullName);
+      setEditWhatsapp(profile.whatsappNumber);
+    }
+  }, [profile, isEditing]);
+
+  const handlePickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+      base64: true,
+    });
+    
+    if (!result.canceled && result.assets[0].base64) {
+      setEditProfileImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!profile) return;
+    try {
+      setSaving(true);
+      await updateLawyerProfile({
+        fullName: editFullName,
+        whatsappNumber: editWhatsapp,
+        activeCityIds: profile.activeCities ? profile.activeCities.map(c => c.id) : [],
+        profileImageBase64: editProfileImage || undefined,
+        professionalTitle: profile.professionalTitle || undefined,
+      });
+
+      await refreshProfile();
+      setIsEditing(false);
+      Alert.alert('Success', 'Profile updated successfully.');
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'Update failed');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      {
-        text: 'Cancel',
-        onPress: () => {},
-        style: 'cancel',
-      },
-      {
-        text: 'Logout',
-        onPress: async () => {
-          setLoggingOut(true);
-          await signOut();
-        },
-        style: 'destructive',
-      },
-    ]);
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Logout', 
+          style: 'destructive', 
+          onPress: async () => {
+            setLoggingOut(true);
+            await signOut();
+          }
+        }
+      ]
+    );
   };
 
-  if (isLoading || !profile) {
-    return <Loading message='Loading profile...' />;
-  }
+  if (isLoading || !profile) return <Loading message='Loading profile...' />;
 
-  const statusColors: Record<string | number, string> = {
-    0: '#ff9800', Pending: '#ff9800', pending: '#ff9800',
-    1: '#4caf50', Approved: '#4caf50', approved: '#4caf50',
-    2: '#f44336', Rejected: '#f44336', rejected: '#f44336',
-  };
-
-  const statusColor = statusColors[profile.verificationStatus as string | number] || '#999';
-
-  // Normalize to a readable label regardless of whether the backend returns number or string
   const statusLabel = (() => {
     const s = profile.verificationStatus;
     if (s === 1 || s === 'Approved' || s === 'approved') return 'Approved';
@@ -48,243 +100,271 @@ export function ProfileScreen({ navigation }: Props) {
     return 'Pending';
   })();
 
-  const isApproved = statusLabel === 'Approved';
-  const isRejected = statusLabel === 'Rejected';
+  const statusColor = statusLabel === 'Approved' ? '#20C997' : statusLabel === 'Rejected' ? '#FF6B6B' : '#FF9F43';
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-    >
-      <View style={styles.profileCard}>
-        <View style={styles.avatarContainer}>
-          <Text style={styles.avatar}>
-            {profile.fullName.charAt(0).toUpperCase()}
-          </Text>
-        </View>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <ScrollView contentContainerStyle={styles.contentContainer}>
+        <View style={styles.profileCard}>
+          <TouchableOpacity 
+            disabled={!isEditing} 
+            style={[styles.avatarContainer, { borderColor: isEditing ? '#5C7CFA' : '#EEEEEE' }]} 
+            onPress={handlePickImage}
+          >
+            {editProfileImage ? (
+              <Image source={{ uri: editProfileImage }} style={styles.avatarImage} />
+            ) : profile.profileImageUrl ? (
+              <Image source={{ uri: `${BASE_URL}${profile.profileImageUrl}` }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarText}>{profile.fullName.charAt(0).toUpperCase()}</Text>
+            )}
+            {isEditing && <View style={styles.avatarOverlay}><Text style={styles.avatarOverlayText}>EDIT</Text></View>}
+          </TouchableOpacity>
 
-        <Text style={styles.fullName}>{profile.fullName}</Text>
+          {isEditing ? (
+            <TextInput
+              style={styles.editInputName}
+              value={editFullName}
+              onChangeText={setEditFullName}
+              placeholder="Full Name"
+              placeholderTextColor="#AAB2C1"
+            />
+          ) : (
+            <Text style={styles.fullName}>{profile.fullName}</Text>
+          )}
 
-        <View style={styles.statusContainer}>
-          <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-            <Text style={styles.statusText}>{statusLabel}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: statusColor + '15' }]}>
+            <Text style={[styles.statusText, { color: statusColor }]}>{statusLabel}</Text>
           </View>
         </View>
-      </View>
 
-      <View style={styles.detailsCard}>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>WhatsApp Number:</Text>
-          <Text style={styles.detailValue}>{profile.whatsappNumber}</Text>
-        </View>
+        <View style={styles.detailsCard}>
+          <Text style={styles.sectionTitle}>Profile Details</Text>
+          
+          <View style={styles.detailItem}>
+             <Text style={styles.detailLabel}>WhatsApp</Text>
+             {isEditing ? (
+               <TextInput
+                 style={styles.editInput}
+                 value={editWhatsapp}
+                 onChangeText={setEditWhatsapp}
+                 keyboardType="phone-pad"
+               />
+             ) : (
+               <Text style={styles.detailValue}>{profile.whatsappNumber}</Text>
+             )}
+          </View>
 
-        <View style={styles.divider} />
+          <View style={styles.divider} />
 
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Syndicate Card:</Text>
-          <Text style={styles.detailValue}>{profile.syndicateCardNumber}</Text>
-        </View>
+          <View style={styles.detailItem}>
+             <Text style={styles.detailLabel}>Syndicate Number</Text>
+             <Text style={styles.detailValueLocked}>{profile.syndicateCardNumber}</Text>
+          </View>
 
-        <View style={styles.divider} />
-
-        {profile.professionalTitle && (
-          <>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Professional Title:</Text>
-              <Text style={styles.detailValue}>
-                {profile.professionalTitle}
-              </Text>
-            </View>
-
-            <View style={styles.divider} />
-          </>
-        )}
-
-        {profile.activeCities && profile.activeCities.length > 0 && (
-          <>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Active Cities:</Text>
-              <View style={styles.citiesContainer}>
-                {profile.activeCities.map((city) => (
-                  <View key={city.id} style={styles.cityChip}>
-                    <Text style={styles.cityChipText}>📍 {city.name}</Text>
-                  </View>
-                ))}
+          {profile.professionalTitle && (
+            <>
+              <View style={styles.divider} />
+              <View style={styles.detailItem}>
+                 <Text style={styles.detailLabel}>Title</Text>
+                 <Text style={styles.detailValue}>{profile.professionalTitle}</Text>
               </View>
-            </View>
+            </>
+          )}
 
-            <View style={styles.divider} />
-          </>
-        )}
-
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Account Status:</Text>
-          <Text
-            style={[
-              styles.detailValue,
-              { color: profile.isSuspended ? '#f44336' : '#4caf50' },
-            ]}
-          >
-            {profile.isSuspended ? 'Suspended' : 'Active'}
-          </Text>
+          {profile.activeCities && profile.activeCities.length > 0 && (
+             <>
+               <View style={styles.divider} />
+               <View style={styles.detailItem}>
+                  <Text style={styles.detailLabel}>Active Cities</Text>
+                  <View style={styles.citiesRow}>
+                    {profile.activeCities.map(city => (
+                      <View key={city.id} style={styles.cityChip}>
+                        <Text style={styles.cityChipText}>📍 {city.name}</Text>
+                      </View>
+                    ))}
+                  </View>
+               </View>
+             </>
+          )}
         </View>
 
-        <View style={styles.divider} />
-
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Lawyer ID:</Text>
-          <Text style={styles.detailValue}>{profile.id}</Text>
+        <View style={styles.actionSection}>
+          {isEditing ? (
+            <>
+              <Button title={saving ? 'Saving...' : 'Save Changes'} onPress={handleSaveProfile} loading={saving} />
+              <Button title="Cancel" onPress={() => { setIsEditing(false); setEditProfileImage(null); }} variant="secondary" style={{ marginTop: 12 }} />
+            </>
+          ) : (
+            <>
+              <Button title="Edit Profile" onPress={() => setIsEditing(true)} />
+              <Button 
+                title={loggingOut ? 'Logging out...' : 'Sign Out'} 
+                onPress={handleLogout} 
+                variant='secondary' 
+                style={{ marginTop: 12, borderColor: '#FF6B6B' }} 
+              />
+            </>
+          )}
         </View>
-      </View>
+      </ScrollView>
 
-      {/* Status info box – only shown for non-approved accounts */}
-      {!isApproved && (
-        <View style={[
-          styles.infoBox,
-          isRejected
-            ? { backgroundColor: '#fce4ec', borderLeftColor: '#f44336' }
-            : { backgroundColor: '#fff8e1', borderLeftColor: '#ff9800' },
-        ]}>
-          <Text style={[
-            styles.infoTitle,
-            { color: isRejected ? '#c62828' : '#e65100' },
-          ]}>
-            {isRejected ? '❌ Account Rejected' : '⏳ Pending Verification'}
-          </Text>
-          <Text style={[
-            styles.infoText,
-            { color: isRejected ? '#b71c1c' : '#bf360c' },
-          ]}>
-            {isRejected
-              ? 'Your registration was rejected by the admin. Please contact support for more information.'
-              : 'Your account is pending admin approval. You will be able to use all features once approved.'}
-          </Text>
-        </View>
-      )}
-
-      <Button
-        title={loggingOut ? 'Logging out...' : 'Logout'}
-        onPress={handleLogout}
-        loading={loggingOut}
-        variant='secondary'
-      />
-    </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F8F9FA',
   },
   contentContainer: {
-    padding: 16,
-    paddingTop: 20,
+    padding: 24,
   },
   profileCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 24,
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 32,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
   },
   avatarContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#0066cc',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#F1F3F5',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
+    borderWidth: 1,
+    overflow: 'hidden',
   },
-  avatar: {
-    fontSize: 36,
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  avatarText: {
+    fontSize: 40,
     fontWeight: 'bold',
+    color: '#495057',
+  },
+  avatarOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    width: '100%',
+    paddingVertical: 2,
+    alignItems: 'center',
+  },
+  avatarOverlayText: {
     color: '#fff',
+    fontSize: 8,
+    fontWeight: 'bold',
   },
   fullName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 12,
-    textAlign: 'center',
+    color: '#1E1E1E',
+    marginBottom: 10,
   },
-  statusContainer: {
-    alignItems: 'center',
+  editInputName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#5C7CFA',
+    borderBottomWidth: 1,
+    borderBottomColor: '#5C7CFA',
+    textAlign: 'center',
+    marginBottom: 10,
+    minWidth: 180,
   },
   statusBadge: {
-    paddingVertical: 6,
+    paddingVertical: 4,
     paddingHorizontal: 12,
-    borderRadius: 20,
+    borderRadius: 100,
   },
   statusText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 12,
+    fontSize: 11,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
   },
   detailsCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    marginBottom: 32,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
   },
-  detailRow: {
-    paddingVertical: 12,
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1E1E1E',
+    marginBottom: 20,
+  },
+  detailItem: {
+    marginBottom: 4,
   },
   detailLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
+    fontSize: 11,
+    color: '#868E96',
     marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   detailValue: {
     fontSize: 16,
-    color: '#000',
+    color: '#1E1E1E',
     fontWeight: '500',
+  },
+  detailValueLocked: {
+    fontSize: 16,
+    color: '#ADB5BD',
+    fontWeight: '500',
+  },
+  editInput: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    color: '#1E1E1E',
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+    fontSize: 15,
   },
   divider: {
     height: 1,
-    backgroundColor: '#eee',
+    backgroundColor: '#F1F3F5',
+    marginVertical: 16,
   },
-  infoBox: {
-    backgroundColor: '#e3f2fd',
-    borderLeftWidth: 4,
-    borderLeftColor: '#0066cc',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 24,
-  },
-  infoTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#0066cc',
-    marginBottom: 4,
-  },
-  infoText: {
-    fontSize: 14,
-    color: '#0066cc',
-    lineHeight: 20,
-  },
-  citiesContainer: {
+  citiesRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 6,
-    gap: 6,
+    gap: 8,
+    marginTop: 4,
   },
   cityChip: {
-    backgroundColor: '#e3f2fd',
-    borderRadius: 12,
+    backgroundColor: '#E7F5FF',
+    borderRadius: 8,
     paddingVertical: 4,
     paddingHorizontal: 10,
   },
   cityChipText: {
-    fontSize: 13,
-    color: '#0066cc',
+    color: '#228BE6',
+    fontSize: 12,
     fontWeight: '500',
+  },
+  actionSection: {
+    marginBottom: 40,
   },
 });

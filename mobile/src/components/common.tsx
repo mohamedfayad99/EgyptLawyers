@@ -14,6 +14,7 @@ interface ButtonProps {
   loading?: boolean;
   disabled?: boolean;
   variant?: 'primary' | 'secondary';
+  style?: any;
 }
 
 export function Button({
@@ -22,6 +23,7 @@ export function Button({
   loading,
   disabled,
   variant = 'primary',
+  style,
 }: ButtonProps) {
   return (
     <TouchableOpacity
@@ -29,12 +31,13 @@ export function Button({
         styles.button,
         variant === 'primary' ? styles.primaryButton : styles.secondaryButton,
         disabled || loading ? styles.disabledButton : {},
+        style,
       ]}
       onPress={onPress}
       disabled={disabled || loading}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'primary' ? '#fff' : '#0066cc'} />
+        <ActivityIndicator color={variant === 'primary' ? '#fff' : '#5C7CFA'} />
       ) : (
         <Text
           style={[
@@ -57,19 +60,24 @@ interface TextInputProps {
   editable?: boolean;
   multiline?: boolean;
   numberOfLines?: number;
+  placeholderTextColor?: string;
+  style?: any;
+  keyboardType?: any;
 }
 
 export function TextInput({
   placeholder,
   value,
   onChangeText,
+  placeholderTextColor = '#AAB2C1',
+  style,
   ...rest
 }: TextInputProps) {
   return (
     <RNTextInput
-      style={styles.input}
+      style={[styles.input, style]}
       placeholder={placeholder}
-      placeholderTextColor='#999'
+      placeholderTextColor={placeholderTextColor}
       value={value}
       onChangeText={onChangeText}
       {...rest}
@@ -90,15 +98,7 @@ export function Card({ children, onPress }: CardProps) {
       </TouchableOpacity>
     );
   }
-  return <>{children}</>;
-}
-
-interface ContainerProps {
-  children: React.ReactNode;
-}
-
-export function Container({ children }: ContainerProps) {
-  return <>{children}</>;
+  return <View style={styles.card}>{children}</View>;
 }
 
 interface LoadingProps {
@@ -108,7 +108,7 @@ interface LoadingProps {
 export function Loading({ message }: LoadingProps) {
   return (
     <View style={styles.loadingContainer}>
-      <ActivityIndicator size='large' color='#0066cc' />
+      <ActivityIndicator size='large' color='#5C7CFA' />
       {message && <Text style={styles.loadingText}>{message}</Text>}
     </View>
   );
@@ -122,84 +122,90 @@ interface ErrorProps {
 export function ErrorMessage({ message, onRetry }: ErrorProps) {
   return (
     <View style={styles.errorContainer}>
-      <Text style={styles.errorText}>{message}</Text>
-      {onRetry && <Button title='Retry' onPress={onRetry} variant='primary' />}
+      <Text style={styles.errorText}>⚠️ {message}</Text>
+      {onRetry && <Button title='Retry' onPress={onRetry} variant='secondary' style={{ marginTop: 10, borderColor: '#FF6B6B' }} />}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   button: {
-    paddingVertical: 12,
+    paddingVertical: 14,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 8,
+    marginVertical: 4,
   },
   primaryButton: {
-    backgroundColor: '#0066cc',
+    backgroundColor: '#5C7CFA',
   },
   secondaryButton: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#0066cc',
+    borderColor: '#E9ECEF',
   },
   disabledButton: {
     opacity: 0.5,
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   primaryText: {
-    color: '#fff',
+    color: '#FFFFFF',
   },
   secondaryText: {
-    color: '#0066cc',
+    color: '#5C7CFA',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    borderColor: '#E9ECEF',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     marginVertical: 8,
     fontSize: 16,
-    backgroundColor: '#fff',
-    color: '#000',
+    backgroundColor: '#F8F9FA',
+    color: '#1E1E1E',
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     padding: 16,
     marginVertical: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#FFFFFF',
   },
   loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#666',
+    marginTop: 16,
+    fontSize: 15,
+    color: '#868E96',
+    fontWeight: '500',
   },
   errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 16,
+    backgroundColor: '#FFF5F5',
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 12,
+    borderWidth: 1,
+    borderColor: '#FFE3E3',
   },
   errorText: {
-    fontSize: 16,
-    color: '#d32f2f',
-    marginBottom: 16,
+    fontSize: 14,
+    color: '#FF6B6B',
     textAlign: 'center',
+    fontWeight: '600',
   },
 });

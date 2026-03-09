@@ -4,21 +4,27 @@ import {
   View,
   Text,
   ScrollView,
-  FlatList,
   Alert,
   TouchableOpacity,
   Linking,
+  Image,
+  SafeAreaView,
+  StatusBar,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Button, TextInput, Loading, ErrorMessage } from '../components/common';
-import { getHelpPostDetails, replyToHelpPost, getLawyerById } from '../lib/services';
-import { HelpPostDetails, HelpPostReply } from '../lib/types';
+import { getHelpPostDetails, replyToHelpPost, getLawyerById, rateReply, deleteReply } from '../lib/services';
+import { HelpPostDetails, HelpPostReply, LawyerPublicProfile } from '../lib/types';
 import { useAuth } from '../lib/AuthContext';
+import { BASE_URL } from '../lib/config';
 
 type Props = NativeStackScreenProps<any, 'PostDetails'>;
 
 export function PostDetailsScreen({ route, navigation }: Props) {
-  const { postId } = route.params as { postId: string };
+  const { id } = route.params as { id: string };
   const { profile } = useAuth();
   const [post, setPost] = useState<HelpPostDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -26,18 +32,23 @@ export function PostDetailsScreen({ route, navigation }: Props) {
   const [replyMessage, setReplyMessage] = useState('');
   const [replyLoading, setReplyLoading] = useState(false);
 
+  // Quick View Modal State
+  const [selectedLawyer, setSelectedLawyer] = useState<LawyerPublicProfile | null>(null);
+  const [showQuickView, setShowQuickView] = useState(false);
+  const [quickViewLoading, setQuickViewLoading] = useState(false);
+
   useEffect(() => {
     loadPostDetails();
-  }, [postId]);
+  }, [id]);
 
   const loadPostDetails = async () => {
     try {
       setError('');
-      const postData = await getHelpPostDetails(postId);
+      const postData = await getHelpPostDetails(id);
       setPost(postData);
-      setLoading(false);
     } catch (err: any) {
       setError(err.message || 'Failed to load post');
+    } finally {
       setLoading(false);
     }
   };
@@ -52,7 +63,7 @@ export function PostDetailsScreen({ route, navigation }: Props) {
     setError('');
 
     try {
-      await replyToHelpPost(postId, replyMessage.trim());
+      await replyToHelpPost(id, replyMessage.trim());
       setReplyMessage('');
       await loadPostDetails();
       Alert.alert('Success', 'Reply posted successfully!');
@@ -64,13 +75,10 @@ export function PostDetailsScreen({ route, navigation }: Props) {
   };
 
   const openWhatsApp = (whatsappNumber: string, lawyerName?: string) => {
-    // Keep only digits and leading + so country code is preserved.
-    // Numbers are stored as +2XXXXXXXXXX – wa.me needs digits only (no +).
     const digits = whatsappNumber.replace(/[^0-9]/g, '');
-    // If the stored number somehow lacks the country code, prepend 2 (Egypt)
     const phone = digits.startsWith('2') ? digits : '2' + digits;
     const message = encodeURIComponent(
-      `Hello ${lawyerName || ''}, I saw your reply on EgyptLawyers network and would like to discuss further.`
+      `Hello ${lawyerName || ''}, I saw your reply on EgyptLawyers and would like to discuss further.`
     );
     const url = `https://wa.me/${phone}?text=${message}`;
     Linking.canOpenURL(url)
@@ -78,396 +86,542 @@ export function PostDetailsScreen({ route, navigation }: Props) {
         if (supported) {
           Linking.openURL(url);
         } else {
-          Alert.alert('Error', 'WhatsApp is not installed on this device.');
+          Alert.alert('Error', 'WhatsApp is not installed.');
         }
       })
       .catch(() => Alert.alert('Error', 'Could not open WhatsApp.'));
   };
 
-
-  const viewLawyerProfile = async (lawyerId: string, lawyerName?: string) => {
+  const showLawyerQuickView = async (lawyerId: string) => {
     try {
-      const lawyerProfile = await getLawyerById(lawyerId);
-      Alert.alert(
-        `👤 ${lawyerProfile.fullName}`,
-        [
-          lawyerProfile.professionalTitle ? `Title: ${lawyerProfile.professionalTitle}` : '',
-          `Syndicate Card: ${lawyerProfile.syndicateCardNumber}`,
-          `WhatsApp: ${lawyerProfile.whatsappNumber}`,
-          lawyerProfile.activeCities?.length > 0
-            ? `Active Cities: ${lawyerProfile.activeCities.map((c) => c.name).join(', ')}`
-            : '',
-        ]
-          .filter(Boolean)
-          .join('\n'),
-        [
-          { text: 'Close', style: 'cancel' },
-          {
-            text: '💬 Contact via WhatsApp',
-            onPress: () => openWhatsApp(lawyerProfile.whatsappNumber, lawyerProfile.fullName),
-          },
-        ]
-      );
+      setQuickViewLoading(true);
+      const lawyer = await getLawyerById(lawyerId);
+      setSelectedLawyer(lawyer);
+      setShowQuickView(true);
     } catch {
-      Alert.alert('Error', 'Could not load lawyer profile.');
+      Alert.alert('Error', 'Could not load lawyer info.');
+    } finally {
+      setQuickViewLoading(false);
     }
   };
 
-  if (loading) {
-    return <Loading message='Loading post...' />;
-  }
-
-  if (error && !post) {
-    return <ErrorMessage message={error} onRetry={loadPostDetails} />;
-  }
-
-  if (!post) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>Post not found</Text>
-      </View>
-    );
-  }
-
-  const createdDate = new Date(post.createdAtUtc).toLocaleString('en-GB');
-  const isOwner = profile?.id === post.lawyerId;
-
-  const statusLabel = (status: string | number) => {
-    if (status === 0 || status === 'Open') return 'Open';
-    if (status === 1 || status === 'Closed') return 'Closed';
-    return String(status);
+  const handleRateReply = async (replyId: string, rating: number) => {
+    try {
+      await rateReply(id, replyId, rating);
+      await loadPostDetails();
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to save evaluation');
+    }
   };
 
+  const handleDeleteReply = async (replyId: string) => {
+    Alert.alert(
+      'Delete Reply',
+      'Are you sure you want to delete this reply?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive', 
+          onPress: async () => {
+            try {
+              await deleteReply(id, replyId);
+              await loadPostDetails();
+            } catch (err: any) {
+              Alert.alert('Error', err.message || 'Failed to delete reply');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  if (loading) return <Loading message='Loading request...' />;
+  if (error && !post) return <ErrorMessage message={error} onRetry={loadPostDetails} />;
+  if (!post) return <SafeAreaView style={styles.container}><Text style={styles.errorText}>Post not found</Text></SafeAreaView>;
+
   const renderReply = ({ item }: { item: HelpPostReply }) => {
-    const replyDate = new Date(item.createdAtUtc).toLocaleString('en-GB');
     return (
       <View style={styles.replyCard}>
         <View style={styles.replyHeader}>
-          <View style={styles.replyAuthorRow}>
-            <View style={styles.replyAvatar}>
-              <Text style={styles.replyAvatarText}>
-                {item.lawyerName ? item.lawyerName.charAt(0).toUpperCase() : '?'}
-              </Text>
-            </View>
-            <View style={styles.replyAuthorInfo}>
-              <Text style={styles.replyAuthor}>{item.lawyerName || 'Unknown Lawyer'}</Text>
-              {item.lawyerTitle ? (
-                <Text style={styles.replyTitle}>{item.lawyerTitle}</Text>
-              ) : null}
-              <Text style={styles.replyDate}>{replyDate}</Text>
-            </View>
+          <TouchableOpacity 
+            style={styles.avatarMini} 
+            onPress={() => showLawyerQuickView(item.lawyerId)}
+          >
+            {item.lawyerProfileImageUrl ? (
+              <Image 
+                source={{ uri: `${BASE_URL}${item.lawyerProfileImageUrl}` }} 
+                style={styles.avatarImage} 
+              />
+            ) : (
+              <Text style={styles.avatarText}>{item.lawyerName?.charAt(0)}</Text>
+            )}
+          </TouchableOpacity>
+          <View style={styles.replyAuthorInfo}>
+            <Text style={styles.replyAuthor}>{item.lawyerName}</Text>
+            <Text style={styles.replyDate}>{new Date(item.createdAtUtc).toLocaleDateString()}</Text>
           </View>
-
-          {/* Action buttons – visible to post owner */}
-          {isOwner && (
-            <View style={styles.replyActions}>
-              <TouchableOpacity
-                style={styles.profileButton}
-                onPress={() => viewLawyerProfile(item.lawyerId, item.lawyerName)}
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {item.rating && (
+              <View style={styles.ratingBadge}>
+                <Text style={styles.ratingBadgeText}>⭐ {item.rating}</Text>
+              </View>
+            )}
+            
+            {/* Delete button if user is post owner */}
+            {post?.lawyerId === profile?.id && (
+              <TouchableOpacity 
+                onPress={() => handleDeleteReply(item.id)}
+                style={{ marginLeft: 15 }}
               >
-                <Text style={styles.profileButtonText}>👤 Profile</Text>
+                <Text style={{ fontSize: 18, color: '#FF6B6B' }}>🗑️</Text>
               </TouchableOpacity>
-              {item.lawyerWhatsapp ? (
-                <TouchableOpacity
-                  style={styles.whatsappButton}
-                  onPress={() => openWhatsApp(item.lawyerWhatsapp!, item.lawyerName)}
-                >
-                  <Text style={styles.whatsappButtonText}>📲 WhatsApp</Text>
-                </TouchableOpacity>
-              ) : null}
-            </View>
-          )}
+            )}
+          </View>
         </View>
         <Text style={styles.replyMessage}>{item.message}</Text>
+        
+        {/* Evaluation Logic - Only post owner can evaluate others' replies */}
+        {post?.lawyerId === profile?.id && !item.rating && item.lawyerId !== profile?.id && (
+          <View style={styles.evaluationRow}>
+            <Text style={styles.evaluationLabel}>Evaluate assistance:</Text>
+            <View style={styles.starsRow}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <TouchableOpacity key={star} onPress={() => handleRateReply(item.id, star)}>
+                  <Text style={{ fontSize: 24, marginHorizontal: 2 }}>☆</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
       </View>
     );
   };
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Post info */}
-      <View style={styles.postSection}>
-        <View style={styles.postHeader}>
-          <View style={styles.postHeaderLeft}>
-            <Text style={styles.postCourt}>⚖️ {post.courtName || `Court #${post.courtId}`}</Text>
-            {post.cityName ? (
-              <Text style={styles.postCity}>📍 {post.cityName}</Text>
-            ) : null}
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps='handled'>
+          <View style={styles.postCard}>
+            <View style={styles.authorRow}>
+              <TouchableOpacity 
+                style={styles.avatarMini} 
+                onPress={() => showLawyerQuickView(post.lawyerId)}
+              >
+                 {post.lawyerProfileImageUrl ? (
+                  <Image 
+                    source={{ uri: `${BASE_URL}${post.lawyerProfileImageUrl}` }} 
+                    style={styles.avatarImage} 
+                  />
+                ) : (
+                  <Text style={styles.avatarText}>{post.lawyerName?.charAt(0)}</Text>
+                )}
+              </TouchableOpacity>
+              <View>
+                <Text style={styles.postAuthor}>{post.lawyerName}</Text>
+                <Text style={styles.postDate}>{new Date(post.createdAtUtc).toLocaleString()}</Text>
+              </View>
+            </View>
+
+            <Text style={styles.courtName}>⚖️ {post.courtName}</Text>
+            <Text style={styles.description}>{post.description}</Text>
+            
+            <View style={styles.locationRow}>
+               <Text style={styles.locationText}>📍 {post.cityName}</Text>
+            </View>
           </View>
-          <Text style={styles.postDate}>{createdDate}</Text>
+
+          <View style={styles.repliesSection}>
+            <Text style={styles.sectionTitle}>Replies ({post.replies?.length || 0})</Text>
+            {post.replies?.length === 0 ? (
+              <View style={styles.emptyReplies}>
+                <Text style={styles.emptyText}>No replies yet.</Text>
+              </View>
+            ) : (
+              post.replies?.map((r, i) => <View key={r.id || i}>{renderReply({ item: r })}</View>)
+            )}
+          </View>
+
+          <View style={styles.replyInputSection}>
+            <Text style={styles.replyInputLabel}>Your Reply</Text>
+            <TextInput
+              placeholder="Type your assistance message here..."
+              placeholderTextColor="#AAB2C1"
+              value={replyMessage}
+              onChangeText={setReplyMessage}
+              multiline
+              numberOfLines={4}
+              style={styles.replyInput}
+            />
+            <Button
+              title="Post Reply"
+              onPress={handleReply}
+              loading={replyLoading}
+              style={{ marginTop: 10 }}
+            />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      {/* Lawyer Quick View Modal (Enhanced) */}
+      <Modal
+        visible={showQuickView}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowQuickView(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.quickViewBox}>
+            {selectedLawyer && (
+              <View style={styles.quickViewContent}>
+                {/* Image behind name logic - we can layer them or just show them centered */}
+                <View style={styles.modalAvatarContainer}>
+                   {selectedLawyer.profileImageUrl ? (
+                    <Image 
+                      source={{ uri: `${BASE_URL}${selectedLawyer.profileImageUrl}` }} 
+                      style={styles.avatarLarge} 
+                    />
+                  ) : (
+                    <View style={[styles.avatarLarge, { backgroundColor: '#F8F9FA' }]}>
+                       <Text style={{ fontSize: 40 }}>👤</Text>
+                    </View>
+                  )}
+                </View>
+
+                <Text style={styles.modalLawyerName}>{selectedLawyer.fullName}</Text>
+                {selectedLawyer.professionalTitle && (
+                  <Text style={styles.modalLawyerTitle}>{selectedLawyer.professionalTitle}</Text>
+                )}
+
+                <View style={styles.modalInfoRow}>
+                  <Text style={{ fontSize: 18 }}>📍</Text>
+                  <Text style={styles.modalInfoText}>
+                    Active in: {selectedLawyer.activeCities?.map(c => c.name).join(', ') || 'N/A'}
+                  </Text>
+                </View>
+
+                <View style={styles.modalInfoRow}>
+                   <Text style={styles.modalInfoLabel}>WhatsApp: </Text>
+                   <Text style={styles.modalInfoText}>{selectedLawyer.whatsappNumber}</Text>
+                </View>
+
+                <View style={styles.modalActions}>
+                   <TouchableOpacity 
+                    style={styles.whatsappAction} 
+                    onPress={() => {
+                        setShowQuickView(false);
+                        openWhatsApp(selectedLawyer.whatsappNumber, selectedLawyer.fullName);
+                    }}
+                   >
+                     <Text style={{ fontSize: 24, marginRight: 8 }}>💬</Text>
+                     <Text style={styles.whatsappActionText}>WHATSAPP</Text>
+                   </TouchableOpacity>
+
+                   <TouchableOpacity 
+                    style={styles.closeAction}
+                    onPress={() => setShowQuickView(false)}
+                   >
+                     <Text style={styles.closeActionText}>CLOSE</Text>
+                   </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          </View>
         </View>
+      </Modal>
 
-        <View style={styles.postMeta}>
-          <View style={[styles.statusBadge,
-            (post.status === 0 || post.status === 'Open') ? styles.statusOpen : styles.statusClosed
-          ]}>
-            <Text style={styles.statusText}>{statusLabel(post.status)}</Text>
-          </View>
-          {post.lawyerName ? (
-            <Text style={styles.postOwner}>Posted by {post.lawyerName}</Text>
-          ) : null}
+      {quickViewLoading && (
+        <View style={styles.loadingOverlay}>
+          <Loading />
         </View>
-
-        <Text style={styles.postDescription}>{post.description}</Text>
-
-        {/* If I'm the post owner looking at my own post, show a note */}
-        {isOwner && (
-          <View style={styles.ownerNote}>
-            <Text style={styles.ownerNoteText}>
-              💡 Tap "Profile" or "WhatsApp" on any reply to contact that lawyer directly.
-            </Text>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.divider} />
-
-      {/* Replies section */}
-      <View style={styles.repliesSection}>
-        <Text style={styles.repliesTitle}>
-          Replies ({post.replies?.length || 0})
-        </Text>
-
-        {post.replies && post.replies.length > 0 ? (
-          <FlatList
-            data={post.replies}
-            renderItem={renderReply}
-            keyExtractor={(item, index) => item.id || index.toString()}
-            scrollEnabled={false}
-          />
-        ) : (
-          <View style={styles.noRepliesContainer}>
-            <Text style={styles.noRepliesIcon}>💬</Text>
-            <Text style={styles.noRepliesText}>No replies yet. Be the first to help!</Text>
-          </View>
-        )}
-      </View>
-
-      {/* Reply form – only if not post owner (or even owner can reply if needed) */}
-      <View style={styles.replyFormSection}>
-        <Text style={styles.replyLabel}>Post a Reply</Text>
-        {error ? <ErrorMessage message={error} onRetry={() => setError('')} /> : null}
-        <TextInput
-          placeholder='Type your reply...'
-          value={replyMessage}
-          onChangeText={setReplyMessage}
-          multiline
-          numberOfLines={4}
-          editable={!replyLoading}
-        />
-        <Button
-          title={replyLoading ? 'Sending...' : 'Post Reply'}
-          onPress={handleReply}
-          loading={replyLoading}
-        />
-      </View>
-    </ScrollView>
+      )}
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F8F9FA',
   },
-  postSection: {
-    backgroundColor: '#fff',
+  scrollContent: {
     padding: 16,
-    marginBottom: 8,
   },
-  postHeader: {
+  postCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+  },
+  authorRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 10,
+    alignItems: 'center',
+    marginBottom: 16,
   },
-  postHeaderLeft: {
-    flex: 1,
-    marginRight: 8,
+  avatarMini: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#E9ECEF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    overflow: 'hidden',
   },
-  postCourt: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0066cc',
-    marginBottom: 2,
+  avatarImage: {
+    width: '100%',
+    height: '100%',
   },
-  postCity: {
-    fontSize: 13,
-    color: '#666',
+  avatarText: {
+    color: '#495057',
+    fontWeight: 'bold',
+    fontSize: 20,
+  },
+  postAuthor: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1E1E1E',
   },
   postDate: {
     fontSize: 12,
-    color: '#999',
+    color: '#868E96',
   },
-  postMeta: {
+  courtName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#5C7CFA',
+    marginBottom: 8,
+  },
+  description: {
+    fontSize: 16,
+    color: '#495057',
+    lineHeight: 24,
+    marginBottom: 16,
+  },
+  locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
-    gap: 8,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F3F5',
   },
-  statusBadge: {
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 12,
-  },
-  statusOpen: {
-    backgroundColor: '#e8f5e9',
-  },
-  statusClosed: {
-    backgroundColor: '#fce4ec',
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#333',
-  },
-  postOwner: {
-    fontSize: 13,
-    color: '#666',
-  },
-  postDescription: {
-    fontSize: 16,
-    color: '#333',
-    lineHeight: 24,
-    marginBottom: 12,
-  },
-  ownerNote: {
-    backgroundColor: '#fff8e1',
-    borderRadius: 8,
-    padding: 10,
-    borderLeftWidth: 3,
-    borderLeftColor: '#f59e0b',
-    marginTop: 4,
-  },
-  ownerNoteText: {
-    fontSize: 13,
-    color: '#92400e',
-    lineHeight: 18,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#eee',
-    marginVertical: 0,
+  locationText: {
+    color: '#868E96',
+    fontSize: 14,
   },
   repliesSection: {
-    backgroundColor: '#fff',
-    padding: 16,
-    marginBottom: 8,
+    marginBottom: 24,
   },
-  repliesTitle: {
-    fontSize: 18,
+  sectionTitle: {
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 12,
-  },
-  noRepliesContainer: {
-    alignItems: 'center',
-    paddingVertical: 24,
-  },
-  noRepliesIcon: {
-    fontSize: 36,
-    marginBottom: 8,
-  },
-  noRepliesText: {
-    fontSize: 14,
-    color: '#999',
-    textAlign: 'center',
+    color: '#1E1E1E',
+    marginBottom: 16,
   },
   replyCard: {
-    backgroundColor: '#f9f9f9',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 10,
-    borderLeftWidth: 3,
-    borderLeftColor: '#0066cc',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#5C7CFA',
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowRadius: 5,
+    elevation: 2,
   },
   replyHeader: {
-    marginBottom: 8,
-  },
-  replyAuthorRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-  },
-  replyAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#0066cc',
-    justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
-  },
-  replyAvatarText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
+    marginBottom: 10,
   },
   replyAuthorInfo: {
     flex: 1,
   },
   replyAuthor: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0066cc',
-  },
-  replyTitle: {
-    fontSize: 12,
-    color: '#888',
-    marginTop: 1,
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#1E1E1E',
   },
   replyDate: {
     fontSize: 11,
-    color: '#aaa',
-    marginTop: 2,
-  },
-  replyActions: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 4,
-  },
-  profileButton: {
-    backgroundColor: '#e3f2fd',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 6,
-  },
-  profileButtonText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#0066cc',
-  },
-  whatsappButton: {
-    backgroundColor: '#e8f5e9',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 6,
-  },
-  whatsappButtonText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#2e7d32',
+    color: '#868E96',
   },
   replyMessage: {
     fontSize: 14,
-    color: '#333',
+    color: '#495057',
     lineHeight: 20,
   },
-  replyFormSection: {
-    backgroundColor: '#fff',
-    padding: 16,
-    marginBottom: 20,
+  emptyReplies: {
+    alignItems: 'center',
+    padding: 20,
   },
-  replyLabel: {
+  emptyText: {
+    color: '#868E96',
+    fontSize: 14,
+  },
+  replyInputSection: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 30,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+  },
+  replyInputLabel: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
+    fontWeight: 'bold',
+    color: '#1E1E1E',
     marginBottom: 12,
   },
-  errorText: {
+  replyInput: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 15,
+    color: '#1E1E1E',
     fontSize: 16,
-    color: '#d32f2f',
+    minHeight: 100,
+    textAlignVertical: 'top',
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
+  },
+  errorText: {
+    color: '#FF6B6B',
     textAlign: 'center',
-    paddingVertical: 20,
+    marginTop: 50,
+  },
+  ratingBadge: {
+    backgroundColor: '#FFF9DB',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FFE066',
+  },
+  ratingBadgeText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#F59F00',
+  },
+  evaluationRow: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F3F5',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  evaluationLabel: {
+    fontSize: 13,
+    color: '#868E96',
+    fontWeight: '600',
+  },
+  starsRow: {
+    flexDirection: 'row',
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  quickViewBox: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#DDDDDD',
+    overflow: 'hidden',
+    padding: 24,
+  },
+  quickViewContent: {
+    alignItems: 'center',
+  },
+  modalAvatarContainer: {
+    marginBottom: 16,
+  },
+  avatarLarge: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalLawyerName: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#1E1E1E',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  modalLawyerTitle: {
+    fontSize: 16,
+    color: '#868E96',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    width: '100%',
+    justifyContent: 'center',
+  },
+  modalInfoLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1E1E1E',
+  },
+  modalInfoText: {
+    fontSize: 16,
+    color: '#495057',
+    marginLeft: 8,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    marginTop: 24,
+    width: '100%',
+    justifyContent: 'space-around',
+    borderTopWidth: 1,
+    borderTopColor: '#EEEEEE',
+    paddingTop: 16,
+  },
+  whatsappAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  whatsappActionText: {
+    color: '#2185D0',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  closeAction: {
+    justifyContent: 'center',
+  },
+  closeActionText: {
+    color: '#2185D0',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999,
   },
 });

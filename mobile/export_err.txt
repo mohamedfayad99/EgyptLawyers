@@ -1,0 +1,19 @@
+env: load .env
+env: export EXPO_PUBLIC_API_BASE_URL
+Starting Metro Bundler
+Android Bundled 17837ms index.ts (1247 modules)
+
+› Assets (17):
+node_modules\@react-navigation\elements\lib\module\assets\back-icon-mask.png (653 B)
+node_modules\@react-navigation\elements\lib\module\assets\back-icon.png (4 variations | 152 B)
+node_modules\@react-navigation\elements\lib\module\assets\clear-icon.png (4 variations | 425 B)
+node_modules\@react-navigation\elements\lib\module\assets\close-icon.png (4 variations | 235 B)
+node_modules\@react-navigation\elements\lib\module\assets\search-icon.png (4 variations | 599 B)
+
+› android bundles (1):
+_expo/static/js/android/index-f3948cf0f1fafc33de538f5414197a10.hbc (3.32 MB)
+
+› Files (1):
+metadata.json (1.36 kB)
+
+Exported: dist

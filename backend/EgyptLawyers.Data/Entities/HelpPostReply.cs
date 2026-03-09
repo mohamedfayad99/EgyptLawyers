@@ -18,5 +18,6 @@ public sealed class HelpPostReply
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public List<HelpPostReplyAttachment> Attachments { get; set; } = new();
+    public int? Rating { get; set; }
 }
 

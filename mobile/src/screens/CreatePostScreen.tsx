@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, ScrollView, Alert } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Alert, SafeAreaView, StatusBar } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Button, TextInput, Loading, ErrorMessage } from '../components/common';
 import { createHelpPost, getCities, getCourts } from '../lib/services';
 import { City, Court } from '../lib/types';
-import { Picker } from '@react-native-picker/picker';
+import { Modal, FlatList, TouchableOpacity } from 'react-native';
 
 type Props = NativeStackScreenProps<any, 'CreatePost'>;
 
@@ -19,6 +19,11 @@ export function CreatePostScreen({ navigation }: Props) {
   const [loadingCities, setLoadingCities] = useState(true);
   const [loadingCourts, setLoadingCourts] = useState(false);
   const [error, setError] = useState('');
+
+  const [showCityModal, setShowCityModal] = useState(false);
+  const [showCourtModal, setShowCourtModal] = useState(false);
+  const [citySearch, setCitySearch] = useState('');
+  const [courtSearch, setCourtSearch] = useState('');
 
   useEffect(() => {
     loadCities();
@@ -75,12 +80,11 @@ export function CreatePostScreen({ navigation }: Props) {
 
     try {
       await createHelpPost(selectedCourtId, description.trim());
-      Alert.alert('Success', 'Post created successfully!', [
-        {
-          text: 'OK',
-          onPress: () => navigation.navigate('Home'),
-        },
-      ]);
+      Alert.alert(
+        'Success',
+        'Post created successfully!',
+        [{ text: 'OK', onPress: () => navigation.navigate('HomeTab') }]
+      );
     } catch (err: any) {
       setError(err.message || 'Failed to create post');
     } finally {
@@ -93,118 +97,296 @@ export function CreatePostScreen({ navigation }: Props) {
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-    >
-      <Text style={styles.title}>Create Help Post</Text>
-
-      {error && <ErrorMessage message={error} onRetry={() => setError('')} />}
-
-      <View style={styles.section}>
-        <Text style={styles.label}>Select City *</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={selectedCityId}
-            onValueChange={handleCityChange}
-            enabled={!loading}
-            style={styles.picker}
-          >
-            {cities.map((city) => (
-              <Picker.Item key={city.id} label={city.name} value={city.id} />
-            ))}
-          </Picker>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <ScrollView contentContainerStyle={styles.contentContainer} keyboardShouldPersistTaps='handled'>
+        <View style={styles.header}>
+          <Text style={styles.title}>New Request</Text>
+          <Text style={styles.subtitle}>Ask for assistance from our lawyer network</Text>
         </View>
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.label}>Select Court *</Text>
-        {loadingCourts ? (
-          <Text style={styles.loadingText}>Loading courts...</Text>
-        ) : (
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={selectedCourtId}
-              onValueChange={setSelectedCourtId}
-              enabled={!loading}
-              style={styles.picker}
+        {error ? <ErrorMessage message={error} onRetry={() => setError('')} /> : null}
+
+        <View style={styles.card}>
+          <View style={styles.section}>
+            <Text style={styles.label}>Select City</Text>
+            <TouchableOpacity 
+              style={styles.selector} 
+              onPress={() => setShowCityModal(true)}
+              disabled={loading}
             >
-              {courts.map((court) => (
-                <Picker.Item
-                  key={court.id}
-                  label={court.name}
-                  value={court.id}
-                />
-              ))}
-            </Picker>
+              <Text style={styles.selectorText}>
+                {cities.find(c => c.id === selectedCityId)?.name || 'Select a city'}
+              </Text>
+              <Text style={styles.selectorIcon}>▼</Text>
+            </TouchableOpacity>
           </View>
-        )}
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.label}>Description *</Text>
-        <TextInput
-          placeholder='Describe your legal help request...'
-          value={description}
-          onChangeText={setDescription}
-          multiline
-          numberOfLines={6}
-          editable={!loading}
-        />
-      </View>
+          <View style={styles.section}>
+            <Text style={styles.label}>Select Court</Text>
+            {loadingCourts ? (
+              <View style={styles.loadingContainer}>
+                <Loading message='Loading courts...' />
+              </View>
+            ) : (
+              <TouchableOpacity 
+                style={styles.selector} 
+                onPress={() => setShowCourtModal(true)}
+                disabled={loading || !selectedCityId}
+              >
+                <Text style={styles.selectorText}>
+                  {courts.find(c => c.id === selectedCourtId)?.name || 'Select a court'}
+                </Text>
+                <Text style={styles.selectorIcon}>▼</Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
-      <Button
-        title={loading ? 'Creating...' : 'Create Post'}
-        onPress={handleCreatePost}
-        loading={loading}
-      />
+          <View style={styles.section}>
+            <Text style={styles.label}>Case Details</Text>
+            <TextInput
+              placeholder='Describe your legal help request...'
+              placeholderTextColor="#ADB5BD"
+              value={description}
+              onChangeText={setDescription}
+              multiline
+              numberOfLines={6}
+              editable={!loading}
+              style={styles.textInput}
+            />
+          </View>
 
-      <Button
-        title='Cancel'
-        onPress={() => navigation.goBack()}
-        variant='secondary'
-        disabled={loading}
-      />
-    </ScrollView>
+          <View style={styles.buttonContainer}>
+            <Button
+              title={loading ? 'Publishing...' : 'Publish Request'}
+              onPress={handleCreatePost}
+              loading={loading}
+            />
+            <Button
+              title='Discard'
+              onPress={() => navigation.goBack()}
+              variant='secondary'
+              disabled={loading}
+              style={{marginTop:10}}
+            />
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* City Modal */}
+      <Modal visible={showCityModal} animationType="slide" transparent>
+        <SafeAreaView style={styles.modalBg}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Choose City</Text>
+              <TouchableOpacity onPress={() => setShowCityModal(false)}>
+                <Text style={styles.closeBtn}>Close</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.modalSearch}>
+              <TextInput 
+                placeholder="Search city..." 
+                value={citySearch} 
+                onChangeText={setCitySearch}
+                style={styles.modalSearchInput}
+              />
+            </View>
+            <FlatList
+              data={cities.filter(c => c.name.toLowerCase().includes(citySearch.toLowerCase()))}
+              keyExtractor={item => item.id.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity 
+                  style={styles.modalItem} 
+                  onPress={() => {
+                    handleCityChange(item.id);
+                    setShowCityModal(false);
+                    setCitySearch('');
+                  }}
+                >
+                  <Text style={styles.modalItemText}>{item.name}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </SafeAreaView>
+      </Modal>
+
+      {/* Court Modal */}
+      <Modal visible={showCourtModal} animationType="slide" transparent>
+        <SafeAreaView style={styles.modalBg}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Choose Court</Text>
+              <TouchableOpacity onPress={() => setShowCourtModal(false)}>
+                <Text style={styles.closeBtn}>Close</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.modalSearch}>
+              <TextInput 
+                placeholder="Search court..." 
+                value={courtSearch} 
+                onChangeText={setCourtSearch}
+                style={styles.modalSearchInput}
+              />
+            </View>
+            <FlatList
+              data={courts.filter(c => c.name.toLowerCase().includes(courtSearch.toLowerCase()))}
+              keyExtractor={item => item.id.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity 
+                  style={styles.modalItem} 
+                  onPress={() => {
+                    setSelectedCourtId(item.id);
+                    setShowCourtModal(false);
+                    setCourtSearch('');
+                  }}
+                >
+                  <Text style={styles.modalItemText}>{item.name}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </SafeAreaView>
+      </Modal>
+
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F8F9FA',
   },
   contentContainer: {
-    padding: 16,
+    padding: 24,
+    paddingTop: 40,
+    paddingBottom: 60,
+  },
+  header: {
+    marginBottom: 30,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 24,
-  },
-  section: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
+    color: '#1E1E1E',
     marginBottom: 8,
   },
-  pickerContainer: {
+  subtitle: {
+    fontSize: 16,
+    color: '#868E96',
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
+    borderColor: '#EEEEEE',
+  },
+  section: {
+    marginBottom: 24,
+  },
+  label: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#5C7CFA',
+    marginBottom: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  pickerContainer: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
     overflow: 'hidden',
-    backgroundColor: '#fff',
   },
   picker: {
-    height: 150,
+    height: 50,
+    color: '#1E1E1E',
   },
-  loadingText: {
-    fontSize: 14,
-    color: '#999',
-    padding: 16,
+  textInput: {
+    minHeight: 120,
+    textAlignVertical: 'top',
+    fontSize: 16,
+    color: '#1E1E1E',
+  },
+  loadingContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  buttonContainer: {
+    marginTop: 10,
+  },
+  selector: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
+  },
+  selectorText: {
+    fontSize: 16,
+    color: '#1E1E1E',
+    flex: 1,
+    marginRight: 10,
+  },
+  selectorIcon: {
+    fontSize: 12,
+    color: '#ADB5BD',
+  },
+  modalBg: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    height: '80%',
+    padding: 24,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1E1E1E',
+  },
+  closeBtn: {
+    color: '#5C7CFA',
+    fontWeight: '600',
+  },
+  modalSearch: {
+    marginBottom: 16,
+  },
+  modalSearchInput: {
+    backgroundColor: '#F1F3F5',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+  },
+  modalItem: {
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F3F5',
+  },
+  modalItemText: {
+    fontSize: 16,
+    color: '#495057',
   },
 });

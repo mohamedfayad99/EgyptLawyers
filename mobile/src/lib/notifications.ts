@@ -3,25 +3,28 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Platform } from 'react-native';
 import { registerDevice } from './services';
 
-// Configure how notifications behave when the app is in the foreground
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
-
 /**
  * Returns true when the app is running inside Expo Go.
  * Expo Go dropped remote push notification support in SDK 53.
  * Push tokens only work in a proper development build or production build.
  */
 function isRunningInExpoGo(): boolean {
-  return Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+  return Constants.appOwnership === 'expo';
 }
+
+// Configure how notifications behave when the app is in the foreground
+if (!isRunningInExpoGo()) {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
+
 
 /**
  * Requests notification permissions from the OS, obtains the Expo push token,
@@ -81,6 +84,11 @@ export async function registerForPushNotifications(): Promise<void> {
 export function addNotificationResponseListener(
   onTap: (postId: string) => void,
 ): () => void {
+  if (isRunningInExpoGo()) {
+    // Return empty cleanup if in Expo Go since push notifications are disabled
+    return () => {};
+  }
+  
   const sub = Notifications.addNotificationResponseReceivedListener((response) => {
     const data = response.notification.request.content.data as any;
     if (data?.postId) {

@@ -9,9 +9,14 @@ function defaultBaseUrl() {
 const envUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
 
 export const API_BASE_URL = envUrl || defaultBaseUrl();
+// Base URL for images (without the /api suffix)
+export const BASE_URL = API_BASE_URL.endsWith('/api') 
+  ? API_BASE_URL.slice(0, -4) 
+  : API_BASE_URL;
 
 // Debug log — shows in Metro console so we can confirm the URL at startup
 if (__DEV__) {
   console.log('[Config] EXPO_PUBLIC_API_BASE_URL env =', envUrl ?? '(not set)');
   console.log('[Config] API_BASE_URL =', API_BASE_URL);
+  console.log('[Config] BASE_URL =', BASE_URL);
 }
