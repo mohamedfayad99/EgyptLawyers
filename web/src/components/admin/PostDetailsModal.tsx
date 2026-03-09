@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useLang } from '../../contexts/LanguageContext';
-import { getHelpPost, deleteHelpPost, type Comment, type HelpPost } from '../../admin/services/helpPostService';
+import { getHelpPost, deleteHelpPost, approveHelpPost, rejectHelpPost, type Comment, type HelpPost } from '../../admin/services/helpPostService';
 import ConfirmDialog from './ConfirmDialog';
 
 interface PostDetailsModalProps {
@@ -14,17 +14,22 @@ interface PostDetailsModalProps {
     post: (HelpPost & { cityName?: string; courtName?: string; lawyerName?: string }) | null;
     onClose: () => void;
     onDeleteSuccess: () => void;
+    onModerationSuccess?: () => void;
 }
 
-export default function PostDetailsModal({ open, post, onClose, onDeleteSuccess }: PostDetailsModalProps) {
+export default function PostDetailsModal({ open, post, onClose, onDeleteSuccess, onModerationSuccess }: PostDetailsModalProps) {
     const [replies, setReplies] = useState<Comment[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [moderating, setModerating] = useState(false);
     const { t } = useLang();
 
     const [fullPost, setFullPost] = useState<HelpPost | null>(null);
+
+    const isPending = post?.status === 0 || String(post?.status).toLowerCase() === 'pending';
+    const isOpen = post?.status === 3 || String(post?.status).toLowerCase() === 'open';
 
     const fetchPostDetails = useCallback(async () => {
         if (!post) return;
@@ -67,6 +72,36 @@ export default function PostDetailsModal({ open, post, onClose, onDeleteSuccess 
         }
     };
 
+    const handleApprove = async () => {
+        if (!post) return;
+        setModerating(true);
+        try {
+            await approveHelpPost(post.id);
+            onModerationSuccess?.();
+            onClose();
+        } catch (err) {
+            console.error(err);
+            setError(t('failedToApprove'));
+        } finally {
+            setModerating(false);
+        }
+    };
+
+    const handleReject = async () => {
+        if (!post) return;
+        setModerating(true);
+        try {
+            await rejectHelpPost(post.id);
+            onModerationSuccess?.();
+            onClose();
+        } catch (err) {
+            console.error(err);
+            setError(t('failedToReject'));
+        } finally {
+            setModerating(false);
+        }
+    };
+
     const renderReplies = (items: Comment[], level = 0) => {
         if (items.length === 0 && level === 0) {
             return (
@@ -104,9 +139,11 @@ export default function PostDetailsModal({ open, post, onClose, onDeleteSuccess 
                 <DialogTitle>
                     <Stack direction="row" alignItems="center" justifyContent="space-between">
                         <Typography variant="h6" sx={{ fontWeight: 700 }}>{t('postDetails')}</Typography>
-                        <IconButton color="error" onClick={() => setConfirmDelete(true)} disabled={deleting}>
-                            <DeleteIcon />
-                        </IconButton>
+                        {isOpen && (
+                            <IconButton color="error" onClick={() => setConfirmDelete(true)} disabled={deleting}>
+                                <DeleteIcon />
+                            </IconButton>
+                        )}
                     </Stack>
                 </DialogTitle>
                 <DialogContent dividers>
@@ -139,18 +176,41 @@ export default function PostDetailsModal({ open, post, onClose, onDeleteSuccess 
                     </Box>
                 </DialogContent>
                 <DialogActions sx={{ p: 2, px: 3 }}>
-                    <Button
-                        onClick={() => setConfirmDelete(true)}
-                        color="error"
-                        startIcon={<DeleteIcon />}
-                        disabled={deleting}
-                        sx={{ mr: 'auto' }}
-                    >
-                        {t('deletePost')}
-                    </Button>
-                    <Button onClick={onClose} variant="outlined" sx={{ minWidth: 100 }}>
-                        {t('close')}
-                    </Button>
+                    {isPending && (
+                        <Stack direction="row" spacing={1} sx={{ width: '100%', justifyContent: 'flex-end' }}>
+                            <Button
+                                onClick={handleApprove}
+                                color="primary"
+                                variant="contained"
+                                disabled={moderating || deleting}
+                            >
+                                {t('approve')}
+                            </Button>
+                            <Button
+                                onClick={handleReject}
+                                color="error"
+                                variant="outlined"
+                                disabled={moderating || deleting}
+                            >
+                                {t('reject')}
+                            </Button>
+                            <Button onClick={onClose} variant="outlined" sx={{ minWidth: 100 }}>
+                                {t('cancel', 'إلغاء')}
+                            </Button>
+                        </Stack>
+                    )}
+
+                    {isOpen && (
+                        <Button onClick={onClose} variant="outlined" sx={{ minWidth: 100 }}>
+                            {t('close')}
+                        </Button>
+                    )}
+
+                    {!isPending && !isOpen && (
+                        <Button onClick={onClose} variant="outlined" sx={{ minWidth: 100 }}>
+                            {t('close')}
+                        </Button>
+                    )}
                 </DialogActions>
             </Dialog>
 

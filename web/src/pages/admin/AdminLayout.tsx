@@ -20,7 +20,7 @@ export default function AdminLayout() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
-  const { t, lang } = useLang();
+  const { t } = useLang();
 
   const sidebarWidth = isMobile ? 0 : collapsed ? DRAWER_COLLAPSED : DRAWER_WIDTH;
   const titleKey = pageTitleKeys[location.pathname];
@@ -32,7 +32,7 @@ export default function AdminLayout() {
         display: 'flex',
         minHeight: '100vh',
         bgcolor: 'var(--color-surface)',
-        direction: lang === 'ar' ? 'rtl' : 'ltr',
+        direction: 'ltr',
       }}
     >
       <AdminSidebar
@@ -46,8 +46,8 @@ export default function AdminLayout() {
         component="main"
         sx={{
           flex: 1,
-          ml: lang === 'ar' ? 0 : `${sidebarWidth}px`,
-          mr: lang === 'ar' ? `${sidebarWidth}px` : 0,
+          ml: `${sidebarWidth}px`,
+          mr: 0,
           transition: 'margin 0.3s',
           display: 'flex',
           flexDirection: 'column',

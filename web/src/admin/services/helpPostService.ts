@@ -32,6 +32,18 @@ export async function getHelpPosts(cityId?: number, courtId?: number): Promise<H
   return res.data;
 }
 
+export async function getPendingHelpPosts(): Promise<HelpPost[]> {
+  const res = await api.get('/api/admin/help-posts/pending');
+  return res.data;
+}
+
+export async function getAdminHelpPosts(cityId?: number, courtId?: number): Promise<HelpPost[]> {
+  const res = await api.get('/api/admin/help-posts', {
+    params: { cityId, courtId },
+  });
+  return res.data;
+}
+
 export async function getHelpPost(postId: string): Promise<HelpPost> {
   const res = await api.get(`/api/help-posts/${postId}`);
   return res.data;
@@ -39,5 +51,13 @@ export async function getHelpPost(postId: string): Promise<HelpPost> {
 
 
 export async function deleteHelpPost(postId: string): Promise<void> {
-  await api.delete(`/api/help-posts/${postId}`);
+  await api.delete(`/api/admin/help-posts/${postId}`);
+}
+
+export async function approveHelpPost(postId: string): Promise<void> {
+  await api.post(`/api/admin/help-posts/${postId}/approve`);
+}
+
+export async function rejectHelpPost(postId: string): Promise<void> {
+  await api.post(`/api/admin/help-posts/${postId}/reject`);
 }

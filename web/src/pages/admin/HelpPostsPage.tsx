@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { MenuItem, TextField, Typography, Box, Alert } from '@mui/material';
 import AdminTable, { type Column } from '../../components/admin/AdminTable';
-import { getHelpPosts, type HelpPost } from '../../admin/services/helpPostService';
+import { getHelpPosts, getAdminHelpPosts, getPendingHelpPosts, type HelpPost } from '../../admin/services/helpPostService';
 import { getCities, type City } from '../../admin/services/cityService';
 import { getCourts, type Court } from '../../admin/services/courtService';
 import { getLawyers, type Lawyer } from '../../admin/services/lawyerService';
@@ -22,6 +22,7 @@ export default function HelpPostsPage() {
 
     const [filterCityId, setFilterCityId] = useState<number | ''>('');
     const [filterCourtId, setFilterCourtId] = useState<number | ''>('');
+    const [filterStatus, setFilterStatus] = useState<string | ''>('');
 
     // Modal state
     const [selectedPost, setSelectedPost] = useState<PostRow | null>(null);
@@ -41,16 +42,27 @@ export default function HelpPostsPage() {
 
     useEffect(() => {
         loadPosts();
-    }, [filterCityId, filterCourtId, cities, courts, lawyers]);
+    }, [filterCityId, filterCourtId, filterStatus, cities, courts, lawyers]);
 
     async function loadPosts() {
         setLoading(true);
         setError(null);
         try {
-            const data = await getHelpPosts(
-                filterCityId === '' ? undefined : filterCityId,
-                filterCourtId === '' ? undefined : filterCourtId,
-            );
+            let data: HelpPost[];
+            if (filterStatus === 'pending') {
+                data = await getPendingHelpPosts();
+            } else if (filterStatus === 'open') {
+                data = await getHelpPosts(
+                    filterCityId === '' ? undefined : filterCityId,
+                    filterCourtId === '' ? undefined : filterCourtId,
+                );
+            } else {
+                // Combined view for "All"
+                data = await getAdminHelpPosts(
+                    filterCityId === '' ? undefined : filterCityId,
+                    filterCourtId === '' ? undefined : filterCourtId,
+                );
+            }
             const cityMap = new Map(cities.map((c) => [c.id, c.name]));
             const courtMap = new Map(courts.map((c) => [c.id, c.name]));
             const lawyerMap = new Map(lawyers.map((l) => [l.id, l.fullName]));
@@ -72,8 +84,11 @@ export default function HelpPostsPage() {
 
     const statusLabel = (s: string | number) => {
         const val = String(s);
-        if (val === '0' || val.toLowerCase() === 'open') return 'Open';
-        if (val === '1' || val.toLowerCase() === 'closed') return 'Closed';
+        if (val === '0' || val.toLowerCase() === 'pending') return 'Pending';
+        if (val === '1' || val.toLowerCase() === 'approved') return 'Approved';
+        if (val === '2' || val.toLowerCase() === 'rejected') return 'Rejected';
+        if (val === '3' || val.toLowerCase() === 'open') return 'Open';
+        if (val === '4' || val.toLowerCase() === 'closed') return 'Closed';
         return val;
     };
 
@@ -103,9 +118,12 @@ export default function HelpPostsPage() {
                     sx={{
                         fontSize: '0.8rem',
                         fontWeight: 600,
-                        color: String(row.status).toLowerCase() === 'open' || row.status === 0
-                            ? 'var(--color-primary)'
-                            : 'rgba(var(--color-text-rgb),0.5)',
+                        color:
+                            String(row.status).toLowerCase() === 'open' || row.status === 3
+                                ? 'var(--color-primary)'
+                                : String(row.status).toLowerCase() === 'pending' || row.status === 0
+                                    ? 'orange'
+                                    : 'rgba(var(--color-text-rgb),0.5)',
                     }}
                 >
                     {t(statusLabel(row.status).toLowerCase() as any) ?? statusLabel(row.status)}
@@ -161,6 +179,18 @@ export default function HelpPostsPage() {
                         <TextField
                             select
                             size="small"
+                            label={t('filterByStatus')}
+                            value={filterStatus}
+                            onChange={(e) => setFilterStatus(e.target.value)}
+                            sx={{ minWidth: 120 }}
+                        >
+                            <MenuItem value="">{t('allStatuses')}</MenuItem>
+                            <MenuItem value="pending">{t('pending')}</MenuItem>
+                            <MenuItem value="open">{t('open')}</MenuItem>
+                        </TextField>
+                        <TextField
+                            select
+                            size="small"
                             label={t('city')}
                             value={filterCityId}
                             onChange={(e) => {
@@ -197,6 +227,10 @@ export default function HelpPostsPage() {
                 onClose={() => setSelectedPost(null)}
                 onDeleteSuccess={() => {
                     setSuccessMsg(t('postDeleted'));
+                    loadPosts();
+                }}
+                onModerationSuccess={() => {
+                    setSuccessMsg(t('Action successful', 'تمت العملية بنجاح'));
                     loadPosts();
                 }}
             />
