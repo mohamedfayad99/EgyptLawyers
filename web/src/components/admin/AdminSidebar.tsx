@@ -42,7 +42,7 @@ export default function AdminSidebar({
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const location = useLocation();
   const navigate = useNavigate();
-  const { t, lang } = useLang();
+  const { t } = useLang();
 
   const navItems = [
     { labelKey: "dashboard" as const, icon: DashboardIcon, path: "/admin" },
@@ -160,7 +160,7 @@ export default function AdminSidebar({
                     color: active
                       ? "var(--color-background)"
                       : "rgba(255,255,255,0.7)",
-                    textAlign: lang === "ar" ? "right" : "left",
+                    textAlign: "left",
                   }}
                 />
               )}

@@ -29,6 +29,14 @@ const cacheLtr = createCache({
 
 function RequireAdmin({ children }: { children: React.ReactNode }) {
   const token = getAdminToken()
+  const { lang, toggleLang } = useLang()
+
+  useEffect(() => {
+    if (lang === 'ar') {
+      toggleLang()
+    }
+  }, [lang, toggleLang])
+
   if (!token) return <Navigate to="/admin/login" replace />
   return <>{children}</>
 }
