@@ -124,10 +124,10 @@ export function NotificationsScreen({ navigation }: Props) {
                     {!item.isRead && <View style={styles.unreadDot} />}
                   </View>
                   <Text style={styles.message} numberOfLines={2}>
-                    Replied: "{item.message}"
+                    {item.message}
                   </Text>
                   <Text style={styles.postContext} numberOfLines={1}>
-                    On: {item.postDescription}
+                    Request: {item.postDescription}
                   </Text>
                   <Text style={styles.time}>{new Date(item.createdAtUtc).toLocaleString()}</Text>
                 </TouchableOpacity>

@@ -35,66 +35,6 @@ public static class HelpPostRoutes
             db.HelpPosts.Add(post);
             await db.SaveChangesAsync();
 
-            // ── Push Notifications (fire-and-forget) ───────────────────────
-            // Capture local values before leaving the request scope.
-            var capturedServices = ctx.RequestServices;
-            var capturedLawyerId = lawyerId;
-            var capturedCityId   = court.CityId;
-            var capturedCourtId  = court.Id;
-            var capturedCourtName = court.Name;
-            var capturedPostId   = post.Id;
-
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    // Use a fresh DI scope — the request scope will be disposed shortly.
-                    using var scope    = capturedServices.CreateScope();
-                    var scopedDb       = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                    var push           = scope.ServiceProvider.GetRequiredService<ExpoPushService>();
-
-                    // Poster name & city name for notification copy
-                    var posterName = await scopedDb.Lawyers
-                        .Where(x => x.Id == capturedLawyerId)
-                        .Select(x => x.FullName)
-                        .FirstOrDefaultAsync() ?? "A lawyer";
-
-                    var cityName = await scopedDb.Cities
-                        .Where(x => x.Id == capturedCityId)
-                        .Select(x => x.Name)
-                        .FirstOrDefaultAsync() ?? "your city";
-
-                    // Lawyers who have the same city as an active city (excluding the poster)
-                    var targetIds = await scopedDb.LawyerCities
-                        .Where(lc => lc.CityId == capturedCityId && lc.LawyerId != capturedLawyerId)
-                        .Select(lc => lc.LawyerId)
-                        .Distinct()
-                        .ToListAsync();
-
-                    if (targetIds.Count == 0) return;
-
-                    // Their registered Expo push tokens
-                    var tokens = await scopedDb.DeviceRegistrations
-                        .Where(d => targetIds.Contains(d.LawyerId))
-                        .Select(d => d.DeviceToken)
-                        .ToListAsync();
-
-                    if (tokens.Count == 0) return;
-
-                    await push.SendAsync(
-                        tokens,
-                        title: $"🆘 Help needed in {cityName}",
-                        body:  $"{posterName} needs assistance at {capturedCourtName}. Tap to view.",
-                        data:  new { postId = capturedPostId, cityId = capturedCityId, courtId = capturedCourtId }
-                    );
-                }
-                catch
-                {
-                    // Notifications are best-effort — never crash the request
-                }
-            });
-            // ── End Push ───────────────────────────────────────────────────
-
             return Results.Ok(new { post.Id, post.CityId, post.CourtId });
         }).RequireAuthorization("Lawyer").WithTags("Help Posts");
 
@@ -302,12 +242,63 @@ public static class HelpPostRoutes
             return Results.Ok(posts);
         }).RequireAuthorization("Admin").WithTags("Admin Help Posts");
 
-        api.MapPost("/admin/help-posts/{id:guid}/approve", async (Guid id, AppDbContext db) =>
+        api.MapPost("/admin/help-posts/{id:guid}/approve", async (Guid id, AppDbContext db, ExpoPushService push) =>
         {
-            var post = await db.HelpPosts.FirstOrDefaultAsync(x => x.Id == id);
+            var post = await db.HelpPosts
+                .Include(x => x.Lawyer)
+                .Include(x => x.City)
+                .Include(x => x.Court)
+                .FirstOrDefaultAsync(x => x.Id == id);
+
             if (post is null) return Results.NotFound();
 
             post.Status = HelpPostStatus.Open;
+
+            // ── Notify lawyers in the same city ──
+            var targetLawyerIds = await db.LawyerCities
+                .Where(lc => lc.CityId == post.CityId && lc.LawyerId != post.LawyerId)
+                .Select(lc => lc.LawyerId)
+                .Distinct()
+                .ToListAsync();
+
+            if (targetLawyerIds.Any())
+            {
+                // 1. Create Internal Notifications (for the bell icon list)
+                foreach (var lawyerId in targetLawyerIds)
+                {
+                    db.Notifications.Add(new Notification
+                    {
+                        LawyerId = lawyerId,
+                        PostId = post.Id,
+                        Message = post.Description.Length > 100 ? post.Description[..100] + "..." : post.Description,
+                        ReplierName = post.Lawyer.FullName, // Using Author Name as the "Notifier"
+                    });
+                }
+
+                // 2. Send Push Notifications
+                var tokens = await db.DeviceRegistrations
+                    .Where(d => targetLawyerIds.Contains(d.LawyerId))
+                    .Select(d => d.DeviceToken)
+                    .ToListAsync();
+
+                if (tokens.Any())
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await push.SendAsync(
+                                tokens,
+                                title: $"🆘 Help needed in {post.City.Name}",
+                                body: $"{post.Lawyer.FullName} needs assistance at {post.Court.Name}. Tap to view.",
+                                data: new { postId = post.Id, cityId = post.CityId, courtId = post.CourtId }
+                            );
+                        }
+                        catch { /* Best effort push */ }
+                    });
+                }
+            }
+
             await db.SaveChangesAsync();
 
             return Results.Ok(new { message = "Post approved successfully." });

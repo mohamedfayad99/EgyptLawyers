@@ -96,16 +96,16 @@ public static class LawyerRoutes
             if (lawyer.IsSuspended)
                 return Results.Json(new { message = "suspended" }, statusCode: 403);
 
+            var hasher = new PasswordHasher<Lawyer>();
+            var verified = hasher.VerifyHashedPassword(lawyer, lawyer.PasswordHash, password);
+            if (verified == PasswordVerificationResult.Failed)
+                return Results.Json(new { message = "invalid credentials" }, statusCode: 401);
+
             if (lawyer.VerificationStatus == LawyerVerificationStatus.Pending)
                 return Results.Json(new { message = "pending" }, statusCode: 401);
 
             if (lawyer.VerificationStatus == LawyerVerificationStatus.Rejected)
                 return Results.Json(new { message = "rejected" }, statusCode: 401);
-
-            var hasher = new PasswordHasher<Lawyer>();
-            var verified = hasher.VerifyHashedPassword(lawyer, lawyer.PasswordHash, password);
-            if (verified == PasswordVerificationResult.Failed)
-                return Results.Json(new { message = "invalid credentials" }, statusCode: 401);
 
             var token = tokens.CreateLawyerToken(lawyer);
             return Results.Ok(new { token });

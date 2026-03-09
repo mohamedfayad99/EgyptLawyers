@@ -47,29 +47,22 @@ export function LoginScreen({ navigation }: Props) {
       const normalizedWhatsapp = normalizeEgyptianPhone(whatsapp);
       const response = await loginLawyer(normalizedWhatsapp, password);
       
-      // Before setting token globally, verify the profile status
       await setToken(response.token);
       const profile = await getLawyerProfile();
-      
-      const vStatus = profile.verificationStatus;
-      const isApproved = vStatus === 1 || vStatus === 'Approved' || vStatus === 'approved';
-      const isRejected = vStatus === 2 || vStatus === 'Rejected' || vStatus === 'rejected';
-
-      if (isRejected) {
-        setError('Your application has been rejected. Please contact support for more information.');
-        await setToken(''); // Clear token
-        return;
-      }
-      
-      if (!isApproved) {
-        setError('Your account is still pending approval. We will notify you once it is reviewed.');
-        await setToken(''); // Clear token
-        return;
-      }
-
       await signIn(response.token, profile);
     } catch (err: any) {
-      setError('Invalid WhatsApp number or password. Please try again.');
+      const msg = err.message || '';
+      
+      if (msg.includes('pending')) {
+        setError('Your account is still pending approval. We will notify you once it is reviewed.');
+      } else if (msg.includes('rejected')) {
+        setError('Your application has been rejected. Please contact support for more information.');
+      } else if (msg.includes('suspended')) {
+        setError('Your account has been suspended. Please contact support.');
+      } else {
+        setError('Invalid WhatsApp number or password. Please try again.');
+      }
+      
       await setToken('');
     } finally {
       setLoading(false);
