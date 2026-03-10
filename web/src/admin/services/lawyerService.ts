@@ -9,6 +9,7 @@ export type Lawyer = {
   verificationStatus: 'Pending' | 'Approved' | 'Rejected' | number;
   isSuspended: boolean;
   createdAtUtc: string;
+  activeCities?: string[];
 };
 
 export async function getLawyers(status?: string): Promise<Lawyer[]> {

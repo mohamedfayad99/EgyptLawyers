@@ -3,6 +3,7 @@ import {
     Chip, Stack,
     Typography, Box, Tooltip, IconButton
 } from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import BlockIcon from '@mui/icons-material/Block';
 import AdminTable, { type Column } from '../../components/admin/AdminTable';
 import {
@@ -62,6 +63,15 @@ export default function UserManagementPage() {
             accessor: 'syndicateCardNumber' as keyof LawyerRow,
         },
         {
+            header: t('city'),
+            accessor: 'activeCities' as keyof LawyerRow,
+            render: (row) => (
+                <Typography sx={{ fontSize: '0.8125rem' }}>
+                    {row.activeCities?.join(', ') || '-'}
+                </Typography>
+            ),
+        },
+        {
             header: t('status'),
             accessor: 'verificationStatus' as keyof LawyerRow,
             render: (row) => (
@@ -92,22 +102,36 @@ export default function UserManagementPage() {
             header: t('actions'),
             align: 'right' as const,
             render: (row) => (
-                <Tooltip title={t('block')}>
+                <Tooltip title={row.isSuspended ? t('unblock') : t('block')}>
                     <IconButton
                         size="small"
-                        color="error"
-                        onClick={() => setConfirmBlock(row)}
+                        color={row.isSuspended ? "success" : "error"}
+                        onClick={() => row.isSuspended ? executeUnblock(row) : setConfirmBlock(row)}
                         sx={{
-                            bgcolor: 'rgba(211, 47, 47, 0.04)',
-                            '&:hover': { bgcolor: 'rgba(211, 47, 47, 0.08)' }
+                            bgcolor: row.isSuspended ? 'rgba(76, 175, 80, 0.04)' : 'rgba(211, 47, 47, 0.04)',
+                            '&:hover': { bgcolor: row.isSuspended ? 'rgba(76, 175, 80, 0.08)' : 'rgba(211, 47, 47, 0.08)' }
                         }}
                     >
-                        <BlockIcon fontSize="small" />
+                        {row.isSuspended ? <CheckCircleIcon fontSize="small" /> : <BlockIcon fontSize="small" />}
                     </IconButton>
                 </Tooltip>
             ),
         },
     ];
+
+    async function executeUnblock(lawyer: Lawyer) {
+        setLoading(true);
+        setError(null);
+        try {
+            await suspendLawyer(lawyer.id, false);
+            await load();
+        } catch (e: unknown) {
+            console.error(e);
+            setError(t('failedToUnblock'));
+        } finally {
+            setLoading(false);
+        }
+    }
 
     async function executeBlock() {
         if (!confirmBlock) return;

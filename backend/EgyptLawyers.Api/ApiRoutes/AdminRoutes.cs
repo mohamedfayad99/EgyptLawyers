@@ -38,6 +38,7 @@ public static class AdminRoutes
                 q = q.Where(x => x.VerificationStatus == parsed);
 
             var lawyers = await q
+                .Include(x => x.ActiveCities).ThenInclude(x => x.City)
                 .OrderByDescending(x => x.CreatedAtUtc)
                 .Take(200)
                 .Select(x => new
@@ -49,7 +50,8 @@ public static class AdminRoutes
                     x.WhatsappNumber,
                     x.VerificationStatus,
                     x.IsSuspended,
-                    x.CreatedAtUtc
+                    x.CreatedAtUtc,
+                    ActiveCities = x.ActiveCities.Select(c => c.City.Name).ToList()
                 })
                 .ToListAsync();
 
@@ -62,6 +64,7 @@ public static class AdminRoutes
             if (lawyer is null) return Results.NotFound();
 
             lawyer.VerificationStatus = LawyerVerificationStatus.Approved;
+            lawyer.IsSuspended = false; // Ensure unblocking if they were suspended
             lawyer.UpdatedAtUtc = DateTime.UtcNow;
             await db.SaveChangesAsync();
             return Results.Ok();
