@@ -5,6 +5,7 @@ import { Button, TextInput, Loading, ErrorMessage } from '../components/common';
 import { createHelpPost, getCities, getCourts } from '../lib/services';
 import { City, Court } from '../lib/types';
 import { Modal, FlatList, TouchableOpacity } from 'react-native';
+import * as DocumentPicker from 'expo-document-picker';
 
 type Props = NativeStackScreenProps<any, 'CreatePost'>;
 
@@ -14,6 +15,7 @@ export function CreatePostScreen({ navigation }: Props) {
   const [selectedCityId, setSelectedCityId] = useState<number | undefined>();
   const [selectedCourtId, setSelectedCourtId] = useState<number | undefined>();
   const [description, setDescription] = useState('');
+  const [files, setFiles] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [loadingCities, setLoadingCities] = useState(true);
@@ -64,6 +66,25 @@ export function CreatePostScreen({ navigation }: Props) {
     loadCourts(cityId);
   };
 
+  const pickFiles = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['image/*', 'application/pdf'], // Limit to common types requested
+        multiple: true
+      });
+
+      if (!result.canceled) {
+        setFiles(prev => [...prev, ...result.assets]);
+      }
+    } catch (err) {
+      console.warn(err);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleCreatePost = async () => {
     if (!selectedCourtId) {
       setError('Please select a court');
@@ -79,7 +100,12 @@ export function CreatePostScreen({ navigation }: Props) {
     setError('');
 
     try {
-      await createHelpPost(selectedCourtId, description.trim());
+      await createHelpPost(selectedCourtId, description.trim(), files);
+      
+      // Reset state so next time the screen opens it's empty
+      setDescription('');
+      setFiles([]);
+      
       Alert.alert(
         'Success',
         'Post created successfully!',
@@ -154,6 +180,32 @@ export function CreatePostScreen({ navigation }: Props) {
               editable={!loading}
               style={styles.textInput}
             />
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.label}>Attachments (Optional)</Text>
+            
+            <TouchableOpacity 
+              style={styles.attachmentSelector} 
+              onPress={pickFiles} 
+              disabled={loading}
+            >
+              <Text style={styles.attachmentSelectorText}>
+                {files.length > 0 ? `${files.length} file(s) selected` : '📎 Tap to attach images or PDFs'}
+              </Text>
+              <Text style={styles.addBtnSmall}>+ Add</Text>
+            </TouchableOpacity>
+
+            <View style={styles.fileList}>
+              {files.map((file, index) => (
+                <View key={index} style={styles.fileItem}>
+                  <Text style={styles.fileName} numberOfLines={1}>{file.name}</Text>
+                  <TouchableOpacity onPress={() => removeFile(index)} style={styles.removePadding}>
+                    <Text style={styles.removeBtn}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
           </View>
 
           <View style={styles.buttonContainer}>
@@ -342,6 +394,73 @@ const styles = StyleSheet.create({
   selectorIcon: {
     fontSize: 12,
     color: '#ADB5BD',
+  },
+  attachmentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  addBtn: {
+    color: '#5C7CFA',
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  fileItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#F1F3F5',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 8,
+  },
+  fileName: {
+    fontSize: 14,
+    color: '#495057',
+    flex: 1,
+    marginRight: 10,
+  },
+  removeBtn: {
+    color: '#FF6B6B',
+    fontSize: 16,
+    fontWeight: 'bold',
+    padding: 4,
+  },
+  hint: {
+    fontSize: 12,
+    color: '#ADB5BD',
+    fontStyle: 'italic',
+  },
+  attachmentSelector: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
+    borderStyle: 'dashed',
+    marginBottom: 10,
+  },
+  attachmentSelectorText: {
+    fontSize: 15,
+    color: '#868E96',
+    flex: 1,
+  },
+  addBtnSmall: {
+    color: '#5C7CFA',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  fileList: {
+    marginTop: 4,
+  },
+  removePadding: {
+    padding: 5,
   },
   modalBg: {
     flex: 1,

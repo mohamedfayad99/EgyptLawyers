@@ -17,9 +17,10 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Button, TextInput, Loading, ErrorMessage } from '../components/common';
 import { getHelpPostDetails, replyToHelpPost, getLawyerById, rateReply, deleteReply } from '../lib/services';
-import { HelpPostDetails, HelpPostReply, LawyerPublicProfile } from '../lib/types';
+import { HelpPostDetails, HelpPostReply, LawyerPublicProfile, Attachment } from '../lib/types';
 import { useAuth } from '../lib/AuthContext';
 import { BASE_URL } from '../lib/config';
+import * as DocumentPicker from 'expo-document-picker';
 
 type Props = NativeStackScreenProps<any, 'PostDetails'>;
 
@@ -30,6 +31,7 @@ export function PostDetailsScreen({ route, navigation }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [replyMessage, setReplyMessage] = useState('');
+  const [replyFiles, setReplyFiles] = useState<any[]>([]);
   const [replyLoading, setReplyLoading] = useState(false);
 
   // Quick View Modal State
@@ -63,8 +65,9 @@ export function PostDetailsScreen({ route, navigation }: Props) {
     setError('');
 
     try {
-      await replyToHelpPost(id, replyMessage.trim());
+      await replyToHelpPost(id, replyMessage.trim(), replyFiles);
       setReplyMessage('');
+      setReplyFiles([]);
       await loadPostDetails();
       Alert.alert('Success', 'Reply posted successfully!');
     } catch (err: any) {
@@ -72,6 +75,25 @@ export function PostDetailsScreen({ route, navigation }: Props) {
     } finally {
       setReplyLoading(false);
     }
+  };
+
+  const pickReplyFiles = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['image/*', 'application/pdf'],
+        multiple: true
+      });
+
+      if (!result.canceled) {
+        setReplyFiles(prev => [...prev, ...result.assets]);
+      }
+    } catch (err) {
+      console.warn(err);
+    }
+  };
+
+  const removeReplyFile = (index: number) => {
+    setReplyFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const openWhatsApp = (whatsappNumber: string, lawyerName?: string) => {
@@ -140,6 +162,23 @@ export function PostDetailsScreen({ route, navigation }: Props) {
   if (error && !post) return <ErrorMessage message={error} onRetry={loadPostDetails} />;
   if (!post) return <SafeAreaView style={styles.container}><Text style={styles.errorText}>Post not found</Text></SafeAreaView>;
 
+  const renderAttachments = (attachments?: Attachment[]) => {
+    if (!attachments || attachments.length === 0) return null;
+    return (
+      <View style={styles.attachmentsContainer}>
+        {attachments.map((att) => (
+          <TouchableOpacity 
+            key={att.id} 
+            style={styles.attachmentItem}
+            onPress={() => Linking.openURL(`${BASE_URL}${att.fileUrl}`)}
+          >
+            <Text style={styles.attachmentText}>📎 {att.fileUrl.split('.').pop()?.toUpperCase() || 'Attachment'}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
+
   const renderReply = ({ item }: { item: HelpPostReply }) => {
     return (
       <View style={styles.replyCard}>
@@ -180,6 +219,8 @@ export function PostDetailsScreen({ route, navigation }: Props) {
           </View>
         </View>
         <Text style={styles.replyMessage}>{item.message}</Text>
+        
+        {renderAttachments(item.attachments)}
         
         {/* Evaluation Logic - Only post owner can evaluate others' replies */}
         {post?.lawyerId === profile?.id && !item.rating && item.lawyerId !== profile?.id && (
@@ -231,6 +272,8 @@ export function PostDetailsScreen({ route, navigation }: Props) {
             <Text style={styles.courtName}>⚖️ {post.courtName}</Text>
             <Text style={styles.description}>{post.description}</Text>
             
+            {renderAttachments(post.attachments)}
+
             <View style={styles.locationRow}>
                <Text style={styles.locationText}>📍 {post.cityName}</Text>
             </View>
@@ -258,6 +301,22 @@ export function PostDetailsScreen({ route, navigation }: Props) {
               numberOfLines={4}
               style={styles.replyInput}
             />
+
+            <View style={styles.replyAttachmentRow}>
+              <TouchableOpacity onPress={pickReplyFiles} disabled={replyLoading}>
+                <Text style={styles.addAttachmentText}>+ Attach Document</Text>
+              </TouchableOpacity>
+            </View>
+
+            {replyFiles.map((file, index) => (
+              <View key={index} style={styles.selectedFileItem}>
+                <Text style={styles.selectedFileName} numberOfLines={1}>{file.name}</Text>
+                <TouchableOpacity onPress={() => removeReplyFile(index)}>
+                  <Text style={styles.removeFileBtn}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+
             <Button
               title="Post Reply"
               onPress={handleReply}
@@ -623,5 +682,60 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 999,
+  },
+  attachmentsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  attachmentItem: {
+    backgroundColor: '#F1F3F5',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginRight: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#DEE2E6',
+  },
+  attachmentText: {
+    fontSize: 12,
+    color: '#495057',
+    fontWeight: '600',
+  },
+  replyAttachmentRow: {
+    paddingVertical: 10,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  addAttachmentText: {
+    color: '#5C7CFA',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  selectedFileItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: '#ADB5BD',
+  },
+  selectedFileName: {
+    fontSize: 13,
+    color: '#495057',
+    flex: 1,
+    marginRight: 10,
+  },
+  removeFileBtn: {
+    color: '#FF6B6B',
+    fontSize: 16,
+    fontWeight: 'bold',
+    padding: 4,
   },
 });

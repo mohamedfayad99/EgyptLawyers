@@ -1,6 +1,12 @@
 ﻿export type City = { id: number; name: string };
 export type Court = { id: number; name: string; cityId: number };
 
+export type Attachment = {
+  id: string;
+  fileUrl: string;
+  fileType: string;
+};
+
 export type LawyerProfile = {
   id: string;
   fullName: string;
@@ -37,6 +43,7 @@ export type HelpPost = {
   lawyerName: string;
   lawyerProfileImageUrl?: string;
   replyCount: number;
+  attachments?: Attachment[];
 };
 
 export type HelpPostReply = {
@@ -49,6 +56,7 @@ export type HelpPostReply = {
   message: string;
   createdAtUtc: string;
   rating?: number;
+  attachments?: Attachment[];
 };
 
 export type HelpPostDetails = HelpPost & {

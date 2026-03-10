@@ -1,19 +1,31 @@
-import * as Notifications from 'expo-notifications';
-import Constants, { ExecutionEnvironment } from 'expo-constants';
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { registerDevice } from './services';
 
 /**
  * Returns true when the app is running inside Expo Go.
  * Expo Go dropped remote push notification support in SDK 53.
- * Push tokens only work in a proper development build or production build.
  */
 function isRunningInExpoGo(): boolean {
   return Constants.appOwnership === 'expo';
 }
 
+/**
+ * Lazy-load expo-notifications only if NOT in Expo Go.
+ * This prevents the SDK 53+ error warning from showing up in Expo Go.
+ */
+const getExpoNotifications = () => {
+  if (isRunningInExpoGo() || Platform.OS === 'web') return null;
+  try {
+    return require('expo-notifications');
+  } catch (e) {
+    return null;
+  }
+};
+
 // Configure how notifications behave when the app is in the foreground
-if (!isRunningInExpoGo()) {
+const Notifications = getExpoNotifications();
+if (Notifications) {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowAlert: true,
@@ -25,26 +37,18 @@ if (!isRunningInExpoGo()) {
   });
 }
 
-
 /**
  * Requests notification permissions from the OS, obtains the Expo push token,
  * and registers it with our backend so the server can target this device.
  *
  * ⚠️  This is a no-op when running inside Expo Go (SDK 53+).
- *      Use `npx expo run:android` / `npx expo run:ios` (development build) to
- *      test push notifications on a real device.
- *
- * Should be called once after a successful login.
  */
 export async function registerForPushNotifications(): Promise<void> {
-  // Not supported in web or Expo Go — skip silently
-  if (Platform.OS === 'web') return;
-
-  if (isRunningInExpoGo()) {
-    console.log(
-      '[Push] Running in Expo Go — remote push notifications are not supported. ' +
-      'Use a development build to test push tokens.',
-    );
+  const Notifications = getExpoNotifications();
+  if (!Notifications) {
+    if (isRunningInExpoGo() && Platform.OS !== 'web') {
+      console.log('[Push] Running in Expo Go — remote push notifications are disabled to avoid SDK errors.');
+    }
     return;
   }
 
@@ -84,12 +88,10 @@ export async function registerForPushNotifications(): Promise<void> {
 export function addNotificationResponseListener(
   onTap: (postId: string) => void,
 ): () => void {
-  if (isRunningInExpoGo()) {
-    // Return empty cleanup if in Expo Go since push notifications are disabled
-    return () => {};
-  }
+  const Notifications = getExpoNotifications();
+  if (!Notifications) return () => {};
   
-  const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+  const sub = Notifications.addNotificationResponseReceivedListener((response: any) => {
     const data = response.notification.request.content.data as any;
     if (data?.postId) {
       onTap(String(data.postId));

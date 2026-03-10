@@ -11,14 +11,21 @@ public static class HelpPostRoutes
 {
     public static void MapHelpPostRoutes(this IEndpointRouteBuilder api)
     {
-        api.MapPost("/help-posts", async (CreateHelpPostRequest req, AppDbContext db, HttpContext ctx) =>
+        api.MapPost("/help-posts", async (HttpRequest request, AppDbContext db, HttpContext ctx, IWebHostEnvironment env) =>
         {
-            if (string.IsNullOrWhiteSpace(req.Description))
+            var form = await request.ReadFormAsync();
+            var description = form["description"].ToString();
+            var courtIdStr = form["courtId"].ToString();
+
+            if (string.IsNullOrWhiteSpace(description))
                 return Results.BadRequest(new { message = "Description is required." });
+
+            if (!int.TryParse(courtIdStr, out var courtId))
+                return Results.BadRequest(new { message = "Invalid court ID." });
 
             var lawyerId = ctx.User.GetSubjectId();
 
-            var court = await db.Courts.FirstOrDefaultAsync(x => x.Id == req.CourtId);
+            var court = await db.Courts.FirstOrDefaultAsync(x => x.Id == courtId);
             if (court is null)
                 return Results.BadRequest(new { message = "Invalid court." });
 
@@ -27,10 +34,21 @@ public static class HelpPostRoutes
                 LawyerId = lawyerId,
                 CourtId = court.Id,
                 CityId = court.CityId,
-                Description = req.Description.Trim(),
+                Description = description.Trim(),
                 Status = HelpPostStatus.Pending,
                 CreatedAtUtc = DateTime.UtcNow,
             };
+
+            // Handle Attachments
+            foreach (var file in request.Form.Files)
+            {
+                var fileUrl = await SaveFileAsync(file, "posts", env);
+                post.Attachments.Add(new HelpPostAttachment
+                {
+                    FileUrl = fileUrl,
+                    FileType = file.ContentType
+                });
+            }
 
             db.HelpPosts.Add(post);
             await db.SaveChangesAsync();
@@ -60,7 +78,8 @@ public static class HelpPostRoutes
                     x.LawyerId,
                     LawyerName = x.Lawyer.FullName,
                     LawyerProfileImageUrl = x.Lawyer.ProfileImageUrl,
-                    ReplyCount = x.Replies.Count
+                    ReplyCount = x.Replies.Count,
+                    Attachments = x.Attachments.Select(a => new { a.Id, a.FileUrl, a.FileType }).ToList()
                 })
                 .ToListAsync();
 
@@ -85,6 +104,7 @@ public static class HelpPostRoutes
                     LawyerName = x.Lawyer.FullName,
                     LawyerWhatsapp = x.Lawyer.WhatsappNumber,
                     LawyerProfileImageUrl = x.Lawyer.ProfileImageUrl,
+                    Attachments = x.Attachments.Select(a => new { a.Id, a.FileUrl, a.FileType }).ToList(),
                     Replies = x.Replies.OrderBy(r => r.CreatedAtUtc).Select(r => new
                     {
                         r.Id,
@@ -95,7 +115,8 @@ public static class HelpPostRoutes
                         LawyerProfileImageUrl = r.Lawyer.ProfileImageUrl,
                         r.Message,
                         r.CreatedAtUtc,
-                        r.Rating
+                        r.Rating,
+                        Attachments = r.Attachments.Select(a => new { a.Id, a.FileUrl, a.FileType }).ToList()
                     }).ToList()
                 })
                 .FirstOrDefaultAsync();
@@ -103,9 +124,12 @@ public static class HelpPostRoutes
             return post is null ? Results.NotFound() : Results.Ok(post);
         }).WithTags("Help Posts");
 
-        api.MapPost("/help-posts/{id:guid}/replies", async (Guid id, CreateHelpPostReplyRequest req, AppDbContext db, HttpContext ctx) =>
+        api.MapPost("/help-posts/{id:guid}/replies", async (Guid id, HttpRequest request, AppDbContext db, HttpContext ctx, IWebHostEnvironment env) =>
         {
-            if (string.IsNullOrWhiteSpace(req.Message))
+            var form = await request.ReadFormAsync();
+            var message = form["message"].ToString();
+
+            if (string.IsNullOrWhiteSpace(message))
                 return Results.BadRequest(new { message = "Message is required." });
 
             var lawyerId = ctx.User.GetSubjectId();
@@ -118,9 +142,20 @@ public static class HelpPostRoutes
             {
                 HelpPostId = id,
                 LawyerId = lawyerId,
-                Message = req.Message.Trim(),
+                Message = message.Trim(),
                 CreatedAtUtc = DateTime.UtcNow
             };
+
+            // Handle Attachments
+            foreach (var file in request.Form.Files)
+            {
+                var fileUrl = await SaveFileAsync(file, "replies", env);
+                reply.Attachments.Add(new HelpPostReplyAttachment
+                {
+                    FileUrl = fileUrl,
+                    FileType = file.ContentType
+                });
+            }
 
             db.HelpPostReplies.Add(reply);
 
@@ -133,7 +168,7 @@ public static class HelpPostRoutes
                 {
                     LawyerId = post.LawyerId,
                     PostId = post.Id,
-                    Message = req.Message.Trim(),
+                    Message = message.Trim(),
                     ReplierName = replierName,
                 });
             }
@@ -331,5 +366,18 @@ public static class HelpPostRoutes
 
             return Results.Ok(new { message = "Post deleted successfully." });
         }).RequireAuthorization("Admin").WithTags("Admin Help Posts");
+    }
+
+    private static async Task<string> SaveFileAsync(IFormFile file, string subFolder, IWebHostEnvironment env)
+    {
+        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+        var uploadsPath = Path.Combine(env.WebRootPath, "uploads", subFolder);
+        if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
+
+        var filePath = Path.Combine(uploadsPath, fileName);
+        using var stream = new FileStream(filePath, FileMode.Create);
+        await file.CopyToAsync(stream);
+
+        return $"/uploads/{subFolder}/{fileName}";
     }
 }

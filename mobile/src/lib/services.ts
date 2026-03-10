@@ -107,11 +107,24 @@ export async function getCourts(cityId: number): Promise<Court[]> {
 }
 
 // ============== Help Post Services ==============
-export async function createHelpPost(courtId: number, description: string) {
+export async function createHelpPost(courtId: number, description: string, files: any[] = []) {
   try {
-    const res = await api.post('/help-posts', {
-      courtId,
-      description,
+    const formData = new FormData();
+    formData.append('courtId', courtId.toString());
+    formData.append('description', description);
+
+    files.forEach((file, index) => {
+      formData.append('files', {
+        uri: file.uri,
+        name: file.name || `file_${index}`,
+        type: file.mimeType || file.type || 'application/octet-stream',
+      } as any);
+    });
+
+    const res = await api.post('/help-posts', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
     return res.data;
   } catch (e) {
@@ -144,10 +157,23 @@ export async function getHelpPostDetails(id: string): Promise<HelpPostDetails> {
   }
 }
 
-export async function replyToHelpPost(id: string, message: string) {
+export async function replyToHelpPost(id: string, message: string, files: any[] = []) {
   try {
-    const res = await api.post(`/help-posts/${id}/replies`, {
-      message,
+    const formData = new FormData();
+    formData.append('message', message);
+
+    files.forEach((file, index) => {
+      formData.append('files', {
+        uri: file.uri,
+        name: file.name || `reply_file_${index}`,
+        type: file.mimeType || file.type || 'application/octet-stream',
+      } as any);
+    });
+
+    const res = await api.post(`/help-posts/${id}/replies`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
     return res.data;
   } catch (e) {
