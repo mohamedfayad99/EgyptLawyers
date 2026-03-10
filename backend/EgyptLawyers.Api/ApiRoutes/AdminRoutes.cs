@@ -140,5 +140,113 @@ public static class AdminRoutes
             await db.SaveChangesAsync();
             return Results.Ok(new { court.Id, court.Name, court.CityId });
         }).WithTags("Admin");
+
+        admin.MapGet("/statistics", async (AppDbContext db) =>
+        {
+            var citiesWithMostPosts = await db.HelpPosts
+                .GroupBy(x => x.City.Name)
+                .Select(g => new { City = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .Take(10)
+                .ToListAsync();
+
+            var citiesWithMostLawyers = await db.LawyerCities
+                .GroupBy(x => x.City.Name)
+                .Select(g => new { City = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .Take(10)
+                .ToListAsync();
+
+            var citiesWithActivity = await db.Cities
+                .Select(c => new
+                {
+                    City = c.Name,
+                    Count = db.HelpPosts.Count(hp => hp.CityId == c.Id)
+                })
+                .OrderByDescending(x => x.Count)
+                .Take(50)
+                .ToListAsync();
+
+            var courtsWithMostRequests = await db.HelpPosts
+                .GroupBy(x => x.Court.Name)
+                .Select(g => new { Court = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .Take(10)
+                .ToListAsync();
+
+            var courtsPerCity = await db.Courts
+                .GroupBy(x => x.City.Name)
+                .Select(g => new { City = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .Take(10)
+                .ToListAsync();
+
+            var courtsWithRequests = await db.Courts
+                .Select(c => new
+                {
+                    Court = c.Name,
+                    City = c.City.Name,
+                    Count = db.HelpPosts.Count(hp => hp.CourtId == c.Id)
+                })
+                .OrderByDescending(x => x.Count)
+                .Take(50)
+                .ToListAsync();
+
+            var verifiedVsPending = await db.Lawyers
+                .GroupBy(x => x.VerificationStatus)
+                .Select(g => new { Status = g.Key.ToString(), Count = g.Count() })
+                .ToListAsync();
+
+            var activeLawyersCreators = await db.HelpPosts
+                .Select(x => x.LawyerId)
+                .Distinct()
+                .CountAsync();
+
+            var activeLawyersRepliers = await db.HelpPostReplies
+                .Select(x => x.LawyerId)
+                .Distinct()
+                .CountAsync();
+
+            var topContributingLawyers = await db.HelpPostReplies
+                .GroupBy(x => new { x.LawyerId, x.Lawyer.FullName })
+                .Select(g => new { Lawyer = g.Key.FullName, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .Take(10)
+                .ToListAsync();
+
+            var postsTrendDb = await db.HelpPosts
+                .Select(x => new { x.CreatedAtUtc })
+                .ToListAsync();
+                
+            var postsTrend = postsTrendDb
+                .GroupBy(x => new { x.CreatedAtUtc.Year, x.CreatedAtUtc.Month })
+                .Select(g => new
+                {
+                    Month = $"{g.Key.Year}-{g.Key.Month:D2}",
+                    Count = g.Count()
+                })
+                .OrderBy(x => x.Month)
+                .ToList();
+
+            var postsPerCity = citiesWithMostPosts; 
+            var postsPerCourt = courtsWithMostRequests; 
+
+            return Results.Ok(new
+            {
+                CitiesWithMostPosts = citiesWithMostPosts,
+                CitiesWithMostLawyers = citiesWithMostLawyers,
+                CitiesWithActivity = citiesWithActivity,
+                CourtsWithMostRequests = courtsWithMostRequests,
+                CourtsPerCity = courtsPerCity,
+                CourtsWithRequests = courtsWithRequests,
+                VerifiedVsPendingLawyers = verifiedVsPending,
+                ActiveLawyersCreators = activeLawyersCreators,
+                ActiveLawyersRepliers = activeLawyersRepliers,
+                TopContributingLawyers = topContributingLawyers,
+                PostsTrend = postsTrend,
+                PostsPerCity = postsPerCity,
+                PostsPerCourt = postsPerCourt
+            });
+        }).WithTags("Admin");
     }
 }

@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import {
-  Alert, Box, Grid, Paper, Stack, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, Typography, Chip,
+  Alert, Grid, Stack,
 } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
@@ -9,6 +8,7 @@ import LocationCityIcon from '@mui/icons-material/LocationCity';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import { api } from '../../api/client';
 import StatCard from '../../components/admin/StatCard';
+import StatisticsSection from '../../components/admin/StatisticsSection';
 import { useLang } from '../../contexts/LanguageContext';
 
 type Lawyer = {
@@ -57,22 +57,10 @@ export default function AdminDashboardPage() {
     return String(status);
   };
 
-  const statusColor = (status: string | number) => {
-    const label = statusLabel(status).toLowerCase();
-    if (label === 'approved') return 'success';
-    if (label === 'rejected') return 'error';
-    return 'warning'; // Pending
-  };
+
 
   const approvedLawyers = useMemo(() => lawyers.filter(l => statusLabel(l.verificationStatus) === 'Approved'), [lawyers]);
   const pendingLawyers = useMemo(() => lawyers.filter(l => statusLabel(l.verificationStatus) === 'Pending'), [lawyers]);
-
-  const latestPendingRegistrations = useMemo(() => {
-    return pendingLawyers
-      .slice()
-      .sort((a, b) => new Date(b.createdAtUtc).getTime() - new Date(a.createdAtUtc).getTime())
-      .slice(0, 5);
-  }, [pendingLawyers]);
 
   return (
     <Stack spacing={3}>
@@ -113,76 +101,8 @@ export default function AdminDashboardPage() {
           />
         </Grid>
       </Grid>
-
-      {/* Recent Registrations */}
-      <Paper
-        elevation={0}
-        sx={{ borderRadius: 3, border: '1px solid rgba(var(--color-text-rgb),0.06)', overflow: 'hidden', bgcolor: 'var(--color-background)' }}
-      >
-        <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          spacing={2}
-          alignItems={{ sm: 'center' }}
-          justifyContent="space-between"
-          sx={{ px: 3, py: 2.5, borderBottom: '1px solid var(--color-surface)' }}
-        >
-          <Box>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: 'var(--color-text)' }}>
-              {t('recentRegistrations')}
-            </Typography>
-            <Typography sx={{ color: 'rgba(var(--color-text-rgb),0.7)', fontSize: '0.85rem', mt: 0.5 }}>
-              {t('latestActivity')}
-            </Typography>
-          </Box>
-        </Stack>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow sx={{ bgcolor: 'var(--color-surface)' }}>
-                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>{t('name')}</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>{t('whatsapp')}</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>{t('syndicateNo')}</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>{t('status')}</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'var(--color-text)' }}>{t('date')}</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {latestPendingRegistrations.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} sx={{ textAlign: 'center', color: 'rgba(var(--color-text-rgb),0.5)', py: 4 }}>
-                    {t('noNewRegistrations')}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                latestPendingRegistrations.map((l) => (
-                  <TableRow key={l.id} hover>
-                    <TableCell>
-                      <Typography sx={{ fontWeight: 600, fontSize: '0.875rem' }}>{l.fullName}</Typography>
-                      {l.professionalTitle && (
-                        <Typography sx={{ color: 'rgba(var(--color-text-rgb),0.6)', fontSize: '0.75rem' }}>{l.professionalTitle}</Typography>
-                      )}
-                    </TableCell>
-                    <TableCell sx={{ color: 'rgba(var(--color-text-rgb),0.8)', fontSize: '0.875rem' }}>{l.whatsappNumber}</TableCell>
-                    <TableCell sx={{ color: 'rgba(var(--color-text-rgb),0.8)', fontSize: '0.875rem' }}>{l.syndicateCardNumber}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={t(statusLabel(l.verificationStatus).toLowerCase() as any) ?? statusLabel(l.verificationStatus)}
-                        size="small"
-                        color={statusColor(l.verificationStatus)}
-                        variant="outlined"
-                        sx={{ fontWeight: 600, fontSize: '0.75rem' }}
-                      />
-                    </TableCell>
-                    <TableCell sx={{ color: 'rgba(var(--color-text-rgb),0.6)', fontSize: '0.8rem' }}>
-                      {new Date(l.createdAtUtc).toLocaleDateString()}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+      
+      <StatisticsSection />
     </Stack>
   );
 }
