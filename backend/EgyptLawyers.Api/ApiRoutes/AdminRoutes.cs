@@ -141,6 +141,102 @@ public static class AdminRoutes
             return Results.Ok(new { court.Id, court.Name, court.CityId });
         }).WithTags("Admin");
 
+        // --- Management Routes for Cities ---
+
+        admin.MapPut("/cities/{id:int}", async (int id, CreateCityRequest req, AppDbContext db) =>
+        {
+            var city = await db.Cities.FirstOrDefaultAsync(x => x.Id == id);
+            if (city is null) return Results.NotFound();
+
+            if (string.IsNullOrWhiteSpace(req.Name))
+                return Results.BadRequest(new { message = "Name is required." });
+
+            city.Name = req.Name.Trim();
+            await db.SaveChangesAsync();
+            return Results.Ok(city);
+        }).WithTags("Admin");
+
+        admin.MapDelete("/cities/{id:int}", async (int id, AppDbContext db) =>
+        {
+            var city = await db.Cities.FirstOrDefaultAsync(x => x.Id == id);
+            if (city is null) return Results.NotFound();
+
+            // Cascade delete: find all courts in this city
+            var cityCourts = await db.Courts.Where(x => x.CityId == id).ToListAsync();
+            var cityPosts = await db.HelpPosts.Where(hp => hp.CityId == id).ToListAsync();
+            
+            // Delete replies for all posts in this city
+            foreach(var post in cityPosts)
+            {
+                var replies = await db.HelpPostReplies.Where(r => r.HelpPostId == post.Id).ToListAsync();
+                db.HelpPostReplies.RemoveRange(replies);
+            }
+
+            db.HelpPosts.RemoveRange(cityPosts);
+            db.Courts.RemoveRange(cityCourts);
+            db.Cities.Remove(city);
+            
+            await db.SaveChangesAsync();
+            return Results.NoContent();
+        }).WithTags("Admin");
+
+        // --- Management Routes for Courts ---
+
+        admin.MapPut("/courts/{id:int}", async (int id, CreateCourtRequest req, AppDbContext db) =>
+        {
+            var court = await db.Courts.FirstOrDefaultAsync(x => x.Id == id);
+            if (court is null) return Results.NotFound();
+
+            if (string.IsNullOrWhiteSpace(req.Name))
+                return Results.BadRequest(new { message = "Name is required." });
+
+            court.Name = req.Name.Trim();
+            court.CityId = req.CityId;
+            await db.SaveChangesAsync();
+            return Results.Ok(court);
+        }).WithTags("Admin");
+
+        admin.MapDelete("/courts/{id:int}", async (int id, AppDbContext db) =>
+        {
+            var court = await db.Courts.FirstOrDefaultAsync(x => x.Id == id);
+            if (court is null) return Results.NotFound();
+
+            // Cascade delete: find all posts in this court
+            var courtPosts = await db.HelpPosts.Where(hp => hp.CourtId == id).ToListAsync();
+            foreach(var post in courtPosts)
+            {
+                var replies = await db.HelpPostReplies.Where(r => r.HelpPostId == post.Id).ToListAsync();
+                db.HelpPostReplies.RemoveRange(replies);
+            }
+            db.HelpPosts.RemoveRange(courtPosts);
+
+            db.Courts.Remove(court);
+            await db.SaveChangesAsync();
+            return Results.NoContent();
+        }).WithTags("Admin");
+
+        // --- Management Routes for Lawyers ---
+
+        admin.MapDelete("/lawyers/{id:guid}", async (Guid id, AppDbContext db) =>
+        {
+            var lawyer = await db.Lawyers
+                .Include(x => x.ActiveCities)
+                .Include(x => x.Posts)
+                .Include(x => x.Replies)
+                .FirstOrDefaultAsync(x => x.Id == id);
+            
+            if (lawyer is null) return Results.NotFound();
+
+            // Cleanup related data if necessary or let Cascading handle it
+            db.LawyerCities.RemoveRange(lawyer.ActiveCities);
+            db.HelpPostReplies.RemoveRange(lawyer.Replies);
+            db.HelpPosts.RemoveRange(lawyer.Posts);
+            db.Lawyers.Remove(lawyer);
+
+            await db.SaveChangesAsync();
+            return Results.NoContent();
+        }).WithTags("Admin");
+
         admin.MapGet("/statistics", async (AppDbContext db) =>
         {
             var citiesWithMostPosts = await db.HelpPosts
@@ -214,22 +310,47 @@ public static class AdminRoutes
                 .Take(10)
                 .ToListAsync();
 
+            var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
             var postsTrendDb = await db.HelpPosts
+                .Where(x => x.CreatedAtUtc >= thirtyDaysAgo)
                 .Select(x => new { x.CreatedAtUtc })
                 .ToListAsync();
                 
             var postsTrend = postsTrendDb
-                .GroupBy(x => new { x.CreatedAtUtc.Year, x.CreatedAtUtc.Month })
+                .GroupBy(x => x.CreatedAtUtc.Date)
                 .Select(g => new
                 {
-                    Month = $"{g.Key.Year}-{g.Key.Month:D2}",
+                    Day = g.Key.ToString("MMM dd"),
+                    Date = g.Key,
                     Count = g.Count()
                 })
-                .OrderBy(x => x.Month)
+                .OrderBy(x => x.Date)
+                .Select(x => new { x.Day, x.Count })
                 .ToList();
 
-            var postsPerCity = citiesWithMostPosts; 
-            var postsPerCourt = courtsWithMostRequests; 
+            var cityActivityStacked = await db.Cities
+                .Select(c => new
+                {
+                    City = c.Name,
+                    Posts = db.HelpPosts.Count(hp => hp.CityId == c.Id),
+                    Replies = db.HelpPostReplies.Count(r => r.HelpPost.CityId == c.Id)
+                })
+                .OrderByDescending(x => (x.Posts + x.Replies))
+                .Take(10)
+                .ToListAsync();
+
+            var lawyerGrowth = await db.Lawyers
+                .GroupBy(x => new { x.CreatedAtUtc.Year, x.CreatedAtUtc.Month })
+                .Select(g => new { Year = g.Key.Year, Month = g.Key.Month, Count = g.Count() })
+                .OrderByDescending(x => x.Year).ThenByDescending(x => x.Month)
+                .Take(2)
+                .ToListAsync();
+
+            double lawyerTrend = 0;
+            if (lawyerGrowth.Count == 2 && lawyerGrowth[1].Count > 0)
+            {
+                lawyerTrend = Math.Round(((double)lawyerGrowth[0].Count - lawyerGrowth[1].Count) / (double)lawyerGrowth[1].Count * 100, 1);
+            }
 
             return Results.Ok(new
             {
@@ -244,8 +365,8 @@ public static class AdminRoutes
                 ActiveLawyersRepliers = activeLawyersRepliers,
                 TopContributingLawyers = topContributingLawyers,
                 PostsTrend = postsTrend,
-                PostsPerCity = postsPerCity,
-                PostsPerCourt = postsPerCourt
+                CityActivityStacked = cityActivityStacked,
+                LawyerTrend = (lawyerTrend >= 0 ? "+" : "") + lawyerTrend + "%"
             });
         }).WithTags("Admin");
     }

@@ -1,34 +1,15 @@
 import { useEffect, useState } from 'react';
 import {
-    Alert, Box, Button, Collapse, Stack, TextField, Typography,
+    Alert, Box, Button, Collapse, Stack, TextField, Typography, IconButton, Tooltip,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import LocationCityIcon from '@mui/icons-material/LocationCity';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 import AdminTable, { type Column } from '../../components/admin/AdminTable';
-import { getCities, createCity, type City } from '../../admin/services/cityService';
-
-const columns: Column<City & Record<string, unknown>>[] = [
-    {
-        header: 'ID',
-        accessor: 'id' as keyof (City & Record<string, unknown>),
-        width: 80,
-        render: (row) => (
-            <Typography sx={{ color: 'rgba(var(--color-text-rgb),0.6)', fontSize: '0.875rem' }}>
-                #{row.id}
-            </Typography>
-        ),
-    },
-    {
-        header: 'City Name',
-        accessor: 'name' as keyof (City & Record<string, unknown>),
-        render: (row) => (
-            <Stack direction="row" alignItems="center" spacing={1}>
-                <LocationCityIcon sx={{ fontSize: 18, color: 'rgba(var(--color-text-rgb),0.5)' }} />
-                <Typography sx={{ fontWeight: 600, fontSize: '0.875rem' }}>{row.name}</Typography>
-            </Stack>
-        ),
-    },
-];
+import { getCities, createCity, updateCity, deleteCity, type City } from '../../admin/services/cityService';
 
 export default function CitiesPage() {
     const [cities, setCities] = useState<(City & Record<string, unknown>)[]>([]);
@@ -39,6 +20,10 @@ export default function CitiesPage() {
     const [showForm, setShowForm] = useState(false);
     const [newName, setNewName] = useState('');
     const [creating, setCreating] = useState(false);
+
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editName, setEditName] = useState('');
+    const [saving, setSaving] = useState(false);
 
     async function load() {
         setLoading(true);
@@ -74,6 +59,107 @@ export default function CitiesPage() {
             setCreating(false);
         }
     }
+
+    async function handleUpdate(id: number) {
+        if (!editName.trim()) return;
+        setSaving(true);
+        setError(null);
+        try {
+            await updateCity(id, editName.trim());
+            setEditingId(null);
+            setInfo('City updated successfully.');
+            await load();
+        } catch (e: unknown) {
+            const err = e as { response?: { data?: { message?: string } } };
+            setError(err?.response?.data?.message ?? 'Failed to update city');
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    async function handleDelete(id: number) {
+        if (!window.confirm('Are you sure you want to delete this city? This will also remove all its courts and related posts.')) return;
+        setError(null);
+        setInfo(null);
+        try {
+            await deleteCity(id);
+            setInfo('City deleted successfully.');
+            await load();
+        } catch (e: unknown) {
+            const err = e as { response?: { data?: { message?: string } } };
+            setError(err?.response?.data?.message ?? 'Failed to delete city. It might have related records.');
+        }
+    }
+
+    const columns: Column<City & Record<string, unknown>>[] = [
+        {
+            header: 'ID',
+            accessor: 'id' as keyof (City & Record<string, unknown>),
+            width: 80,
+            render: (row) => (
+                <Typography sx={{ color: 'rgba(var(--color-text-rgb),0.6)', fontSize: '0.875rem' }}>
+                    #{row.id}
+                </Typography>
+            ),
+        },
+        {
+            header: 'City Name',
+            accessor: 'name' as keyof (City & Record<string, unknown>),
+            render: (row) => (
+                editingId === row.id ? (
+                    <TextField
+                        size="small"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        autoFocus
+                        onKeyDown={(e) => e.key === 'Enter' && handleUpdate(row.id)}
+                        sx={{ minWidth: 200 }}
+                    />
+                ) : (
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                        <LocationCityIcon sx={{ fontSize: 18, color: 'rgba(var(--color-text-rgb),0.5)' }} />
+                        <Typography sx={{ fontWeight: 600, fontSize: '0.875rem' }}>{row.name}</Typography>
+                    </Stack>
+                )
+            ),
+        },
+        {
+            header: 'Actions',
+            accessor: 'id' as keyof (City & Record<string, unknown>),
+            width: 120,
+            render: (row) => (
+                <Stack direction="row" spacing={1}>
+                    {editingId === row.id ? (
+                        <>
+                            <Tooltip title="Save">
+                                <IconButton size="small" color="primary" onClick={() => handleUpdate(row.id)} disabled={saving}>
+                                    <CheckIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Cancel">
+                                <IconButton size="small" onClick={() => setEditingId(null)}>
+                                    <CloseIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                        </>
+                    ) : (
+                        <>
+                            <Tooltip title="Edit">
+                                <IconButton size="small" onClick={() => { setEditingId(row.id); setEditName(row.name); }}>
+                                    <EditIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Delete">
+                                <IconButton size="small" color="error" onClick={() => handleDelete(row.id)}>
+                                    <DeleteIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                        </>
+                    )}
+                </Stack>
+            ),
+        },
+    ];
 
     return (
         <Stack spacing={2}>

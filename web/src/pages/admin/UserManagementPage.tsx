@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-    Chip, Stack,
+    Stack,
     Typography, Box, Tooltip, IconButton
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -72,24 +72,6 @@ export default function UserManagementPage() {
             ),
         },
         {
-            header: t('status'),
-            accessor: 'verificationStatus' as keyof LawyerRow,
-            render: (row) => (
-                <Stack direction="row" spacing={0.5} alignItems="center">
-                    <Chip
-                        label={t('approved')}
-                        size="small"
-                        color="success"
-                        variant="outlined"
-                        sx={{ fontWeight: 600, fontSize: '0.75rem' }}
-                    />
-                    {row.isSuspended && (
-                        <Chip label="Suspended" size="small" color="default" sx={{ fontSize: '0.7rem' }} />
-                    )}
-                </Stack>
-            ),
-        },
-        {
             header: t('registered'),
             accessor: 'createdAtUtc' as keyof LawyerRow,
             render: (row) => (
@@ -102,19 +84,21 @@ export default function UserManagementPage() {
             header: t('actions'),
             align: 'right' as const,
             render: (row) => (
-                <Tooltip title={row.isSuspended ? t('unblock') : t('block')}>
-                    <IconButton
-                        size="small"
-                        color={row.isSuspended ? "success" : "error"}
-                        onClick={() => row.isSuspended ? executeUnblock(row) : setConfirmBlock(row)}
-                        sx={{
-                            bgcolor: row.isSuspended ? 'rgba(76, 175, 80, 0.04)' : 'rgba(211, 47, 47, 0.04)',
-                            '&:hover': { bgcolor: row.isSuspended ? 'rgba(76, 175, 80, 0.08)' : 'rgba(211, 47, 47, 0.08)' }
-                        }}
-                    >
-                        {row.isSuspended ? <CheckCircleIcon fontSize="small" /> : <BlockIcon fontSize="small" />}
-                    </IconButton>
-                </Tooltip>
+                <Stack direction="row" spacing={1} justifyContent="flex-end">
+                    <Tooltip title={row.isSuspended ? t('unblock') : t('block')}>
+                        <IconButton
+                            size="small"
+                            color={row.isSuspended ? "success" : "error"}
+                            onClick={() => row.isSuspended ? executeUnblock(row) : setConfirmBlock(row)}
+                            sx={{
+                                bgcolor: row.isSuspended ? 'rgba(76, 175, 80, 0.04)' : 'rgba(211, 47, 47, 0.04)',
+                                '&:hover': { bgcolor: row.isSuspended ? 'rgba(76, 175, 80, 0.08)' : 'rgba(211, 47, 47, 0.08)' }
+                            }}
+                        >
+                            {row.isSuspended ? <CheckCircleIcon fontSize="small" /> : <BlockIcon fontSize="small" />}
+                        </IconButton>
+                    </Tooltip>
+                </Stack>
             ),
         },
     ];
@@ -138,11 +122,8 @@ export default function UserManagementPage() {
         setLoading(true);
         setError(null);
         try {
-            // First reject the lawyer (this moves them to Approvals/Rejected status)
             await rejectLawyer(confirmBlock.id);
-            // Also suspend them so we can identify them as "Blocked" on the Approvals page
             await suspendLawyer(confirmBlock.id, true);
-
             setConfirmBlock(null);
             await load();
         } catch (e: unknown) {
@@ -152,6 +133,7 @@ export default function UserManagementPage() {
             setLoading(false);
         }
     }
+
 
     return (
         <Stack spacing={2}>

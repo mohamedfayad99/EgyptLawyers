@@ -139,11 +139,9 @@ export default function PostDetailsModal({ open, post, onClose, onDeleteSuccess,
                 <DialogTitle>
                     <Stack direction="row" alignItems="center" justifyContent="space-between">
                         <Typography variant="h6" sx={{ fontWeight: 700 }}>{t('postDetails')}</Typography>
-                        {isOpen && (
-                            <IconButton color="error" onClick={() => setConfirmDelete(true)} disabled={deleting}>
-                                <DeleteIcon />
-                            </IconButton>
-                        )}
+                        <IconButton color="error" onClick={() => setConfirmDelete(true)} disabled={deleting}>
+                            <DeleteIcon />
+                        </IconButton>
                     </Stack>
                 </DialogTitle>
                 <DialogContent dividers>

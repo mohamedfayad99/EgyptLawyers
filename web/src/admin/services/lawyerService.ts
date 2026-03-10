@@ -30,3 +30,7 @@ export async function rejectLawyer(id: string): Promise<void> {
 export async function suspendLawyer(id: string, suspended: boolean): Promise<void> {
   await api.patch(`/api/admin/lawyers/${id}/suspend`, null, { params: { suspended } });
 }
+
+export async function deleteLawyer(id: string): Promise<void> {
+  await api.delete(`/api/admin/lawyers/${id}`);
+}

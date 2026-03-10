@@ -1,15 +1,12 @@
 import { useEffect, useState } from 'react';
 import {
-  Box, Typography, Paper, Grid, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, Stack, CircularProgress
+  Box, Typography, Paper, Grid, Stack, CircularProgress
 } from '@mui/material';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
 import { api } from '../../api/client';
-import StatCard from './StatCard';
-import PeopleIcon from '@mui/icons-material/People';
 
 type StatisticsData = {
   citiesWithMostPosts: { city: string; count: number }[];
@@ -22,9 +19,9 @@ type StatisticsData = {
   activeLawyersCreators: number;
   activeLawyersRepliers: number;
   topContributingLawyers: { lawyer: string; count: number }[];
-  postsTrend: { month: string; count: number }[];
-  postsPerCity: { city: string; count: number }[];
-  postsPerCourt: { court: string; count: number }[];
+  postsTrend: { day: string; count: number }[];
+  cityActivityStacked: { city: string; posts: number; replies: number }[];
+  lawyerTrend: string;
 };
 
 const CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
@@ -79,270 +76,213 @@ export default function StatisticsSection() {
 
   if (!data) return null;
 
-  const renderCard = (title: string, children: React.ReactNode) => (
+  const renderCard = (title: string, children: React.ReactNode, dark = false) => (
     <Paper
       elevation={0}
       sx={{
         p: 3,
-        borderRadius: 3,
-        border: '1px solid rgba(var(--color-text-rgb),0.06)',
-        bgcolor: 'var(--color-background)',
-        height: '100%'
+        borderRadius: 4,
+        border: dark ? 'none' : '1px solid rgba(var(--color-text-rgb),0.06)',
+        bgcolor: dark ? '#0a0a0a' : 'var(--color-background)',
+        color: dark ? '#fff' : 'inherit',
+        height: '100%',
+        position: 'relative',
+        overflow: 'hidden'
       }}
     >
-      <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
+      <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, opacity: dark ? 0.9 : 1 }}>
         {title}
       </Typography>
       {children}
     </Paper>
   );
 
+  const totalInteractions = data.cityActivityStacked.reduce((acc, curr) => acc + curr.posts + curr.replies, 0);
+
   return (
-    <Stack spacing={4} sx={{ mt: 4 }}>
-      <Typography variant="h5" sx={{ fontWeight: 700, mb: -2 }}>
-        Statistics
+    <Stack spacing={4} sx={{ mt: 2 }}>
+      {/* Hero Section - Platform Overview */}
+      <Grid container spacing={3}>
+        <Grid size={{ xs: 12 }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 3, md: 5 },
+              borderRadius: 6,
+              bgcolor: '#0a0a0a',
+              color: '#fff',
+              backgroundImage: 'linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(0,0,0,0) 100%)',
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            <Grid container spacing={5} alignItems="center">
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Typography sx={{ opacity: 0.6, fontSize: '0.95rem', mb: 1, letterSpacing: '1px', textTransform: 'uppercase', fontWeight: 600 }}>
+                  Engagement Overview
+                </Typography>
+                <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 1.5 }}>
+                  <Typography variant="h1" sx={{ fontWeight: 800, letterSpacing: '-2px' }}>
+                    {(totalInteractions / 1000).toFixed(1)}K
+                  </Typography>
+                  <Box
+                    sx={{
+                      px: 2,
+                      py: 0.75,
+                      borderRadius: 10,
+                      bgcolor: data.lawyerTrend.startsWith('+') ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                      color: data.lawyerTrend.startsWith('+') ? '#4ade80' : '#f87171',
+                      fontSize: '0.9rem',
+                      fontWeight: 800,
+                      border: '1px solid rgba(255,255,255,0.05)'
+                    }}
+                  >
+                    {data.lawyerTrend}
+                  </Box>
+                </Stack>
+                <Typography sx={{ opacity: 0.5, fontSize: '0.95rem', lineHeight: 1.6, maxWidth: 300 }}>
+                  Real-time aggregation of lawyer help requests and community responses.
+                </Typography>
+              </Grid>
+              <Grid size={{ xs: 12, md: 8 }}>
+                <Box sx={{ height: 280, width: '100%' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={data.cityActivityStacked} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                      <XAxis
+                        dataKey="city"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }}
+                        dy={10}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }}
+                      />
+                      <RechartsTooltip
+                        contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px' }}
+                        itemStyle={{ color: '#fff', fontSize: '13px' }}
+                        cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                      />
+                      <Bar dataKey="posts" stackId="a" fill="#3b82f6" radius={[0, 0, 0, 0]} name="Help Posts" />
+                      <Bar dataKey="replies" stackId="a" fill="#60a5fa" radius={[6, 6, 0, 0]} name="Replies" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </Box>
+              </Grid>
+            </Grid>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {/* Advanced Metrics Section */}
+      <Typography variant="h5" sx={{ fontWeight: 800, letterSpacing: '-0.5px', mt: 4, mb: -1 }}>
+        Platform Performance
       </Typography>
 
-      {/* SECTION 1 — Cities Statistics */}
-      <Stack spacing={3}>
-        <Typography variant="h6" sx={{ fontWeight: 600, color: 'var(--color-primary)' }}>1. Cities Statistics</Typography>
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            {renderCard("Cities with Highest Number of Help Posts", (
-              <Box sx={{ height: 300 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={data.citiesWithMostPosts} margin={{ bottom: 30 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="city" tick={<MultilineTick />} interval={0} />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Bar dataKey="count" fill="#8884d8" name="Help Posts" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Box>
-            ))}
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            {renderCard("Cities with Most Registered Lawyers", (
-              <Box sx={{ height: 300 }}>
+      <Grid container spacing={3}>
+        {/* Engagement Card */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          {renderCard("City-Specific Engagement", (
+            <Stack spacing={2.5}>
+              <Typography sx={{ opacity: 0.6, fontSize: '0.85rem', mb: 1 }}>Total expert replies to help requests</Typography>
+              {data.cityActivityStacked
+                .filter(city => city.posts > 0 || city.replies > 0)
+                .slice(0, 5)
+                .map((city, idx) => {
+                const totalReplies = city.replies;
+                const maxReplies = Math.max(...data.cityActivityStacked.map(c => c.replies), 1);
+                const percentage = (totalReplies / maxReplies) * 100;
+                return (
+                  <Box key={idx}>
+                    <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
+                      <Typography sx={{ fontWeight: 600, fontSize: '0.9rem' }}>{city.city}</Typography>
+                      <Typography sx={{ fontWeight: 800, color: 'var(--color-primary)', fontSize: '0.9rem' }}>
+                        {totalReplies} {totalReplies === 1 ? 'reply' : 'replies'}
+                      </Typography>
+                    </Stack>
+                    <Box sx={{ width: '100%', height: 8, bgcolor: 'rgba(var(--color-primary-rgb),0.06)', borderRadius: 10, overflow: 'hidden' }}>
+                      <Box
+                        sx={{
+                          width: `${percentage}%`,
+                          height: '100%',
+                          background: 'linear-gradient(90deg, var(--color-primary) 0%, var(--color-accent) 100%)',
+                          borderRadius: 10,
+                          transition: 'width 1.5s cubic-bezier(0.4, 0, 0.2, 1)'
+                        }}
+                      />
+                    </Box>
+                  </Box>
+                );
+              })}
+            </Stack>
+          ))}
+        </Grid>
+
+        {/* Verification Pie Card */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          {renderCard("Lawyer Onboarding Status", (
+            <Box sx={{ height: 320, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={data.verifiedVsPendingLawyers}
+                    dataKey="count"
+                    nameKey="status"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={110}
+                    innerRadius={75}
+                    paddingAngle={8}
+                    label={({ name, percent }) => `${name} ${( (percent || 0) * 100).toFixed(0)}%`}
+                  >
+                    {data.verifiedVsPendingLawyers.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} stroke="none" />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </Box>
+          ))}
+        </Grid>
+      </Grid>
+
+      {/* Distribution Section */}
+      <Grid container spacing={3}>
+         <Grid size={{ xs: 12, md: 6 }}>
+            {renderCard("Lawyer Regional Distribution", (
+              <Box sx={{ height: 350 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data.citiesWithMostLawyers} margin={{ bottom: 30 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="city" tick={<MultilineTick />} interval={0} />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Bar dataKey="count" fill="#82ca9d" name="Lawyers" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                    <XAxis dataKey="city" tick={<MultilineTick />} interval={0} axisLine={false} tickLine={false} />
+                    <YAxis axisLine={false} tickLine={false} />
+                    <RechartsTooltip contentStyle={{ borderRadius: '12px', border: 'none' }} />
+                    <Bar dataKey="count" fill="var(--color-primary)" radius={[6, 6, 0, 0]} name="Lawyers" />
                   </BarChart>
                 </ResponsiveContainer>
               </Box>
             ))}
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            {renderCard("Cities With Activity", (
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 600 }}>City Name</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 600 }}>Number of Help Posts</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {data.citiesWithActivity.map((row, i) => (
-                      <TableRow key={i}>
-                        <TableCell>{row.city}</TableCell>
-                        <TableCell align="right">{row.count}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            ))}
-          </Grid>
-        </Grid>
-      </Stack>
-
-      {/* SECTION 2 — Courts Statistics */}
-      <Stack spacing={3}>
-        <Typography variant="h6" sx={{ fontWeight: 600, color: 'var(--color-primary)' }}>2. Courts Statistics</Typography>
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            {renderCard("Courts Where Lawyers Request Help the Most", (
-              <Box sx={{ height: 300 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            {renderCard("High-Traffic Courts", (
+              <Box sx={{ height: 350 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data.courtsWithMostRequests} margin={{ bottom: 30 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="court" tick={<MultilineTick />} interval={0} />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Bar dataKey="count" fill="#ffc658" name="Help Requests" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                    <XAxis dataKey="court" tick={<MultilineTick />} interval={0} axisLine={false} tickLine={false} />
+                    <YAxis axisLine={false} tickLine={false} />
+                    <RechartsTooltip contentStyle={{ borderRadius: '12px', border: 'none' }} />
+                    <Bar dataKey="count" fill="var(--color-accent)" radius={[6, 6, 0, 0]} name="Help Requests" />
                   </BarChart>
                 </ResponsiveContainer>
               </Box>
             ))}
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            {renderCard("Number of Courts Per City", (
-              <Box sx={{ height: 300 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={data.courtsPerCity} margin={{ bottom: 30 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="city" tick={<MultilineTick />} interval={0} />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Bar dataKey="count" fill="#8884d8" name="Courts" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Box>
-            ))}
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            {renderCard("Courts With Requests", (
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 600 }}>Court Name</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>City</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 600 }}>Number of Help Requests</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {data.courtsWithRequests.map((row, i) => (
-                      <TableRow key={i}>
-                        <TableCell>{row.court}</TableCell>
-                        <TableCell>{row.city}</TableCell>
-                        <TableCell align="right">{row.count}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            ))}
-          </Grid>
-        </Grid>
-      </Stack>
+      </Grid>
 
-      {/* SECTION 3 — Lawyers Statistics */}
-      <Stack spacing={3}>
-        <Typography variant="h6" sx={{ fontWeight: 600, color: 'var(--color-primary)' }}>3. Lawyers Statistics</Typography>
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            {renderCard("Verified vs Pending Lawyers", (
-              <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={data.verifiedVsPendingLawyers}
-                      dataKey="count"
-                      nameKey="status"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      label
-                    >
-                      {data.verifiedVsPendingLawyers.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </Box>
-            ))}
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <Stack spacing={3} sx={{ height: '100%' }}>
-              <StatCard
-                title="Lawyers Who Created Posts"
-                value={data.activeLawyersCreators}
-                icon={PeopleIcon}
-                color="var(--color-primary)"
-              />
-              <StatCard
-                title="Lawyers Who Replied to Posts"
-                value={data.activeLawyersRepliers}
-                icon={PeopleIcon}
-                color="var(--color-accent)"
-              />
-            </Stack>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            {renderCard("Top Contributing Lawyers", (
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 600 }}>Lawyer Name</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 600 }}>Number of Replies</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {data.topContributingLawyers.map((row, i) => (
-                      <TableRow key={i}>
-                        <TableCell>{row.lawyer}</TableCell>
-                        <TableCell align="right">{row.count}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            ))}
-          </Grid>
-        </Grid>
-      </Stack>
-
-      {/* SECTION 4 — Posts Statistics */}
-      <Stack spacing={3}>
-        <Typography variant="h6" sx={{ fontWeight: 600, color: 'var(--color-primary)' }}>4. Posts Statistics</Typography>
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            {renderCard("Posts Trend", (
-              <Box sx={{ height: 300 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={data.postsTrend}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Line type="monotone" dataKey="count" stroke="#8884d8" name="Help Posts" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </Box>
-            ))}
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            {renderCard("Posts Per City", (
-              <Box sx={{ height: 300 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={data.postsPerCity} margin={{ bottom: 30 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="city" tick={<MultilineTick />} interval={0} />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Bar dataKey="count" fill="#82ca9d" name="Posts" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Box>
-            ))}
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            {renderCard("Posts Per Court", (
-              <Box sx={{ height: 300 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={data.postsPerCourt} margin={{ bottom: 30 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="court" tick={<MultilineTick />} interval={0} />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Bar dataKey="count" fill="#ffc658" name="Posts" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Box>
-            ))}
-          </Grid>
-        </Grid>
-      </Stack>
     </Stack>
   );
 }
