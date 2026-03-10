@@ -49,6 +49,7 @@ const translations = {
     approve: 'Approve',
     reject: 'Reject',
     block: 'Block',
+    unblock: 'Unblock',
 
     // Filters
     filterByStatus: 'Status',
@@ -67,6 +68,7 @@ const translations = {
     failedToApprove: 'Failed to approve lawyer',
     failedToReject: 'Failed to reject lawyer',
     failedToBlock: 'Failed to block lawyer',
+    failedToUnblock: 'Failed to unblock lawyer',
     failedToLoadLawyers: 'Failed to load lawyers',
     failedToLoadDashboard: 'Failed to load dashboard data',
     failedToLoadPosts: 'Failed to load help posts',
@@ -148,6 +150,7 @@ const translations = {
     approve: 'قبول',
     reject: 'رفض',
     block: 'حظر',
+    unblock: 'إلغاء الحظر',
 
     // Filters
     filterByStatus: 'الحالة',
@@ -166,6 +169,7 @@ const translations = {
     failedToApprove: 'فشل في قبول المحامي',
     failedToReject: 'فشل في رفض المحامي',
     failedToBlock: 'فشل في حظر المحامي',
+    failedToUnblock: 'فشل في إلغاء حظر المحامي',
     failedToLoadLawyers: 'فشل في تحميل بيانات المحامين',
     failedToLoadDashboard: 'فشل في تحميل بيانات لوحة التحكم',
     failedToLoadPosts: 'فشل في تحميل المنشورات',

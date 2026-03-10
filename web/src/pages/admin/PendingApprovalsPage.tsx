@@ -131,6 +131,15 @@ export default function PendingApprovalsPage() {
             accessor: 'syndicateCardNumber' as keyof LawyerRow,
         },
         {
+            header: t('city'),
+            accessor: 'activeCities' as keyof LawyerRow,
+            render: (row) => (
+                <Typography sx={{ fontSize: '0.8125rem' }}>
+                    {row.activeCities?.join(', ') || '-'}
+                </Typography>
+            ),
+        },
+        {
             header: t('status'),
             accessor: 'verificationStatus' as keyof LawyerRow,
             render: (row) => {
@@ -167,17 +176,14 @@ export default function PendingApprovalsPage() {
 
                 return (
                     <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                        <Tooltip title={row.isSuspended ? t('blocked') : t('approve')}>
-                            <span>
-                                <IconButton
-                                    size="small"
-                                    color="success"
-                                    onClick={() => setConfirmAction({ type: 'approve', lawyer: row })}
-                                    disabled={row.isSuspended}
-                                >
-                                    <CheckCircleIcon fontSize="small" />
-                                </IconButton>
-                            </span>
+                        <Tooltip title={t('approve')}>
+                            <IconButton
+                                size="small"
+                                color="success"
+                                onClick={() => setConfirmAction({ type: 'approve', lawyer: row })}
+                            >
+                                <CheckCircleIcon fontSize="small" />
+                            </IconButton>
                         </Tooltip>
                         {!isRejected && (
                             <Tooltip title={t('reject')}>
