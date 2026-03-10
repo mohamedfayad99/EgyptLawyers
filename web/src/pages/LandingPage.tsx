@@ -10,6 +10,7 @@ import JoinSteps from '../components/landing/JoinSteps';
 import FAQ from '../components/landing/FAQ';
 import DownloadCTA from '../components/landing/DownloadCTA';
 import Footer from '../components/landing/Footer';
+import ScrollToTop from '../components/landing/ScrollToTop';
 
 export default function LandingPage() {
   return (
@@ -26,6 +27,7 @@ export default function LandingPage() {
         <FAQ />
         <DownloadCTA />
         <Footer />
+        <ScrollToTop />
       </main>
     </LanguageProvider>
   );

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Box, Container, Grid, Typography } from '@mui/material';
 import GavelIcon from '@mui/icons-material/Gavel';
 import LocationCityIcon from '@mui/icons-material/LocationCity';
@@ -9,28 +10,62 @@ import { useScrollAnimation } from '../../hooks/useScrollAnimation';
 const stats = [
     {
         icon: GavelIcon,
-        en: { value: '1,200+', label: 'Licensed Lawyers' },
-        ar: { value: '+1,200', label: 'محامٍ مرخص' },
+        target: 1200,
+        suffix: '+',
+        en: { label: 'Licensed Lawyers' },
+        ar: { label: 'محامٍ مرخص' },
     },
     {
         icon: LocationCityIcon,
-        en: { value: '27', label: 'Governorates Covered' },
-        ar: { value: '27', label: 'محافظة مغطاة' },
+        target: 27,
+        en: { label: 'Governorates Covered' },
+        ar: { label: 'محافظة مغطاة' },
     },
     {
         icon: VerifiedUserIcon,
-        en: { value: '100%', label: 'Syndicate Verified' },
-        ar: { value: '100%', label: 'موثق بالنقابة' },
+        target: 100,
+        suffix: '%',
+        en: { label: 'Syndicate Verified' },
+        ar: { label: 'موثق بالنقابة' },
     },
     {
         icon: DownloadingIcon,
-        en: { value: '3 Steps', label: 'To Start Connecting' },
-        ar: { value: '3 خطوات', label: 'للبدء في التواصل' },
+        target: 3,
+        suffixEn: ' Steps',
+        suffixAr: ' خطوات',
+        en: { label: 'To Start Connecting' },
+        ar: { label: 'للبدء في التواصل' },
     },
 ];
 
+function Counter({ target, visible, suffix = '' }: { target: number, visible: boolean, suffix?: string }) {
+    const [count, setCount] = useState(0);
+
+    useEffect(() => {
+        if (!visible) return;
+
+        let start = 0;
+        const duration = 2000; // 2 seconds
+        const increment = target / (duration / 16); // 16ms per frame (approx 60fps)
+
+        const timer = setInterval(() => {
+            start += increment;
+            if (start >= target) {
+                setCount(target);
+                clearInterval(timer);
+            } else {
+                setCount(Math.floor(start));
+            }
+        }, 16);
+
+        return () => clearInterval(timer);
+    }, [visible, target]);
+
+    return <>{count.toLocaleString()}{suffix}</>;
+}
+
 export default function StatsBar() {
-    const { t } = useLang();
+    const { t, lang } = useLang();
     const { ref, visible } = useScrollAnimation();
 
     return (
@@ -81,7 +116,11 @@ export default function StatsBar() {
                                         lineHeight: 1.1,
                                     }}
                                 >
-                                    {t(stat.en.value, stat.ar.value)}
+                                    <Counter 
+                                        target={stat.target} 
+                                        visible={visible} 
+                                        suffix={lang === 'ar' ? (stat.suffixAr || stat.suffix) : (stat.suffixEn || stat.suffix)} 
+                                    />
                                 </Typography>
                                 <Typography
                                     sx={{
