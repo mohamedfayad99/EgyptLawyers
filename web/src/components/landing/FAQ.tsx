@@ -61,11 +61,11 @@ const faqs = [
     {
         en: {
             q: 'What if I have a dispute with another lawyer on the platform?',
-            a: 'We have a dedicated support team to handle disputes. Any lawyer found violating professional ethics or platform rules will have their account reviewed and may be suspended. You can report any concern directly through the app.',
+            a: 'We have a dedicated support team to handle disputes. Any lawyer found violating professional ethics or platform rules will have their account reviewed and may be suspended.',
         },
         ar: {
             q: 'ماذا لو كان لدي نزاع مع محامٍ آخر على المنصة؟',
-            a: 'لدينا فريق دعم متخصص للتعامل مع النزاعات. أي محامٍ يُثبت انتهاكه للأخلاقيات المهنية أو قواعد المنصة سيخضع حسابه للمراجعة وقد يتعرض للتعليق. يمكنك الإبلاغ عن أي مخاوف مباشرة من خلال التطبيق.',
+            a: 'لدينا فريق دعم متخصص للتعامل مع النزاعات. أي محامٍ يُثبت انتهاكه للأخلاقيات المهنية أو قواعد المنصة سيخضع حسابه للمراجعة وقد يتعرض للتعليق.',
         },
     },
 ];
