@@ -218,8 +218,17 @@ export default function PendingApprovalsPage() {
                 emptyMessage={t('noPending')}
                 getRowKey={(row) => row.id}
                 toolbar={
-                    <FormControl size="small" sx={{ minWidth: 150 }}>
-                        <InputLabel>{t('filterByStatus')}</InputLabel>
+                    <FormControl size="small" sx={{ 
+                        minWidth: 150,
+                        '& .MuiInputLabel-root': { color: 'rgba(var(--color-text-rgb), 0.7)' },
+                        '& .MuiOutlinedInput-root': {
+                            color: 'var(--color-text)',
+                            '& fieldset': { borderColor: 'rgba(var(--color-text-rgb), 0.15)' },
+                            '&:hover fieldset': { borderColor: 'rgba(var(--color-text-rgb), 0.3)' },
+                        },
+                        '& .MuiSelect-icon': { color: 'var(--color-text)' }
+                    }}>
+                        <InputLabel sx={{ color: 'rgba(var(--color-text-rgb), 0.7)' }}>{t('filterByStatus')}</InputLabel>
                         <Select
                             value={statusFilter}
                             label={t('filterByStatus')}

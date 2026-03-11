@@ -2,8 +2,6 @@ import { Box, Container, Grid, Stack, Typography } from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
-import EastIcon from '@mui/icons-material/East';
-import WestIcon from '@mui/icons-material/West';
 import { useLang } from '../../contexts/LanguageContext';
 import { useScrollAnimation } from '../../hooks/useScrollAnimation';
 
@@ -23,11 +21,11 @@ const steps = [
         icon: NotificationsActiveIcon,
         en: {
             title: 'Colleagues Get Notified',
-            desc: 'Verified lawyers registered in the same city receive instant push notifications about your request — only lawyers, never clients.',
+            desc: 'Verified lawyers registered in the same city receive instant push notifications about your request.',
         },
         ar: {
             title: 'يتم إخطار الزملاء',
-            desc: 'يتلقى المحامون الموثقون المسجلون في نفس المدينة إشعارات فورية بطلبك — المحامون فقط، وليس العملاء.',
+            desc: 'يتلقى المحامون الموثقون المسجلون في نفس المدينة إشعارات فورية بطلبك.',
         },
     },
     {
@@ -44,28 +42,27 @@ const steps = [
 ];
 
 export default function HowItWorks() {
-    const { t, isRTL } = useLang();
+    const { t } = useLang();
     const { ref, visible } = useScrollAnimation();
 
-    const ArrowIcon = isRTL ? WestIcon : EastIcon;
-
     return (
-        <Box id="how-it-works" sx={{ py: { xs: 10, md: 14 }, bgcolor: 'var(--color-background)' }}>
+        <Box id="how-it-works" sx={{ py: { xs: 12, md: 16 }, bgcolor: 'var(--color-background)', position: 'relative' }}>
             <Container maxWidth="lg">
-                {/* Header */}
-                <Stack alignItems="center" spacing={1.5} sx={{ mb: 8 }}>
-                    <Typography
+                <Stack alignItems="center" spacing={2} sx={{ mb: 10 }}>
+                    <Box
                         sx={{
-                            color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.8rem',
-                            textTransform: 'uppercase', letterSpacing: 2,
+                            display: 'inline-flex', px: 2, py: 0.75, borderRadius: '16px',
+                            bgcolor: 'rgba(var(--color-accent-rgb),0.1)', border: '1px solid rgba(var(--color-accent-rgb),0.2)',
                         }}
                     >
-                        {t('How It Works', 'كيف يعمل')}
-                    </Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 800, color: 'var(--color-text)', textAlign: 'center' }}>
+                        <Typography sx={{ color: 'var(--color-text)', fontWeight: 700, fontSize: '0.85rem' }}>
+                            {t('How It Works', 'كيف يعمل')}
+                        </Typography>
+                    </Box>
+                    <Typography variant="h2" sx={{ fontWeight: 800, color: 'var(--color-primary-dark)', textAlign: 'center', fontSize: { xs: '2.2rem', md: '3rem' }, letterSpacing: '-0.02em' }}>
                         {t('Three Simple Steps', 'ثلاث خطوات بسيطة')}
                     </Typography>
-                    <Typography sx={{ color: 'rgba(var(--color-text-rgb),0.65)', textAlign: 'center', maxWidth: 520, lineHeight: 1.7, fontSize: '0.95rem' }}>
+                    <Typography sx={{ color: 'var(--color-secondary-text)', textAlign: 'center', maxWidth: 600, lineHeight: 1.7, fontSize: '1.1rem' }}>
                         {t(
                             'One lawyer posts the need — qualified verified colleagues in the same city respond within minutes.',
                             'يقوم محامٍ بنشر الطلب — ويستجيب زملاؤه الموثقون في نفس المدينة خلال دقائق.',
@@ -73,86 +70,62 @@ export default function HowItWorks() {
                     </Typography>
                 </Stack>
 
-                {/* Steps + Connectors */}
-                <Grid ref={ref} container alignItems="flex-start">
+                <Grid ref={ref} container spacing={4} sx={{ position: 'relative' }}>
+                    {/* Background Connector Line (Desktop Only) */}
+                    <Box sx={{
+                        display: { xs: 'none', md: 'block' },
+                        position: 'absolute', top: 56, left: 100, right: 100, height: 2,
+                        bgcolor: 'var(--color-border)', zIndex: 0
+                    }} />
+
                     {steps.map((step, i) => (
-                        <>
-                            <Grid key={`step-${i}`} size={{ xs: 12, md: 3.5 }}>
-                                <Stack
-                                    alignItems="center"
-                                    spacing={2}
+                        <Grid key={i} size={{ xs: 12, md: 4 }} sx={{ display: 'flex' }}>
+                            <Box
+                                sx={{
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                    textAlign: 'center', zIndex: 1, flex: 1,
+                                    transition: 'all 1s cubic-bezier(0.16,1,0.3,1)',
+                                    transitionDelay: `${i * 200}ms`,
+                                    opacity: visible ? 1 : 0,
+                                    transform: visible ? 'translateY(0)' : 'translateY(32px)',
+                                }}
+                            >
+                                <Box
                                     sx={{
-                                        textAlign: 'center',
-                                        transition: 'all 0.6s cubic-bezier(0.16,1,0.3,1)',
-                                        transitionDelay: `${i * 150}ms`,
-                                        opacity: visible ? 1 : 0,
-                                        transform: visible ? 'translateY(0)' : 'translateY(32px)',
+                                        width: 112, height: 112, borderRadius: '32px',
+                                        bgcolor: 'var(--color-surface)',
+                                        border: '4px solid var(--color-background)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        position: 'relative', mb: 4,
+                                        boxShadow: '0 20px 40px -10px rgba(0,0,0,0.08)',
                                     }}
                                 >
-                                    {/* Icon box */}
+                                    <step.icon sx={{ fontSize: 44, color: 'var(--color-primary)' }} />
+                                    
+                                    {/* Number Badge */}
                                     <Box
                                         sx={{
-                                            width: 100, height: 100, borderRadius: 4,
-                                            bgcolor: 'var(--color-primary-dark)',
+                                            position: 'absolute', top: -10, right: -10,
+                                            width: 36, height: 36, borderRadius: '50%',
+                                            bgcolor: 'var(--color-accent)', color: '#fff',
+                                            fontWeight: 800, fontSize: '1.1rem',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            boxShadow: '0 8px 32px rgba(15,23,42,0.14)',
-                                            transition: 'box-shadow 0.3s, transform 0.3s',
-                                            '&:hover': {
-                                                boxShadow: '0 12px 40px rgba(var(--color-primary-rgb),0.3)',
-                                                transform: 'translateY(-4px)',
-                                            },
-                                        }}
-                                    >
-                                        <step.icon sx={{ fontSize: 40, color: 'var(--color-accent)' }} />
-                                    </Box>
-
-                                    {/* Number badge */}
-                                    <Box
-                                        sx={{
-                                            width: 34, height: 34, borderRadius: '50%',
-                                            bgcolor: 'var(--color-primary)',
-                                            color: '#fff', fontWeight: 800, fontSize: '0.9rem',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            mt: -1.5,
-                                            boxShadow: '0 4px 12px rgba(var(--color-primary-rgb),0.4)',
+                                            boxShadow: '0 4px 12px rgba(var(--color-accent-rgb), 0.4)',
+                                            border: '2px solid var(--color-background)',
                                         }}
                                     >
                                         {i + 1}
                                     </Box>
+                                </Box>
 
-                                    <Typography variant="h6" sx={{ fontWeight: 700, color: 'var(--color-text)' }}>
-                                        {t(step.en.title, step.ar.title)}
-                                    </Typography>
-                                    <Typography sx={{ color: 'rgba(var(--color-text-rgb),0.65)', lineHeight: 1.75, maxWidth: 260, fontSize: '0.9rem' }}>
-                                        {t(step.en.desc, step.ar.desc)}
-                                    </Typography>
-                                </Stack>
-                            </Grid>
-
-                            {/* Connector arrow — only between steps, not after the last */}
-                            {i < steps.length - 1 && (
-                                <Grid
-                                    key={`arrow-${i}`}
-                                    size={{ xs: 12, md: 0.5 }}
-                                    sx={{
-                                        display: { xs: 'none', md: 'flex' },
-                                        alignItems: 'flex-start',
-                                        justifyContent: 'center',
-                                        pt: 4.5,
-                                        transition: 'all 0.6s ease',
-                                        transitionDelay: `${(i + 0.5) * 150}ms`,
-                                        opacity: visible ? 1 : 0,
-                                    }}
-                                >
-                                    <ArrowIcon
-                                        sx={{
-                                            fontSize: 28,
-                                            color: 'rgba(var(--color-primary-rgb),0.35)',
-                                        }}
-                                    />
-                                </Grid>
-                            )}
-                        </>
+                                <Typography variant="h5" sx={{ fontWeight: 800, color: 'var(--color-primary-dark)', mb: 2, fontSize: '1.3rem' }}>
+                                    {t(step.en.title, step.ar.title)}
+                                </Typography>
+                                <Typography sx={{ color: 'var(--color-secondary-text)', lineHeight: 1.7, maxWidth: 320, fontSize: '1.05rem' }}>
+                                    {t(step.en.desc, step.ar.desc)}
+                                </Typography>
+                            </Box>
+                        </Grid>
                     ))}
                 </Grid>
             </Container>

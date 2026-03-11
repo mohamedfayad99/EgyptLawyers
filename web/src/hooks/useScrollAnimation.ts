@@ -14,10 +14,9 @@ export function useScrollAnimation(threshold = 0.15) {
 
         const observer = new IntersectionObserver(
             ([entry]) => {
-                if (entry.isIntersecting) {
-                    setVisible(true);
-                    observer.disconnect(); // fire once
-                }
+                // By updating visible but NOT disconnecting, 
+                // we allow animations to re-trigger.
+                setVisible(entry.isIntersecting);
             },
             { threshold }
         );

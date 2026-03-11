@@ -4,7 +4,7 @@ import {
 } from '@mui/material';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
-  ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line
+  ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
 import { api } from '../../api/client';
 
@@ -84,13 +84,13 @@ export default function StatisticsSection() {
         borderRadius: 4,
         border: dark ? 'none' : '1px solid rgba(var(--color-text-rgb),0.06)',
         bgcolor: dark ? '#0a0a0a' : 'var(--color-background)',
-        color: dark ? '#fff' : 'inherit',
+        color: dark ? '#fff' : 'var(--color-text)',
         height: '100%',
         position: 'relative',
         overflow: 'hidden'
       }}
     >
-      <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, opacity: dark ? 0.9 : 1 }}>
+      <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, opacity: dark ? 0.9 : 1, color: dark ? '#fff' : 'var(--color-text)' }}>
         {title}
       </Typography>
       {children}
@@ -177,7 +177,7 @@ export default function StatisticsSection() {
       </Grid>
 
       {/* Advanced Metrics Section */}
-      <Typography variant="h5" sx={{ fontWeight: 800, letterSpacing: '-0.5px', mt: 4, mb: -1 }}>
+      <Typography variant="h5" sx={{ fontWeight: 800, letterSpacing: '-0.5px', mt: 4, mb: -1, color: 'var(--color-text)' }}>
         Platform Performance
       </Typography>
 
@@ -186,7 +186,7 @@ export default function StatisticsSection() {
         <Grid size={{ xs: 12, md: 6 }}>
           {renderCard("City-Specific Engagement", (
             <Stack spacing={2.5}>
-              <Typography sx={{ opacity: 0.6, fontSize: '0.85rem', mb: 1 }}>Total expert replies to help requests</Typography>
+              <Typography sx={{ opacity: 0.6, fontSize: '0.85rem', mb: 1, color: 'var(--color-text)' }}>Total expert replies to help requests</Typography>
               {data.cityActivityStacked
                 .filter(city => city.posts > 0 || city.replies > 0)
                 .slice(0, 5)
@@ -197,7 +197,7 @@ export default function StatisticsSection() {
                 return (
                   <Box key={idx}>
                     <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
-                      <Typography sx={{ fontWeight: 600, fontSize: '0.9rem' }}>{city.city}</Typography>
+                      <Typography sx={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--color-text)' }}>{city.city}</Typography>
                       <Typography sx={{ fontWeight: 800, color: 'var(--color-primary)', fontSize: '0.9rem' }}>
                         {totalReplies} {totalReplies === 1 ? 'reply' : 'replies'}
                       </Typography>
@@ -256,9 +256,9 @@ export default function StatisticsSection() {
               <Box sx={{ height: 350 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data.citiesWithMostLawyers} margin={{ bottom: 30 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(var(--color-text-rgb),0.05)" />
                     <XAxis dataKey="city" tick={<MultilineTick />} interval={0} axisLine={false} tickLine={false} />
-                    <YAxis axisLine={false} tickLine={false} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: 'rgba(var(--color-text-rgb),0.5)', fontSize: 11 }} />
                     <RechartsTooltip contentStyle={{ borderRadius: '12px', border: 'none' }} />
                     <Bar dataKey="count" fill="var(--color-primary)" radius={[6, 6, 0, 0]} name="Lawyers" />
                   </BarChart>
@@ -271,9 +271,9 @@ export default function StatisticsSection() {
               <Box sx={{ height: 350 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data.courtsWithMostRequests} margin={{ bottom: 30 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(var(--color-text-rgb),0.05)" />
                     <XAxis dataKey="court" tick={<MultilineTick />} interval={0} axisLine={false} tickLine={false} />
-                    <YAxis axisLine={false} tickLine={false} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: 'rgba(var(--color-text-rgb),0.5)', fontSize: 11 }} />
                     <RechartsTooltip contentStyle={{ borderRadius: '12px', border: 'none' }} />
                     <Bar dataKey="count" fill="var(--color-accent)" radius={[6, 6, 0, 0]} name="Help Requests" />
                   </BarChart>

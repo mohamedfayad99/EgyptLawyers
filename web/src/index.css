@@ -2,20 +2,40 @@
 
 :root {
   --color-background: #ffffff;
-  --color-surface: #f3f4f6;
-  --color-primary: #2563eb;
-  --color-accent: #2563eb;
-  --color-text: #111827;
-  --color-primary-dark: #1e3a5f;
-  --color-secondary-text: #6b7280;
-  --color-border: #e5e7eb;
+  --color-surface: #f8fafc;
+  --color-primary: #070930;
+  --color-accent: #22c55e;
+  --color-text: #070930;
+  --color-primary-dark: #050624;
+  --color-secondary-text: #64748b;
+  --color-border: #e2e8f0;
 
-  --color-primary-rgb: 37, 99, 235;
-  --color-accent-rgb: 37, 99, 235;
-  --color-text-rgb: 17, 24, 39;
-  --color-surface-rgb: 243, 244, 246;
-  --color-primary-dark-rgb: 30, 58, 95;
-  --color-border-rgb: 229, 231, 235;
+  --color-primary-rgb: 7, 9, 48;
+  --color-accent-rgb: 34, 197, 94;
+  --color-text-rgb: 7, 9, 48;
+  --color-surface-rgb: 248, 250, 252;
+  --color-primary-dark-rgb: 5, 6, 36;
+  --color-border-rgb: 226, 232, 240;
+  --color-background-rgb: 255, 255, 255;
+}
+
+[data-theme="dark"] {
+  --color-background: #03031a;
+  --color-surface: #070731;
+  --color-primary: #ffffff;
+  --color-accent: #22c55e;
+  --color-text: #f8fafc;
+  --color-primary-dark: #f1f5f9;
+  --color-secondary-text: #94a3b8;
+  --color-border: #1e293b;
+
+  --color-primary-rgb: 255, 255, 255;
+  --color-accent-rgb: 34, 197, 94;
+  --color-text-rgb: 248, 250, 252;
+  --color-surface-rgb: 7, 7, 49;
+  --color-primary-dark-rgb: 241, 245, 249;
+  --color-border-rgb: 30, 41, 59;
+  --color-background-rgb: 3, 3, 26;
 }
 
 *,
@@ -72,3 +92,31 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(var(--color-primary-rgb), 0.6);
 }
+
+/* MUI Dark Mode Overrides for Portals */
+.MuiPaper-root.MuiMenu-paper {
+  background-color: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  border: 1px solid var(--color-border) !important;
+}
+
+.MuiMenuItem-root {
+  color: var(--color-text) !important;
+}
+
+.MuiMenuItem-root:hover {
+  background-color: rgba(var(--color-primary-rgb), 0.08) !important;
+}
+
+.MuiMenuItem-root.Mui-selected {
+  background-color: rgba(var(--color-primary-rgb), 0.15) !important;
+}
+
+.MuiMenuItem-root.Mui-selected:hover {
+  background-color: rgba(var(--color-primary-rgb), 0.2) !important;
+}
+
+.MuiTablePagination-actions .MuiIconButton-root {
+  color: var(--color-text);
+}
+

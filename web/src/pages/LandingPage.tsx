@@ -4,7 +4,6 @@ import HeroSection from '../components/landing/HeroSection';
 import StatsBar from '../components/landing/StatsBar';
 import HowItWorks from '../components/landing/HowItWorks';
 import Features from '../components/landing/Features';
-import WhyJoin from '../components/landing/WhyJoin';
 import Testimonials from '../components/landing/Testimonials';
 import JoinSteps from '../components/landing/JoinSteps';
 import FAQ from '../components/landing/FAQ';
@@ -21,7 +20,6 @@ export default function LandingPage() {
         <StatsBar />
         <HowItWorks />
         <Features />
-        <WhyJoin />
         <Testimonials />
         <JoinSteps />
         <FAQ />
