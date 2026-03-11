@@ -182,7 +182,16 @@ export default function HelpPostsPage() {
                             label={t('filterByStatus')}
                             value={filterStatus}
                             onChange={(e) => setFilterStatus(e.target.value)}
-                            sx={{ minWidth: 120 }}
+                            sx={{ 
+                                minWidth: 120,
+                                '& .MuiOutlinedInput-root': {
+                                    color: 'var(--color-text)',
+                                    '& fieldset': { borderColor: 'rgba(var(--color-text-rgb), 0.15)' },
+                                    '&:hover fieldset': { borderColor: 'rgba(var(--color-text-rgb), 0.3)' },
+                                },
+                                '& .MuiInputLabel-root': { color: 'rgba(var(--color-text-rgb), 0.7)' },
+                                '& .MuiSelect-icon': { color: 'var(--color-text)' }
+                            }}
                         >
                             <MenuItem value="">{t('allStatuses')}</MenuItem>
                             <MenuItem value="pending">{t('pending')}</MenuItem>
@@ -197,7 +206,16 @@ export default function HelpPostsPage() {
                                 setFilterCityId(e.target.value === '' ? '' : Number(e.target.value));
                                 setFilterCourtId('');
                             }}
-                            sx={{ minWidth: 150 }}
+                            sx={{ 
+                                minWidth: 150,
+                                '& .MuiOutlinedInput-root': {
+                                    color: 'var(--color-text)',
+                                    '& fieldset': { borderColor: 'rgba(var(--color-text-rgb), 0.15)' },
+                                    '&:hover fieldset': { borderColor: 'rgba(var(--color-text-rgb), 0.3)' },
+                                },
+                                '& .MuiInputLabel-root': { color: 'rgba(var(--color-text-rgb), 0.7)' },
+                                '& .MuiSelect-icon': { color: 'var(--color-text)' }
+                            }}
                         >
                             <MenuItem value="">{t('allCities')}</MenuItem>
                             {cities.map((c) => (
@@ -210,7 +228,16 @@ export default function HelpPostsPage() {
                             label={t('court')}
                             value={filterCourtId}
                             onChange={(e) => setFilterCourtId(e.target.value === '' ? '' : Number(e.target.value))}
-                            sx={{ minWidth: 150 }}
+                            sx={{ 
+                                minWidth: 150,
+                                '& .MuiOutlinedInput-root': {
+                                    color: 'var(--color-text)',
+                                    '& fieldset': { borderColor: 'rgba(var(--color-text-rgb), 0.15)' },
+                                    '&:hover fieldset': { borderColor: 'rgba(var(--color-text-rgb), 0.3)' },
+                                },
+                                '& .MuiInputLabel-root': { color: 'rgba(var(--color-text-rgb), 0.7)' },
+                                '& .MuiSelect-icon': { color: 'var(--color-text)' }
+                            }}
                         >
                             <MenuItem value="">{t('allCourts')}</MenuItem>
                             {(filterCityId ? courts.filter((c) => c.cityId === filterCityId) : courts).map((c) => (

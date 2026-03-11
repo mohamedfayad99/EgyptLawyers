@@ -17,6 +17,7 @@ import CitiesPage from './pages/admin/CitiesPage'
 import CourtsPage from './pages/admin/CourtsPage'
 import PostsPage from './pages/admin/HelpPostsPage'
 import { LanguageProvider, useLang } from './contexts/LanguageContext'
+import { AppThemeProvider, useAppTheme } from './contexts/ThemeContext'
 
 const cacheRtl = createCache({
   key: 'muirtl',
@@ -43,6 +44,7 @@ function RequireAdmin({ children }: { children: React.ReactNode }) {
 
 function MainApp() {
   const { lang } = useLang()
+  const { mode } = useAppTheme()
 
   useEffect(() => {
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'
@@ -54,27 +56,57 @@ function MainApp() {
       createTheme({
         direction: lang === 'ar' ? 'rtl' : 'ltr',
         palette: {
-          mode: 'light',
-          primary: { main: '#4F8EF7' },
-          secondary: { main: '#FF9B51' },
-          background: { default: '#FFFFFF' },
+          mode: mode,
+          primary: {
+            main: mode === 'light' ? '#070930' : '#ffffff',
+            dark: mode === 'light' ? '#050624' : '#f1f5f9',
+          },
+          secondary: {
+            main: '#22c55e',
+          },
+          background: {
+            default: mode === 'light' ? '#ffffff' : '#03031a',
+            paper: mode === 'light' ? '#f8fafc' : '#070731',
+          },
+          text: {
+            primary: mode === 'light' ? '#070930' : '#f8fafc',
+            secondary: mode === 'light' ? '#64748b' : '#94a3b8',
+          },
         },
         typography: {
-          fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          fontFamily: '"Inter", "Cairo", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         },
-        shape: { borderRadius: 12 },
+        shape: { borderRadius: 16 },
         components: {
           MuiButton: {
             styleOverrides: {
-              root: { textTransform: 'none', fontWeight: 600 },
+              root: {
+                textTransform: 'none',
+                fontWeight: 700,
+                borderRadius: '12px',
+              },
             },
+          },
+          MuiTextField: {
+            styleOverrides: {
+              root: {
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '12px',
+                }
+              }
+            }
           },
           MuiPaper: {
             defaultProps: { elevation: 0 },
+            styleOverrides: {
+              root: {
+                backgroundImage: 'none',
+              }
+            }
           },
         },
       }),
-    [lang]
+    [lang, mode]
   )
 
   return (
@@ -113,7 +145,9 @@ function MainApp() {
 export default function App() {
   return (
     <LanguageProvider>
-      <MainApp />
+      <AppThemeProvider>
+        <MainApp />
+      </AppThemeProvider>
     </LanguageProvider>
   )
 }

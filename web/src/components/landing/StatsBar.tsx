@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Box, Container, Grid, Typography } from '@mui/material';
+import { Box, Container, Grid, Typography, Stack } from '@mui/material';
 import GavelIcon from '@mui/icons-material/Gavel';
 import LocationCityIcon from '@mui/icons-material/LocationCity';
-import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
-import DownloadingIcon from '@mui/icons-material/Downloading';
+import ArticleIcon from '@mui/icons-material/Article';
 import { useLang } from '../../contexts/LanguageContext';
 import { useScrollAnimation } from '../../hooks/useScrollAnimation';
 
@@ -17,24 +16,16 @@ const stats = [
     },
     {
         icon: LocationCityIcon,
-        target: 27,
-        en: { label: 'Governorates Covered' },
-        ar: { label: 'محافظة مغطاة' },
+        target: 35,
+        en: { label: 'Cities Covered' },
+        ar: { label: 'مدينة مغطاة' },
     },
     {
-        icon: VerifiedUserIcon,
-        target: 100,
-        suffix: '%',
-        en: { label: 'Syndicate Verified' },
-        ar: { label: 'موثق بالنقابة' },
-    },
-    {
-        icon: DownloadingIcon,
-        target: 3,
-        suffixEn: ' Steps',
-        suffixAr: ' خطوات',
-        en: { label: 'To Start Connecting' },
-        ar: { label: 'للبدء في التواصل' },
+        icon: ArticleIcon,
+        target: 5000,
+        suffix: '+',
+        en: { label: 'Posts Created' },
+        ar: { label: 'طلب منشور' },
     },
 ];
 
@@ -42,11 +33,14 @@ function Counter({ target, visible, suffix = '' }: { target: number, visible: bo
     const [count, setCount] = useState(0);
 
     useEffect(() => {
-        if (!visible) return;
+        if (!visible) {
+            setCount(0); // Reset when not visible to allow repeat
+            return;
+        }
 
         let start = 0;
-        const duration = 2000; // 2 seconds
-        const increment = target / (duration / 16); // 16ms per frame (approx 60fps)
+        const duration = 3000;
+        const increment = target / (duration / 16);
 
         const timer = setInterval(() => {
             start += increment;
@@ -65,73 +59,87 @@ function Counter({ target, visible, suffix = '' }: { target: number, visible: bo
 }
 
 export default function StatsBar() {
-    const { t, lang } = useLang();
+    const { t } = useLang();
     const { ref, visible } = useScrollAnimation();
 
     return (
         <Box
             ref={ref}
             sx={{
-                py: { xs: 5, md: 6 },
+                py: { xs: 8, md: 10 },
                 bgcolor: 'var(--color-surface)',
-                borderTop: '1px solid rgba(var(--color-primary-rgb),0.1)',
-                borderBottom: '1px solid rgba(var(--color-primary-rgb),0.1)',
+                position: 'relative',
             }}
         >
-            <Container maxWidth="lg">
-                <Grid container spacing={2} justifyContent="center">
+            <Box
+                sx={{
+                    position: 'absolute', inset: 0,
+                    background: 'linear-gradient(180deg, var(--color-background) 0%, var(--color-surface) 100%)',
+                    zIndex: 0,
+                }}
+            />
+            
+            <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+                <Grid container spacing={4} justifyContent="center">
                     {stats.map((stat, i) => (
-                        <Grid key={i} size={{ xs: 6, md: 3 }}>
+                        <Grid key={i} size={{ xs: 12, sm: 6, md: 4 }}>
                             <Box
                                 sx={{
-                                    textAlign: 'center',
-                                    py: { xs: 2, md: 3 },
-                                    px: 2,
-                                    borderRadius: 3,
-                                    transition: 'all 0.6s cubic-bezier(0.16,1,0.3,1)',
-                                    transitionDelay: `${i * 100}ms`,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 3,
+                                    p: 4,
+                                    borderRadius: '24px',
+                                    bgcolor: 'var(--color-background)',
+                                    boxShadow: '0 10px 30px -10px rgba(0,0,0,0.05)',
+                                    border: '1px solid var(--color-border)',
+                                    transition: 'all 0.8s cubic-bezier(0.16,1,0.3,1)',
+                                    transitionDelay: `${i * 150}ms`,
                                     opacity: visible ? 1 : 0,
                                     transform: visible ? 'translateY(0)' : 'translateY(24px)',
                                     '&:hover': {
-                                        bgcolor: 'rgba(var(--color-primary-rgb),0.06)',
-                                        transform: 'translateY(-4px)',
+                                        transform: 'translateY(-6px)',
+                                        boxShadow: '0 20px 40px -15px rgba(0,0,0,0.08)',
                                     },
                                 }}
                             >
                                 <Box
                                     sx={{
-                                        width: 48, height: 48, borderRadius: 2,
-                                        bgcolor: 'rgba(var(--color-primary-rgb),0.1)',
-                                        mx: 'auto', mb: 1.5,
+                                        width: 64, height: 64, borderRadius: '16px',
+                                        bgcolor: 'rgba(var(--color-accent-rgb),0.12)',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        flexShrink: 0,
                                     }}
                                 >
-                                    <stat.icon sx={{ color: 'var(--color-primary)', fontSize: 24 }} />
+                                    <stat.icon sx={{ color: 'var(--color-accent)', fontSize: 32 }} />
                                 </Box>
-                                <Typography
-                                    sx={{
-                                        fontSize: { xs: '1.6rem', md: '2rem' },
-                                        fontWeight: 800,
-                                        color: 'var(--color-primary-dark)',
-                                        lineHeight: 1.1,
-                                    }}
-                                >
-                                    <Counter 
-                                        target={stat.target} 
-                                        visible={visible} 
-                                        suffix={lang === 'ar' ? (stat.suffixAr || stat.suffix) : (stat.suffixEn || stat.suffix)} 
-                                    />
-                                </Typography>
-                                <Typography
-                                    sx={{
-                                        fontSize: '0.8rem',
-                                        color: 'rgba(var(--color-text-rgb),0.6)',
-                                        fontWeight: 500,
-                                        mt: 0.5,
-                                    }}
-                                >
-                                    {t(stat.en.label, stat.ar.label)}
-                                </Typography>
+                                <Stack>
+                                    <Typography
+                                        sx={{
+                                            fontSize: { xs: '2rem', md: '2.5rem' },
+                                            fontWeight: 900,
+                                            color: 'var(--color-primary-dark)',
+                                            lineHeight: 1,
+                                            letterSpacing: '-0.03em',
+                                            mb: 0.5,
+                                        }}
+                                    >
+                                        <Counter 
+                                            target={stat.target} 
+                                            visible={visible} 
+                                            suffix={stat.suffix} 
+                                        />
+                                    </Typography>
+                                    <Typography
+                                        sx={{
+                                            fontSize: '1rem',
+                                            color: 'var(--color-secondary-text)',
+                                            fontWeight: 500,
+                                        }}
+                                    >
+                                        {t(stat.en.label, stat.ar.label)}
+                                    </Typography>
+                                </Stack>
                             </Box>
                         </Grid>
                     ))}

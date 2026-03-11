@@ -1,0 +1,7 @@
+﻿src/components/admin/StatisticsSection.tsx(7,45): error TS6133: 'LineChart' is declared but its value is never read.
+src/components/admin/StatisticsSection.tsx(7,56): error TS6133: 'Line' is declared but its value is never read.
+src/components/landing/HeroSection.tsx(5,1): error TS6133: 'ArrowDownwardIcon' is declared but its value is never read.
+src/components/landing/HeroSection.tsx(16,11): error TS6133: 'scrollToDownload' is declared but its value is never read.
+src/components/landing/StatsBar.tsx(5,1): error TS6133: 'VerifiedUserIcon' is declared but its value is never read.
+src/components/landing/StatsBar.tsx(60,16): error TS6133: 'lang' is declared but its value is never read.
+src/components/landing/WhyJoin.tsx(1,59): error TS6133: 'CardMedia' is declared but its value is never read.

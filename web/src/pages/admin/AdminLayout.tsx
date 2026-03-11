@@ -3,6 +3,7 @@ import { Box, useMediaQuery, useTheme } from '@mui/material';
 import { Outlet, useLocation } from 'react-router-dom';
 import AdminSidebar, { DRAWER_WIDTH, DRAWER_COLLAPSED } from '../../components/admin/AdminSidebar';
 import AdminTopBar from '../../components/admin/AdminTopBar';
+import ScrollToTop from '../../components/landing/ScrollToTop';
 import { useLang } from '../../contexts/LanguageContext';
 
 const pageTitleKeys: Record<string, 'dashboard' | 'lawyers' | 'pendingApprovals' | 'cities' | 'courts' | 'posts'> = {
@@ -32,6 +33,7 @@ export default function AdminLayout() {
         display: 'flex',
         minHeight: '100vh',
         bgcolor: 'var(--color-surface)',
+        color: 'var(--color-text)',
         direction: 'ltr',
       }}
     >
@@ -48,7 +50,10 @@ export default function AdminLayout() {
           flex: 1,
           ml: `${sidebarWidth}px`,
           mr: 0,
-          transition: 'margin 0.3s',
+          transition: theme.transitions.create(['margin', 'width'], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+          }),
           display: 'flex',
           flexDirection: 'column',
           minHeight: '100vh',
@@ -63,6 +68,8 @@ export default function AdminLayout() {
           <Outlet />
         </Box>
       </Box>
+
+      <ScrollToTop />
     </Box>
   );
 }

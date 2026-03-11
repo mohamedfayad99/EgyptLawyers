@@ -4,17 +4,16 @@ import GoogleIcon from '@mui/icons-material/Google';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useLang } from '../../contexts/LanguageContext';
 
-// QR code pointing to the play store link — update once the app is live
-const QR_CODE_URL = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&bgcolor=1E3A5F&color=FFFFFF&data=https://play.google.com/store&format=svg`;
+const QR_CODE_URL = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&bgcolor=09090B&color=FFFFFF&data=https://play.google.com/store&format=svg`;
 
 const APP_STORE_URL = '#';
 const PLAY_STORE_URL = '#';
 
 const perks = [
-    { en: 'Free to download & join', ar: 'مجاني للتحميل والانضمام' },
-    { en: 'No subscription fees', ar: 'بدون رسوم اشتراك' },
-    { en: 'Available on iOS & Android', ar: 'متاح على iOS وAndroid' },
-    { en: 'Verified lawyers only', ar: 'محامون موثقون فقط' },
+    { en: 'Free forever', ar: 'مجاني دائماً' },
+    { en: '100% Verified lawyers', ar: 'محامون موثقون 100%' },
+    { en: 'Secure & private', ar: 'آمن وخاص' },
+    { en: '27 Governorates', ar: '27 محافظة' },
 ];
 
 export default function DownloadCTA() {
@@ -24,168 +23,156 @@ export default function DownloadCTA() {
         <Box
             id="download"
             sx={{
-                py: { xs: 10, md: 14 },
-                bgcolor: 'var(--color-primary-dark)',
+                py: { xs: 12, md: 16 },
+                bgcolor: 'var(--color-surface)',
                 position: 'relative',
                 overflow: 'hidden',
+                color: 'var(--color-text)',
             }}
         >
-            {/* Background glow */}
             <Box
                 sx={{
                     position: 'absolute',
-                    top: '50%', left: '50%',
+                    top: '30%', left: '20%',
                     transform: 'translate(-50%, -50%)',
-                    width: 700, height: 700,
-                    bgcolor: 'rgba(var(--color-primary-rgb),0.1)',
+                    width: 800, height: 800,
+                    background: 'radial-gradient(circle, rgba(var(--color-accent-rgb),0.1) 0%, transparent 70%)',
                     borderRadius: '50%',
                     filter: 'blur(100px)',
-                }}
-            />
-            {/* Corner accent */}
-            <Box
-                sx={{
-                    position: 'absolute',
-                    bottom: -80, right: -80,
-                    width: 320, height: 320,
-                    bgcolor: 'rgba(var(--color-accent-rgb),0.08)',
-                    borderRadius: '50%',
-                    filter: 'blur(60px)',
+                    zIndex: 0,
                 }}
             />
 
             <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-                <Grid container spacing={6} alignItems="center">
-                    {/* Left: Text + Buttons */}
-                    <Grid size={{ xs: 12, md: 7 }}>
-                        <Stack spacing={4}>
-                            <Typography
-                                sx={{
-                                    color: 'var(--color-accent)', fontWeight: 600, fontSize: '0.8rem',
-                                    textTransform: 'uppercase', letterSpacing: 2,
-                                }}
-                            >
-                                {t('Download the App', 'حمّل التطبيق')}
-                            </Typography>
-
-                            <Typography
-                                variant="h3"
-                                sx={{
-                                    fontWeight: 900, color: 'var(--color-background)',
-                                    fontSize: { xs: '1.8rem', md: '2.8rem' },
-                                    lineHeight: 1.15,
-                                    letterSpacing: '-0.5px',
-                                }}
-                            >
-                                {t('Ready to Join the Network?', 'مستعد للانضمام إلى الشبكة؟')}
-                            </Typography>
-
-                            <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '1.05rem', lineHeight: 1.8, maxWidth: 500 }}>
-                                {t(
-                                    'Download the app today and connect with thousands of verified lawyers across Egypt. Your next case partner is just a tap away.',
-                                    'حمّل التطبيق اليوم وتواصل مع آلاف المحامين الموثقين في جميع أنحاء مصر. شريكك القانوني القادم على بعد نقرة واحدة.',
-                                )}
-                            </Typography>
-
-                            {/* Perks */}
-                            <Grid container spacing={1}>
-                                {perks.map((perk, i) => (
-                                    <Grid key={i} size={{ xs: 12, sm: 6 }}>
-                                        <Stack direction="row" spacing={1} alignItems="center">
-                                            <CheckCircleIcon sx={{ fontSize: 18, color: '#22C55E', flexShrink: 0 }} />
-                                            <Typography sx={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.875rem' }}>
-                                                {t(perk.en, perk.ar)}
-                                            </Typography>
-                                        </Stack>
-                                    </Grid>
-                                ))}
-                            </Grid>
-
-                            {/* CTA Buttons */}
-                            <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
-                                <Button
-                                    variant="contained"
-                                    startIcon={<AppleIcon />}
-                                    href={APP_STORE_URL}
-                                    sx={{
-                                        bgcolor: 'var(--color-background)',
-                                        color: 'var(--color-primary-dark)',
-                                        fontWeight: 700,
-                                        px: 3.5, py: 1.5, fontSize: '1rem', borderRadius: 2,
-                                        '& .MuiButton-startIcon': { ml: 0.5 },
-                                        '&:hover': {
-                                            bgcolor: 'rgba(255,255,255,0.9)',
-                                            transform: 'translateY(-2px)',
-                                            boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-                                        },
-                                        transition: 'all 0.25s',
-                                    }}
-                                >
-                                    {t('Download on App Store', 'حمّل من آب ستور')}
-                                </Button>
-                                <Button
-                                    variant="contained"
-                                    startIcon={<GoogleIcon />}
-                                    href={PLAY_STORE_URL}
-                                    sx={{
-                                        bgcolor: 'var(--color-accent)', color: 'var(--color-background)',
-                                        fontWeight: 700,
-                                        px: 3.5, py: 1.5, fontSize: '1rem', borderRadius: 2,
-                                        '& .MuiButton-startIcon': { ml: 0.5 },
-                                        '&:hover': {
-                                            bgcolor: '#1d4ed8',
-                                            transform: 'translateY(-2px)',
-                                            boxShadow: '0 8px 24px rgba(var(--color-accent-rgb),0.45)',
-                                        },
-                                        transition: 'all 0.25s',
-                                    }}
-                                >
-                                    {t('Get it on Google Play', 'احصل عليه من جوجل بلاي')}
-                                </Button>
-                            </Stack>
-                        </Stack>
-                    </Grid>
-
-                    {/* Right: QR Code */}
-                    <Grid size={{ xs: 12, md: 5 }} sx={{ display: { xs: 'none', md: 'flex' }, justifyContent: 'center' }}>
-                        <Stack alignItems="center" spacing={2}>
-                            <Box
-                                sx={{
-                                    p: 2.5,
-                                    borderRadius: 4,
-                                    bgcolor: 'rgba(255,255,255,0.08)',
-                                    border: '1px solid rgba(255,255,255,0.15)',
-                                    boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-                                }}
-                            >
+                <Box
+                    sx={{
+                        bgcolor: 'var(--color-background)',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: '32px',
+                        p: { xs: 4, md: 8 },
+                        boxShadow: '0 20px 40px -10px rgba(0,0,0,0.4)',
+                    }}
+                >
+                    <Grid container spacing={8} alignItems="center">
+                        <Grid size={{ xs: 12, md: 7 }}>
+                            <Stack spacing={4}>
                                 <Box
-                                    component="img"
-                                    src={QR_CODE_URL}
-                                    alt={t('QR code to download the app', 'رمز QR لتحميل التطبيق')}
                                     sx={{
-                                        width: 160, height: 160,
-                                        display: 'block',
-                                        borderRadius: 2,
+                                        display: 'inline-flex', px: 2, py: 0.75, borderRadius: '12px',
+                                        bgcolor: 'rgba(var(--color-accent-rgb),0.15)', border: '1px solid rgba(var(--color-accent-rgb),0.3)', width: 'max-content'
                                     }}
-                                />
+                                >
+                                    <Typography sx={{ color: 'var(--color-accent)', fontWeight: 800, fontSize: '0.8rem', letterSpacing: 1 }}>
+                                        {t('Get Started Today', 'ابدأ اليوم')}
+                                    </Typography>
+                                </Box>
+
+                                <Typography
+                                    variant="h2"
+                                    sx={{
+                                        fontWeight: 900,
+                                        fontSize: { xs: '2.5rem', md: '3.5rem' },
+                                        lineHeight: 1.1,
+                                        letterSpacing: '-0.02em',
+                                    }}
+                                >
+                                    {t('Ready to Join the Network?', 'مستعد للانضمام إلى الشبكة؟')}
+                                </Typography>
+
+                                <Typography sx={{ color: 'var(--color-secondary-text)', fontSize: '1.2rem', lineHeight: 1.6, maxWidth: 520 }}>
+                                    {t(
+                                        'Download the app today and connect with thousands of verified lawyers across Egypt. Your next case partner is just a tap away.',
+                                        'حمّل التطبيق اليوم وتواصل مع آلاف المحامين الموثقين في جميع أنحاء مصر. شريكك القانوني القادم على بعد نقرة واحدة.',
+                                    )}
+                                </Typography>
+
+                                <Grid container spacing={2}>
+                                    {perks.map((perk, i) => (
+                                        <Grid key={i} size={{ xs: 6 }}>
+                                            <Stack direction="row" spacing={1.5} alignItems="center">
+                                                <CheckCircleIcon sx={{ fontSize: 20, color: 'var(--color-accent)', flexShrink: 0 }} />
+                                                <Typography sx={{ color: 'var(--color-text)', fontSize: '0.95rem', fontWeight: 500 }}>
+                                                    {t(perk.en, perk.ar)}
+                                                </Typography>
+                                            </Stack>
+                                        </Grid>
+                                    ))}
+                                </Grid>
+
+                                <Stack direction="row" spacing={2.5} flexWrap="wrap" useFlexGap sx={{ pt: 2 }}>
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<AppleIcon />}
+                                        href={APP_STORE_URL}
+                                        sx={{
+                                            bgcolor: 'var(--color-primary)', color: 'var(--color-background)',
+                                            fontWeight: 700, px: 4, py: 1.8, fontSize: '1.1rem', borderRadius: '16px',
+                                            textTransform: 'none', boxShadow: '0 10px 30px -10px rgba(var(--color-primary-rgb),0.2)',
+                                            '& .MuiButton-startIcon': { ml: 0.5 },
+                                            '&:hover': {
+                                                bgcolor: 'var(--color-primary-dark)',
+                                                transform: 'translateY(-4px)',
+                                            },
+                                            transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
+                                        }}
+                                    >
+                                        {t('App Store', 'آب ستور')}
+                                    </Button>
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<GoogleIcon />}
+                                        href={PLAY_STORE_URL}
+                                        sx={{
+                                            bgcolor: 'var(--color-accent)', color: '#ffffff',
+                                            fontWeight: 700, px: 4, py: 1.8, fontSize: '1.1rem', borderRadius: '16px',
+                                            textTransform: 'none', boxShadow: '0 10px 30px -10px rgba(var(--color-accent-rgb),0.3)',
+                                            '& .MuiButton-startIcon': { ml: 0.5 },
+                                            '&:hover': {
+                                                bgcolor: '#16a34a',
+                                                transform: 'translateY(-4px)',
+                                            },
+                                            transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
+                                        }}
+                                    >
+                                        {t('Google Play', 'جوجل بلاي')}
+                                    </Button>
+                                </Stack>
+                            </Stack>
+                        </Grid>
+
+                        <Grid size={{ xs: 12, md: 5 }} sx={{ display: { xs: 'none', md: 'flex' }, justifyContent: 'center' }}>
+                            <Box sx={{ position: 'relative' }}>
+                                <Stack alignItems="center" spacing={3} sx={{ position: 'relative', zIndex: 1, p: 4 }}>
+                                    <Box
+                                        sx={{
+                                            p: 3, borderRadius: '24px', bgcolor: 'var(--color-surface)',
+                                            border: '1px solid var(--color-border)',
+                                            boxShadow: '0 20px 40px rgba(0,0,0,0.3)', display: 'inline-flex'
+                                        }}
+                                    >
+                                        <Box
+                                            component="img"
+                                            src={QR_CODE_URL}
+                                            alt={t('QR code to download the app', 'رمز QR لتحميل التطبيق')}
+                                            sx={{ width: 180, height: 180, display: 'block', borderRadius: '12px' }}
+                                        />
+                                    </Box>
+                                    <Typography
+                                        sx={{
+                                            color: 'var(--color-secondary-text)', fontSize: '1rem',
+                                            textAlign: 'center', maxWidth: 220, lineHeight: 1.6, fontWeight: 500,
+                                        }}
+                                    >
+                                        {t(
+                                            'Scan with your phone camera to download instantly',
+                                            'امسح بكاميرا هاتفك للتحميل فوراً',
+                                        )}
+                                    </Typography>
+                                </Stack>
                             </Box>
-                            <Typography
-                                sx={{
-                                    color: 'rgba(255,255,255,0.5)',
-                                    fontSize: '0.8rem',
-                                    textAlign: 'center',
-                                    maxWidth: 180,
-                                    lineHeight: 1.5,
-                                }}
-                            >
-                                {t(
-                                    'Scan with your phone camera to download instantly',
-                                    'امسح بكاميرا هاتفك للتحميل فوراً',
-                                )}
-                            </Typography>
-                        </Stack>
+                        </Grid>
                     </Grid>
-                </Grid>
+                </Box>
             </Container>
         </Box>
     );

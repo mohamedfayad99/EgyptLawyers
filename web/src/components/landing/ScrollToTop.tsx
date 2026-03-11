@@ -25,9 +25,9 @@ export default function ScrollToTop() {
           bottom: 32,
           right: 32,
           bgcolor: 'var(--color-primary)',
-          color: 'white',
+          color: 'var(--color-background)',
           '&:hover': {
-            bgcolor: 'var(--color-primary-dark, var(--color-primary))',
+            bgcolor: 'var(--color-text)',
             transform: 'translateY(-4px)',
           },
           transition: 'all 0.3s ease',

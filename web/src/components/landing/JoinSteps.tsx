@@ -10,7 +10,7 @@ const steps = [
     {
         icon: DownloadIcon,
         color: 'var(--color-primary)',
-        en: { step: 'Step 1', title: 'Download the App', desc: 'Get the Egyptian Lawyers Network app from the App Store or Google Play. It\'s free to download.' },
+        en: { step: 'Step 1', title: 'Download the App', desc: 'Get the Egypt Lawyers Network app from the App Store or Google Play. It\'s free to download.' },
         ar: { step: 'الخطوة 1', title: 'حمّل التطبيق', desc: 'احصل على تطبيق شبكة المحامين المصريين من آب ستور أو جوجل بلاي. التحميل مجاني.' },
     },
     {
@@ -34,32 +34,33 @@ const steps = [
 ];
 
 export default function JoinSteps() {
-    const { t } = useLang();
+    const { t, isRTL } = useLang();
     const { ref, visible } = useScrollAnimation();
 
     return (
         <Box
             id="join-steps"
             sx={{
-                py: { xs: 10, md: 14 },
+                py: { xs: 12, md: 16 },
                 bgcolor: 'var(--color-background)',
             }}
         >
             <Container maxWidth="lg">
-                {/* Header */}
-                <Stack alignItems="center" spacing={1.5} sx={{ mb: 8 }}>
-                    <Typography
+                <Stack alignItems="center" spacing={2} sx={{ mb: 10 }}>
+                    <Box
                         sx={{
-                            color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.8rem',
-                            textTransform: 'uppercase', letterSpacing: 2,
+                            display: 'inline-flex', px: 2, py: 0.75, borderRadius: '16px',
+                            bgcolor: 'rgba(var(--color-primary-rgb),0.06)', border: '1px solid rgba(var(--color-primary-rgb),0.1)',
                         }}
                     >
-                        {t('How to Join', 'كيفية الانضمام')}
-                    </Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 800, color: 'var(--color-text)', textAlign: 'center' }}>
+                        <Typography sx={{ color: 'var(--color-primary)', fontWeight: 700, fontSize: '0.85rem' }}>
+                            {t('How to Join', 'كيفية الانضمام')}
+                        </Typography>
+                    </Box>
+                    <Typography variant="h2" sx={{ fontWeight: 800, color: 'var(--color-primary-dark)', textAlign: 'center', fontSize: { xs: '2.2rem', md: '3rem' }, letterSpacing: '-0.02em' }}>
                         {t('Get Started in 4 Simple Steps', 'ابدأ في 4 خطوات بسيطة')}
                     </Typography>
-                    <Typography sx={{ color: 'rgba(var(--color-text-rgb),0.65)', textAlign: 'center', maxWidth: 520, lineHeight: 1.7, fontSize: '0.95rem' }}>
+                    <Typography sx={{ color: 'var(--color-secondary-text)', textAlign: 'center', maxWidth: 600, lineHeight: 1.7, fontSize: '1.1rem' }}>
                         {t(
                             'From download to your first connection — the entire process takes less than 24 hours.',
                             'من التحميل حتى أول تواصل — تستغرق العملية بأكملها أقل من 24 ساعة.',
@@ -67,74 +68,63 @@ export default function JoinSteps() {
                     </Typography>
                 </Stack>
 
-                {/* Steps */}
-                <Grid ref={ref} container spacing={3}>
+                <Grid ref={ref} container spacing={4}>
                     {steps.map((step, i) => (
                         <Grid key={i} size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
                             <Box
                                 sx={{
                                     flex: 1,
-                                    p: 3.5,
-                                    borderRadius: 4,
-                                    border: '1px solid rgba(var(--color-text-rgb),0.07)',
+                                    p: 4,
+                                    borderRadius: '24px',
+                                    border: '1px solid var(--color-border)',
                                     bgcolor: 'var(--color-surface)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: 2,
-                                    position: 'relative',
-                                    overflow: 'hidden',
-                                    transition: 'all 0.6s cubic-bezier(0.16,1,0.3,1)',
-                                    transitionDelay: `${i * 110}ms`,
+                                    display: 'flex', flexDirection: 'column', gap: 2.5, position: 'relative', overflow: 'hidden',
+                                    transition: 'all 0.4s cubic-bezier(0.16,1,0.3,1)',
+                                    transitionDelay: `${i * 120}ms`,
                                     opacity: visible ? 1 : 0,
-                                    transform: visible ? 'translateY(0)' : 'translateY(28px)',
+                                    transform: visible ? 'translateY(0)' : 'translateY(32px)',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.02)',
                                     '&:hover': {
-                                        transform: 'translateY(-6px)',
-                                        boxShadow: `0 20px 48px rgba(0,0,0,0.08)`,
-                                        borderColor: step.color,
+                                        transform: 'translateY(-8px)',
+                                        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.08)',
+                                        borderColor: 'transparent',
+                                        bgcolor: 'var(--color-background)',
                                     },
                                 }}
                             >
-                                {/* Step number watermark */}
                                 <Typography
+                                    style={{
+                                        [isRTL ? 'left' : 'right']: 16,
+                                    }}
                                     sx={{
-                                        position: 'absolute',
-                                        top: -8,
-                                        right: 16,
-                                        fontSize: '5rem',
-                                        fontWeight: 900,
-                                        color: 'rgba(var(--color-text-rgb),0.04)',
-                                        lineHeight: 1,
-                                        userSelect: 'none',
+                                        position: 'absolute', top: -16,
+                                        fontSize: '7rem', fontWeight: 900,
+                                        color: 'var(--color-primary-dark)', opacity: 0.04, lineHeight: 1, userSelect: 'none',
                                     }}
                                 >
                                     {i + 1}
                                 </Typography>
-
-                                {/* Icon */}
                                 <Box
                                     sx={{
-                                        width: 52, height: 52, borderRadius: 3,
-                                        bgcolor: `${step.color}18`,
+                                        width: 56, height: 56, borderRadius: '16px',
+                                        bgcolor: `${step.color}15`,
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        position: 'relative', zIndex: 1,
                                     }}
                                 >
-                                    <step.icon sx={{ color: step.color, fontSize: 26 }} />
+                                    <step.icon sx={{ color: step.color, fontSize: 28 }} />
                                 </Box>
-
-                                {/* Step label */}
-                                <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: step.color, textTransform: 'uppercase', letterSpacing: 1 }}>
-                                    {t(step.en.step, step.ar.step)}
-                                </Typography>
-
-                                {/* Title */}
-                                <Typography sx={{ fontWeight: 700, color: 'var(--color-text)', fontSize: '1rem' }}>
-                                    {t(step.en.title, step.ar.title)}
-                                </Typography>
-
-                                {/* Desc */}
-                                <Typography sx={{ color: 'rgba(var(--color-text-rgb),0.65)', fontSize: '0.875rem', lineHeight: 1.7 }}>
-                                    {t(step.en.desc, step.ar.desc)}
-                                </Typography>
+                                <Box sx={{ position: 'relative', zIndex: 1 }}>
+                                    <Typography sx={{ fontSize: '0.8rem', fontWeight: 800, color: step.color, textTransform: 'uppercase', letterSpacing: 1.5, mb: 1 }}>
+                                        {t(step.en.step, step.ar.step)}
+                                    </Typography>
+                                    <Typography sx={{ fontWeight: 800, color: 'var(--color-primary-dark)', fontSize: '1.2rem', mb: 1.5, letterSpacing: '-0.01em' }}>
+                                        {t(step.en.title, step.ar.title)}
+                                    </Typography>
+                                    <Typography sx={{ color: 'var(--color-secondary-text)', fontSize: '0.95rem', lineHeight: 1.7 }}>
+                                        {t(step.en.desc, step.ar.desc)}
+                                    </Typography>
+                                </Box>
                             </Box>
                         </Grid>
                     ))}

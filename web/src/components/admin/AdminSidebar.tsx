@@ -64,7 +64,8 @@ export default function AdminSidebar({
     <Box
       sx={{
         height: "100%",
-        bgcolor: "var(--color-primary-dark)",
+        bgcolor: "var(--color-surface)",
+        borderRight: "1px solid var(--color-border)",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
@@ -78,7 +79,7 @@ export default function AdminSidebar({
         sx={{
           px: collapsed && !isMobile ? 1.5 : 2.5,
           height: 64,
-          borderBottom: "1px solid rgba(var(--color-surface-rgb),0.7)",
+          borderBottom: "1px solid var(--color-border)",
           justifyContent: collapsed && !isMobile ? "center" : "flex-start",
         }}
       >
@@ -101,9 +102,9 @@ export default function AdminSidebar({
         {(!collapsed || isMobile) && (
           <Typography
             sx={{
-              color: "var(--color-background)",
-              fontWeight: 700,
-              fontSize: "0.9rem",
+              color: "var(--color-text)",
+              fontWeight: 800,
+              fontSize: "0.95rem",
               whiteSpace: "nowrap",
             }}
           >
@@ -131,12 +132,12 @@ export default function AdminSidebar({
                 justifyContent:
                   collapsed && !isMobile ? "center" : "flex-start",
                 bgcolor: active
-                  ? "rgba(var(--color-primary-rgb),0.18)"
+                  ? "rgba(var(--color-primary-rgb),0.1)"
                   : "transparent",
                 "&:hover": {
                   bgcolor: active
-                    ? "rgba(var(--color-primary-rgb),0.24)"
-                    : "rgba(255,255,255,0.04)",
+                    ? "rgba(var(--color-primary-rgb),0.15)"
+                    : "rgba(var(--color-primary-rgb),0.05)",
                 },
               }}
             >
@@ -145,7 +146,7 @@ export default function AdminSidebar({
                   minWidth: collapsed && !isMobile ? 0 : 40,
                   color: active
                     ? "var(--color-primary)"
-                    : "rgba(255,255,255,0.45)",
+                    : "var(--color-secondary-text)",
                   justifyContent: "center",
                 }}
               >
@@ -155,11 +156,11 @@ export default function AdminSidebar({
                 <ListItemText
                   primary={t(item.labelKey)}
                   primaryTypographyProps={{
-                    fontWeight: active ? 600 : 400,
+                    fontWeight: active ? 700 : 500,
                     fontSize: "0.875rem",
                     color: active
-                      ? "var(--color-background)"
-                      : "rgba(255,255,255,0.7)",
+                      ? "var(--color-primary)"
+                      : "var(--color-secondary-text)",
                     textAlign: "left",
                   }}
                 />
@@ -174,22 +175,25 @@ export default function AdminSidebar({
         <Box
           sx={{
             p: 1.5,
-            borderTop: "1px solid rgba(var(--color-surface-rgb),0.7)",
+            borderTop: "1px solid var(--color-border)",
           }}
         >
           <IconButton
             onClick={onToggleCollapse}
             sx={{
               width: "100%",
-              color: "rgba(255,255,255,0.7)",
+              color: "var(--color-secondary-text)",
               borderRadius: 2,
-              "&:hover": { bgcolor: "rgba(255,255,255,0.06)" },
+              "&:hover": { bgcolor: "rgba(var(--color-primary-rgb), 0.05)" },
             }}
           >
             <ChevronLeftIcon
               sx={{
-                transition: "transform 0.3s",
+                transition: theme.transitions.create("transform", {
+                  duration: theme.transitions.duration.shorter,
+                }),
                 transform: collapsed ? "rotate(180deg)" : "rotate(0deg)",
+                willChange: "transform",
               }}
             />
           </IconButton>
@@ -222,8 +226,12 @@ export default function AdminSidebar({
         sx: {
           width: drawerWidth,
           border: "none",
-          transition: "width 0.3s",
+          transition: theme.transitions.create("width", {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+          }),
           overflowX: "hidden",
+          willChange: "width",
         },
       }}
     >

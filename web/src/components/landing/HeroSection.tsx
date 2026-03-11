@@ -2,7 +2,6 @@ import { Box, Button, Container, Grid, Stack, Typography, Chip } from '@mui/mate
 import AppleIcon from '@mui/icons-material/Apple';
 import GoogleIcon from '@mui/icons-material/Google';
 import BalanceIcon from '@mui/icons-material/Balance';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import { useLang } from '../../contexts/LanguageContext';
 
@@ -11,11 +10,7 @@ const APP_STORE_URL = '#download';
 const PLAY_STORE_URL = '#download';
 
 export default function HeroSection() {
-    const { t } = useLang();
-
-    const scrollToDownload = () => {
-        document.querySelector('#download')?.scrollIntoView({ behavior: 'smooth' });
-    };
+    const { t, isRTL } = useLang();
 
     return (
         <Box
@@ -24,61 +19,59 @@ export default function HeroSection() {
                 minHeight: '100vh',
                 display: 'flex',
                 alignItems: 'center',
-                bgcolor: 'var(--color-primary-dark)',
+                bgcolor: 'var(--color-background)',
                 position: 'relative',
                 overflow: 'hidden',
-                pt: { xs: 4, md: 0 },
+                pt: { xs: 12, md: 8 },
+                pb: { xs: 8, md: 0 },
             }}
         >
-            {/* Background radial glows */}
+            {/* Subtle background gradient / blob */}
             <Box
                 sx={{
-                    position: 'absolute', inset: 0, opacity: 0.12,
-                    background: `
-                        radial-gradient(circle at 15% 30%, rgba(var(--color-primary-rgb),0.6) 0%, transparent 45%),
-                        radial-gradient(circle at 85% 70%, rgba(var(--color-accent-rgb),0.4) 0%, transparent 45%)
-                    `,
+                    position: 'absolute', top: '-10%', right: '-5%', width: '50vw', height: '50vw',
+                    background: 'radial-gradient(circle, rgba(var(--color-primary-rgb), 0.04) 0%, transparent 70%)',
+                    zIndex: 0, pointerEvents: 'none'
                 }}
             />
-            {/* Subtle grid pattern */}
             <Box
                 sx={{
-                    position: 'absolute', inset: 0, opacity: 0.03,
-                    backgroundImage: `linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px),
-                                      linear-gradient(90deg, rgba(255,255,255,0.8) 1px, transparent 1px)`,
-                    backgroundSize: '60px 60px',
+                    position: 'absolute', bottom: '-20%', left: '-10%', width: '60vw', height: '60vw',
+                    background: 'radial-gradient(circle, rgba(var(--color-accent-rgb), 0.03) 0%, transparent 70%)',
+                    zIndex: 0, pointerEvents: 'none'
                 }}
             />
 
-            <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1, py: { xs: 8, md: 10 } }}>
+            <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
                 <Grid container spacing={6} alignItems="center">
                     {/* ── Text Column ── */}
                     <Grid size={{ xs: 12, lg: 6 }}>
-                        <Stack spacing={3.5}>
+                        <Stack spacing={4}>
                             {/* Badge */}
-                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                <Box
-                                    sx={{
-                                        display: 'inline-flex', alignSelf: 'flex-start',
-                                        px: 2.5, py: 0.75, borderRadius: 50,
-                                        bgcolor: 'rgba(var(--color-primary-rgb),0.12)',
-                                        border: '1px solid rgba(var(--color-primary-rgb),0.45)',
-                                    }}
-                                >
-                                    <Typography sx={{ color: 'var(--color-primary)', fontSize: '0.82rem', fontWeight: 700 }}>
-                                        {t('For Licensed Lawyers Only', 'للمحامين المرخصين فقط')}
-                                    </Typography>
-                                </Box>
+                            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
                                 <Chip
-                                    icon={<VerifiedIcon sx={{ fontSize: '14px !important', color: '#22C55E !important' }} />}
-                                    label={t("Egypt's #1 Legal Network", 'شبكة قانونية رقم 1 في مصر')}
-                                    size="medium"
+                                    label={t('For Licensed Lawyers Only', 'للمحامين المرخصين فقط')}
+                                    size="small"
                                     sx={{
-                                        bgcolor: 'rgba(34,197,94,0.1)',
-                                        border: '1px solid rgba(34,197,94,0.3)',
-                                        color: '#22C55E',
+                                        bgcolor: 'rgba(var(--color-primary-rgb),0.08)',
+                                        color: 'var(--color-primary)',
                                         fontWeight: 700,
-                                        fontSize: '0.82rem',
+                                        fontSize: '0.75rem',
+                                        height: '28px',
+                                        border: '1px solid rgba(var(--color-primary-rgb),0.2)',
+                                    }}
+                                />
+                                <Chip
+                                    icon={<VerifiedIcon sx={{ fontSize: '14px !important', color: 'var(--color-accent) !important' }} />}
+                                    label={t("Egypt's #1 Legal Network", 'شبكة قانونية رقم 1 في مصر')}
+                                    size="small"
+                                    sx={{
+                                        bgcolor: 'rgba(var(--color-accent-rgb),0.08)',
+                                        border: '1px solid rgba(var(--color-accent-rgb),0.2)',
+                                        color: 'var(--color-text)',
+                                        fontWeight: 700,
+                                        fontSize: '0.75rem',
+                                        height: '28px',
                                         paddingRight: '15px !important',
                                     }}
                                 />
@@ -89,10 +82,10 @@ export default function HeroSection() {
                                 variant="h1"
                                 sx={{
                                     fontWeight: 900,
-                                    color: 'var(--color-background)',
-                                    fontSize: { xs: '2.2rem', sm: '2.8rem', md: '3.5rem' },
-                                    lineHeight: 1.12,
-                                    letterSpacing: '-0.5px',
+                                    color: 'var(--color-primary-dark)',
+                                    fontSize: { xs: '2.5rem', sm: '3.2rem', md: '3.8rem' },
+                                    lineHeight: 1.05,
+                                    letterSpacing: '-0.02em',
                                 }}
                             >
                                 {t(
@@ -104,10 +97,10 @@ export default function HeroSection() {
                             {/* Sub-headline */}
                             <Typography
                                 sx={{
-                                    color: 'rgba(255,255,255,0.72)',
-                                    fontSize: '1.05rem',
-                                    maxWidth: 520,
-                                    lineHeight: 1.8,
+                                    color: 'var(--color-secondary-text)',
+                                    fontSize: '1.15rem',
+                                    maxWidth: 540,
+                                    lineHeight: 1.6,
                                 }}
                             >
                                 {t(
@@ -116,255 +109,193 @@ export default function HeroSection() {
                                 )}
                             </Typography>
 
-                            {/* Trust chips */}
-                            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                                {[
-                                    t('✓ Free to Join', '✓ مجاني للانضمام'),
-                                    t('✓ Syndicate Verified', '✓ موثق بالنقابة'),
-                                    t('✓ 27 Governorates', '✓ 27 محافظة'),
-                                ].map((chip) => (
-                                    <Typography
-                                        key={chip}
-                                        sx={{
-                                            fontSize: '0.8rem', fontWeight: 600,
-                                            color: 'rgba(255,255,255,0.65)',
-                                            bgcolor: 'rgba(255,255,255,0.06)',
-                                            border: '1px solid rgba(255,255,255,0.1)',
-                                            px: 1.5, py: 0.5, borderRadius: 50,
-                                        }}
-                                    >
-                                        {chip}
-                                    </Typography>
-                                ))}
-                            </Stack>
-
                             {/* CTAs */}
-                            <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+                            <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap sx={{ pt: 1 }}>
                                 <Button
                                     variant="contained"
                                     startIcon={<AppleIcon />}
                                     href={APP_STORE_URL}
                                     sx={{
-                                        bgcolor: 'var(--color-background)',
-                                        color: 'var(--color-primary-dark)',
-                                        fontWeight: 700,
-                                        px: 3, py: 1.4, fontSize: '0.95rem', borderRadius: 2,
+                                        bgcolor: 'var(--color-primary)',
+                                        color: 'var(--color-background)',
+                                        fontWeight: 600,
+                                        px: 4, py: 1.5, fontSize: '1rem', borderRadius: '12px',
+                                        textTransform: 'none',
+                                        boxShadow: '0 10px 25px -5px rgba(var(--color-primary-rgb), 0.4)',
                                         '& .MuiButton-startIcon': { ml: 0.5 },
                                         '&:hover': {
-                                            bgcolor: 'rgba(255,255,255,0.9)',
+                                            bgcolor: 'var(--color-primary-dark)',
                                             transform: 'translateY(-2px)',
-                                            boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                                            boxShadow: '0 20px 30px -10px rgba(var(--color-primary-rgb), 0.5)',
                                         },
-                                        transition: 'all 0.25s',
+                                        transition: 'all 0.3s ease',
                                     }}
                                 >
                                     {t('App Store', 'آب ستور')}
                                 </Button>
                                 <Button
-                                    variant="contained"
+                                    variant="outlined"
                                     startIcon={<GoogleIcon />}
                                     href={PLAY_STORE_URL}
                                     sx={{
-                                        bgcolor: 'var(--color-accent)',
-                                        color: 'var(--color-background)',
-                                        fontWeight: 700,
-                                        px: 3, py: 1.4, fontSize: '0.95rem', borderRadius: 2,
+                                        borderColor: 'var(--color-border)',
+                                        color: 'var(--color-text)',
+                                        bgcolor: 'var(--color-surface)',
+                                        fontWeight: 600,
+                                        px: 4, py: 1.5, fontSize: '1rem', borderRadius: '12px',
+                                        textTransform: 'none',
+                                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)',
                                         '& .MuiButton-startIcon': { ml: 0.5 },
                                         '&:hover': {
-                                            bgcolor: '#1d4ed8',
+                                            borderColor: 'var(--color-primary)',
+                                            bgcolor: 'var(--color-background)',
                                             transform: 'translateY(-2px)',
-                                            boxShadow: '0 8px 24px rgba(var(--color-accent-rgb),0.4)',
+                                            boxShadow: '0 10px 20px -5px rgba(0,0,0,0.05)',
                                         },
-                                        transition: 'all 0.25s',
+                                        transition: 'all 0.3s ease',
                                     }}
                                 >
                                     {t('Google Play', 'جوجل بلاي')}
                                 </Button>
                             </Stack>
 
-                            {/* Learn more scroll hint */}
-                            <Box
-                                component="button"
-                                onClick={scrollToDownload}
-                                sx={{
-                                    display: 'inline-flex', alignItems: 'center', gap: 1,
-                                    background: 'none', border: 'none', cursor: 'pointer', p: 0, mt: 1,
-                                    color: 'rgba(255,255,255,0.45)',
-                                    fontSize: '0.8rem', fontWeight: 500,
-                                    '&:hover': { color: 'rgba(255,255,255,0.75)' },
-                                    transition: 'color 0.2s',
-                                }}
-                            >
-                                <ArrowDownwardIcon sx={{ fontSize: 16, animation: 'bounce 2s infinite' }} />
-                                {t('Scroll to learn more', 'اسحب لأسفل لمعرفة المزيد')}
-                            </Box>
+                            {/* Trust metrics */}
+                            <Stack direction="row" spacing={3} sx={{ pt: 2, borderTop: '1px solid var(--color-border)' }}>
+                                {[
+                                    { v: t('Free', 'مجاني'), l: t('To Join', 'للانضمام') },
+                                    { v: t('100%', '١٠٠٪'), l: t('Verified', 'موثق') },
+                                    { v: t('27', '٢٧'), l: t('Governorates', 'محافظة') },
+                                ].map((stat, i) => (
+                                    <Box key={i}>
+                                        <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--color-primary-dark)' }}>
+                                            {stat.v}
+                                        </Typography>
+                                        <Typography sx={{ fontSize: '0.8rem', color: 'var(--color-secondary-text)', fontWeight: 500 }}>
+                                            {stat.l}
+                                        </Typography>
+                                    </Box>
+                                ))}
+                            </Stack>
                         </Stack>
                     </Grid>
 
                     {/* ── App Mockup Column ── */}
-                    <Grid size={{ xs: 12, lg: 6 }} sx={{ display: 'flex', justifyContent: { xs: 'center', lg: 'flex-end' } }}>
-                        <Box sx={{ position: 'relative' }}>
-                            {/* Glow halo */}
-                            <Box
-                                sx={{
-                                    position: 'absolute', inset: -60, borderRadius: '50%',
-                                    background: 'radial-gradient(circle, rgba(var(--color-primary-rgb),0.22) 0%, transparent 70%)',
-                                    filter: 'blur(30px)',
-                                    zIndex: 0,
-                                }}
-                            />
+                    <Grid size={{ xs: 12, lg: 6 }} sx={{ display: 'flex', justifyContent: { xs: 'center', lg: 'flex-end' }, position: 'relative' }}>
+                        
+                        {/* Decorative background shapes */}
+                        <Box sx={{
+                            position: 'absolute', top: '10%', right: '15%',
+                            width: '300px', height: '400px',
+                            bgcolor: 'var(--color-surface)',
+                            borderRadius: '32px',
+                            transform: 'rotate(6deg)',
+                            zIndex: 0, border: '1px solid var(--color-border)',
+                        }} />
 
+                        {/* Floating elements */}
+                        <Box sx={{
+                            position: 'absolute', top: '20%', 
+                            left: isRTL ? 'auto' : '0%',
+                            right: isRTL ? '0%' : 'auto',
+                            bgcolor: 'var(--color-background)', p: 2, borderRadius: 3,
+                            boxShadow: '0 15px 35px rgba(0,0,0,0.05)',
+                            border: '1px solid var(--color-border)',
+                            zIndex: 2, display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1.5,
+                            animation: 'floatUI 6s ease-in-out infinite',
+                        }}>
+                            <Box sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: 'rgba(var(--color-accent-rgb), 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <VerifiedIcon sx={{ color: 'var(--color-accent)' }} />
+                            </Box>
+                            <Box>
+                                <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--color-text)' }}>{t('Syndicate Verified', 'نقابة موثقة')}</Typography>
+                                <Typography sx={{ fontSize: '0.75rem', color: 'var(--color-secondary-text)' }}>{t('Ahmed Ali joined', 'انضم أحمد علي')}</Typography>
+                            </Box>
+                        </Box>
+
+                        <Box sx={{ position: 'relative', zIndex: 1 }}>
                             {/* Phone shell */}
                             <Box
                                 sx={{
-                                    position: 'relative', zIndex: 1,
-                                    width: 270, height: 520,
-                                    borderRadius: '3.5rem',
-                                    border: '2px solid rgba(var(--color-border-rgb),0.8)',
-                                    bgcolor: 'var(--color-background)',
-                                    boxShadow: '0 32px 80px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(var(--color-border-rgb),0.5)',
+                                    width: 290, height: 580,
+                                    borderRadius: '40px',
+                                    border: '10px solid var(--color-primary-dark)',
+                                    bgcolor: 'var(--color-surface)',
+                                    boxShadow: '0 25px 60px -10px rgba(var(--color-primary-rgb),0.2)',
                                     overflow: 'hidden',
                                     display: 'flex', flexDirection: 'column',
+                                    position: 'relative',
                                 }}
                             >
-                                {/* Status bar */}
-                                <Box sx={{ height: 44, px: 3, pt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexShrink: 0 }}>
-                                    <Typography sx={{ color: 'rgba(var(--color-text-rgb),0.6)', fontSize: '0.7rem', fontWeight: 600 }}>9:41</Typography>
-                                    <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
-                                        {[3, 4, 5, 4].map((h, i) => (
-                                            <Box key={i} sx={{ width: 3, height: h, bgcolor: 'rgba(var(--color-text-rgb),0.5)', borderRadius: 1 }} />
-                                        ))}
-                                    </Box>
-                                </Box>
+                                {/* iPhone Notch */}
+                                <Box sx={{
+                                    position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
+                                    width: 120, height: 24, bgcolor: 'var(--color-primary-dark)',
+                                    borderBottomLeftRadius: 16, borderBottomRightRadius: 16, zIndex: 10
+                                }} />
 
                                 {/* App header */}
-                                <Box sx={{ px: 2.5, pt: 1.5, pb: 2, borderBottom: '1px solid var(--color-border)' }}>
-                                    <Stack direction="row" alignItems="center" spacing={1}>
-                                        <Box sx={{ width: 28, height: 28, borderRadius: '50%', bgcolor: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                            <BalanceIcon sx={{ fontSize: 14, color: '#fff' }} />
+                                <Box sx={{ px: 2.5, pt: 5, pb: 2, bgcolor: 'var(--color-background)' }}>
+                                    <Stack direction="row" alignItems="center" spacing={1.5}>
+                                        <Box sx={{ width: 32, height: 32, borderRadius: '8px', bgcolor: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <BalanceIcon sx={{ fontSize: 18, color: 'var(--color-background)' }} />
                                         </Box>
-                                        <Typography sx={{ color: 'var(--color-text)', fontWeight: 700, fontSize: '0.8rem' }}>
-                                            {t('Lawyers Network', 'شبكة المحامين')}
+                                        <Typography sx={{ color: 'var(--color-text)', fontWeight: 800, fontSize: { xs: '0.85rem', sm: '0.95rem' } }}>
+                                            {t('Egypt Lawyers Network', 'شبكة المحامين المصريين')}
                                         </Typography>
                                     </Stack>
                                 </Box>
 
-                                {/* Search bar */}
-                                <Box sx={{ mx: 2.5, mb: 2, bgcolor: 'var(--color-surface)', borderRadius: 2, px: 2, py: 1, border: '1px solid var(--color-border)' }}>
-                                    <Typography sx={{ color: 'var(--color-secondary-text)', fontSize: '0.72rem' }}>
-                                        {t('Search by court or city...', 'ابحث بالمحكمة أو المدينة...')}
+                                {/* Content area */}
+                                <Box sx={{ flex: 1, px: 2.5, py: 2, overflow: 'hidden' }}>
+                                    <Typography sx={{ fontWeight: 600, mb: 2, fontSize: '0.9rem', color: 'var(--color-text)' }}>
+                                        {t('Recent Requests', 'أحدث الطلبات')}
                                     </Typography>
-                                </Box>
-
-                                {/* Request cards */}
-                                <Stack spacing={1.5} sx={{ px: 2.5, flex: 1, overflowY: 'hidden' }}>
-                                    {[
-                                        { court: t('Cairo Court', 'محكمة القاهرة'), city: t('Cairo', 'القاهرة'), tag: t('Urgent', 'عاجل'), color: '#EF4444' },
-                                        { court: t('Alexandria Court', 'محكمة الإسكندرية'), city: t('Alexandria', 'الإسكندرية'), tag: t('New', 'جديد'), color: '#22C55E' },
-                                        { court: t('Giza Court', 'محكمة الجيزة'), city: t('Giza', 'الجيزة'), tag: t('Open', 'مفتوح'), color: 'var(--color-primary)' },
-                                    ].map((card, i) => (
-                                        <Box
-                                            key={i}
-                                            sx={{
-                                                bgcolor: 'rgba(37,99,235,0.06)',
-                                                borderRadius: 2.5,
-                                                p: 2,
-                                                border: '1px solid rgba(37,99,235,0.18)',
-                                            }}
-                                        >
-                                            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={0.75}>
-                                                <Typography sx={{ color: 'var(--color-text)', fontSize: '0.73rem', fontWeight: 600 }}>
-                                                    {card.court}
-                                                </Typography>
-                                                <Box sx={{ bgcolor: `${card.color}15`, border: `1px solid ${card.color}40`, borderRadius: 50, px: 1, py: 0.15 }}>
-                                                    <Typography sx={{ color: card.color, fontSize: '0.62rem', fontWeight: 700 }}>
-                                                        {card.tag}
-                                                    </Typography>
+                                    
+                                    <Stack spacing={2}>
+                                        {[
+                                            { court: t('Cairo Court', 'محكمة القاهرة'), type: t('Hearing Attend', 'حضور جلسة'), time: '10m', color: 'var(--color-primary)' },
+                                            { court: t('Alexandria Court', 'محكمة الإسكندرية'), type: t('Document Submit', 'تقديم مستند'), time: '1h', color: 'var(--color-accent)' },
+                                            { court: t('Giza Court', 'محكمة الجيزة'), type: t('Inquiry', 'استعلام'), time: '2h', color: 'var(--color-secondary-text)' },
+                                        ].map((card, i) => (
+                                            <Box key={i} sx={{
+                                                bgcolor: 'var(--color-background)', p: 2, borderRadius: 3,
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid var(--color-border)',
+                                            }}>
+                                                <Stack direction="row" justifyContent="space-between" mb={1}>
+                                                    <Typography sx={{ fontWeight: 700, fontSize: '0.8rem', color: 'var(--color-text)' }}>{card.court}</Typography>
+                                                    <Typography sx={{ fontSize: '0.7rem', color: 'var(--color-secondary-text)' }}>{card.time}</Typography>
+                                                </Stack>
+                                                <Box sx={{ display: 'inline-flex', px: 1, py: 0.5, borderRadius: 1, bgcolor: `rgba(${i === 0 ? 'var(--color-primary-rgb)' : (i === 1 ? '34,197,94' : '100,116,139')}, 0.1)` }}>
+                                                    <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: card.color }}>{card.type}</Typography>
                                                 </Box>
-                                            </Stack>
-                                            <Stack direction="row" spacing={1} alignItems="center">
-                                                <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: card.color, flexShrink: 0 }} />
-                                                <Typography sx={{ color: 'var(--color-secondary-text)', fontSize: '0.65rem' }}>
-                                                    {card.city}
-                                                </Typography>
-                                            </Stack>
-                                            {/* skeleton lines */}
-                                            <Stack spacing={0.5} mt={1}>
-                                                <Box sx={{ height: 4, borderRadius: 1, bgcolor: 'rgba(37,99,235,0.18)', width: '85%' }} />
-                                                <Box sx={{ height: 4, borderRadius: 1, bgcolor: 'rgba(37,99,235,0.1)', width: '60%' }} />
-                                            </Stack>
-                                        </Box>
-                                    ))}
-                                </Stack>
-
-                                {/* Bottom nav */}
-                                <Box
-                                    sx={{
-                                        height: 60, mt: 'auto', flexShrink: 0,
-                                        borderTop: '1px solid var(--color-border)',
-                                        bgcolor: 'var(--color-background)',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'space-around', px: 1,
-                                    }}
-                                >
-                                    {['🏠', '🔔', '➕', '👤'].map((icon, i) => (
-                                        <Box
-                                            key={i}
-                                            sx={{
-                                                width: 40, height: 40, borderRadius: 2,
-                                                bgcolor: i === 2 ? 'var(--color-primary)' : 'transparent',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                fontSize: i === 2 ? '1.1rem' : '1rem',
-                                            }}
-                                        >
-                                            {icon}
-                                        </Box>
-                                    ))}
+                                                {/* skeleton lines */}
+                                                <Stack spacing={0.75} mt={1.5}>
+                                                    <Box sx={{ height: 6, borderRadius: 3, bgcolor: 'var(--color-surface)', width: '100%' }} />
+                                                    <Box sx={{ height: 6, borderRadius: 3, bgcolor: 'var(--color-surface)', width: '60%' }} />
+                                                </Stack>
+                                            </Box>
+                                        ))}
+                                    </Stack>
                                 </Box>
-                            </Box>
 
-                            {/* Floating notification card */}
-                            <Box
-                                sx={{
-                                    position: 'absolute',
-                                    bottom: 80, right: { xs: -20, lg: -60 },
-                                    bgcolor: 'rgba(var(--color-primary-dark-rgb),0.95)',
-                                    backdropFilter: 'blur(12px)',
-                                    border: '1px solid rgba(255,255,255,0.1)',
-                                    borderRadius: 3, p: 1.5,
-                                    boxShadow: '0 16px 40px rgba(0,0,0,0.4)',
-                                    minWidth: 190,
-                                    animation: 'floatCard 3s ease-in-out infinite',
-                                    zIndex: 2,
-                                }}
-                            >
-                                <Stack direction="row" spacing={1} alignItems="flex-start">
-                                    <Box sx={{ width: 32, height: 32, borderRadius: 1.5, bgcolor: 'rgba(34,197,94,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                        <VerifiedIcon sx={{ fontSize: 18, color: '#22C55E' }} />
+                                {/* Bottom Nav */}
+                                <Box sx={{ height: 64, bgcolor: 'var(--color-background)', borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-evenly', alignItems: 'center', pb: 1 }}>
+                                    <Box sx={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid var(--color-secondary-text)', opacity: 0.5 }} />
+                                    <Box sx={{ width: 42, height: 42, borderRadius: '14px', bgcolor: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(var(--color-primary-rgb), 0.2)' }}>
+                                        <Typography sx={{ color: 'var(--color-background)', fontSize: '1.5rem', fontWeight: 600, lineHeight: 1 }}>+</Typography>
                                     </Box>
-                                    <Box>
-                                        <Typography sx={{ color: '#fff', fontSize: '0.72rem', fontWeight: 700, lineHeight: 1.2 }}>
-                                            {t('3 Lawyers Responded', '3 محامين استجابوا')}
-                                        </Typography>
-                                        <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.65rem', mt: 0.25 }}>
-                                            {t('Just now · Cairo Court', 'الآن · محكمة القاهرة')}
-                                        </Typography>
-                                    </Box>
-                                </Stack>
+                                    <Box sx={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid var(--color-secondary-text)', opacity: 0.5 }} />
+                                </Box>
                             </Box>
                         </Box>
                     </Grid>
                 </Grid>
             </Container>
 
-            {/* CSS keyframes */}
             <style>{`
-                @keyframes bounce {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(5px); }
-                }
-                @keyframes floatCard {
+                @keyframes floatUI {
                     0%, 100% { transform: translateY(0px); }
-                    50% { transform: translateY(-8px); }
+                    50% { transform: translateY(-12px); }
                 }
             `}</style>
         </Box>

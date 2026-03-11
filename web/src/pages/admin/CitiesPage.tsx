@@ -181,9 +181,10 @@ export default function CitiesPage() {
                         onClick={() => setShowForm((v) => !v)}
                         sx={{
                             bgcolor: 'var(--color-primary)',
+                            color: 'var(--color-background)',
                             textTransform: 'none',
                             fontWeight: 600,
-                            '&:hover': { bgcolor: '#346fda' },
+                            '&:hover': { bgcolor: 'rgba(var(--color-primary-rgb), 0.8)' },
                         }}
                     >
                         Add City
@@ -206,7 +207,14 @@ export default function CitiesPage() {
                             value={newName}
                             onChange={(e) => setNewName(e.target.value)}
                             size="small"
-                            sx={{ flex: 1 }}
+                            sx={{ 
+                                flex: 1,
+                                '& .MuiOutlinedInput-root': {
+                                    color: 'var(--color-text)',
+                                    '& fieldset': { borderColor: 'rgba(var(--color-text-rgb), 0.2)' },
+                                },
+                                '& .MuiInputLabel-root': { color: 'rgba(var(--color-text-rgb), 0.7)' },
+                            }}
                             onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
                         />
                         <Button
@@ -215,9 +223,16 @@ export default function CitiesPage() {
                             disabled={!newName.trim() || creating}
                             sx={{
                                 bgcolor: 'var(--color-primary)',
+                                color: 'var(--color-background)',
                                 textTransform: 'none',
                                 fontWeight: 600,
-                                '&:hover': { bgcolor: '#346fda' },
+                                '&:hover': { bgcolor: 'rgba(var(--color-primary-rgb), 0.8)' },
+                                '&.Mui-disabled': {
+                                    bgcolor: 'rgba(var(--color-primary-rgb), 0.12)',
+                                    color: 'rgba(var(--color-text-rgb), 0.3)',
+                                    cursor: 'not-allowed',
+                                    pointerEvents: 'auto',
+                                },
                             }}
                         >
                             {creating ? 'Creating…' : 'Create'}

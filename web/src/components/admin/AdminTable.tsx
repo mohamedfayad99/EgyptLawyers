@@ -94,7 +94,23 @@ export default function AdminTable<T extends Record<string, unknown>>({
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     size="small"
-                    sx={{ flex: 1, minWidth: 200 }}
+                    sx={{
+                        flex: 1,
+                        minWidth: 200,
+                        '& .MuiOutlinedInput-root': {
+                            color: 'var(--color-text)',
+                            '& fieldset': {
+                                borderColor: 'rgba(var(--color-text-rgb), 0.15)',
+                            },
+                            '&:hover fieldset': {
+                                borderColor: 'rgba(var(--color-text-rgb), 0.3)',
+                            },
+                        },
+                        '& .MuiInputBase-input::placeholder': {
+                            color: 'rgba(var(--color-text-rgb), 0.5)',
+                            opacity: 1,
+                        },
+                    }}
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
@@ -199,6 +215,18 @@ export default function AdminTable<T extends Record<string, unknown>>({
                                 setPage(0);
                             }}
                             rowsPerPageOptions={rowsPerPageOptions}
+                            sx={{
+                                color: 'var(--color-text)',
+                                '& .MuiTablePagination-selectIcon': {
+                                    color: 'var(--color-text)',
+                                },
+                                '& .MuiIconButton-root': {
+                                    color: 'var(--color-text)',
+                                    '&.Mui-disabled': {
+                                        color: 'rgba(var(--color-text-rgb), 0.3)',
+                                    },
+                                },
+                            }}
                         />
                     </Box>
                 )}

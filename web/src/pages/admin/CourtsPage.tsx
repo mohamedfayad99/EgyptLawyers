@@ -226,7 +226,16 @@ export default function CourtsPage() {
                             label="Filter by City"
                             value={filterCityId}
                             onChange={(e) => setFilterCityId(e.target.value === '' ? '' : Number(e.target.value))}
-                            sx={{ minWidth: 160 }}
+                            sx={{ 
+                                minWidth: 160,
+                                '& .MuiOutlinedInput-root': {
+                                    color: 'var(--color-text)',
+                                    '& fieldset': { borderColor: 'rgba(var(--color-text-rgb), 0.15)' },
+                                    '&:hover fieldset': { borderColor: 'rgba(var(--color-text-rgb), 0.3)' },
+                                },
+                                '& .MuiInputLabel-root': { color: 'rgba(var(--color-text-rgb), 0.7)' },
+                                '& .MuiSelect-icon': { color: 'var(--color-text)' }
+                            }}
                         >
                             <MenuItem value="">All Cities</MenuItem>
                             {cities.map((c) => (
@@ -239,9 +248,10 @@ export default function CourtsPage() {
                             onClick={() => setShowForm((v) => !v)}
                             sx={{
                                 bgcolor: 'var(--color-primary)',
+                                color: 'var(--color-background)',
                                 textTransform: 'none',
                                 fontWeight: 600,
-                                '&:hover': { bgcolor: '#346fda' },
+                                '&:hover': { bgcolor: 'rgba(var(--color-primary-rgb), 0.8)' },
                             }}
                         >
                             Add Court
@@ -265,7 +275,14 @@ export default function CourtsPage() {
                             value={newName}
                             onChange={(e) => setNewName(e.target.value)}
                             size="small"
-                            sx={{ flex: 1 }}
+                            sx={{ 
+                                flex: 1,
+                                '& .MuiOutlinedInput-root': {
+                                    color: 'var(--color-text)',
+                                    '& fieldset': { borderColor: 'rgba(var(--color-text-rgb), 0.15)' },
+                                },
+                                '& .MuiInputLabel-root': { color: 'rgba(var(--color-text-rgb), 0.7)' },
+                            }}
                         />
                         <TextField
                             select
@@ -273,7 +290,15 @@ export default function CourtsPage() {
                             value={newCityId}
                             onChange={(e) => setNewCityId(Number(e.target.value))}
                             size="small"
-                            sx={{ minWidth: 160 }}
+                            sx={{ 
+                                minWidth: 160,
+                                '& .MuiOutlinedInput-root': {
+                                    color: 'var(--color-text)',
+                                    '& fieldset': { borderColor: 'rgba(var(--color-text-rgb), 0.15)' },
+                                },
+                                '& .MuiInputLabel-root': { color: 'rgba(var(--color-text-rgb), 0.7)' },
+                                '& .MuiSelect-icon': { color: 'var(--color-text)' }
+                            }}
                         >
                             {cities.length === 0 ? (
                                 <MenuItem value="" disabled>No cities available</MenuItem>
@@ -289,9 +314,16 @@ export default function CourtsPage() {
                             disabled={!newName.trim() || newCityId === '' || creating}
                             sx={{
                                 bgcolor: 'var(--color-primary)',
+                                color: 'var(--color-background)',
                                 textTransform: 'none',
                                 fontWeight: 600,
-                                '&:hover': { bgcolor: '#346fda' },
+                                '&:hover': { bgcolor: 'rgba(var(--color-primary-rgb), 0.8)' },
+                                '&.Mui-disabled': {
+                                    bgcolor: 'rgba(var(--color-primary-rgb), 0.12)',
+                                    color: 'rgba(var(--color-text-rgb), 0.3)',
+                                    cursor: 'not-allowed',
+                                    pointerEvents: 'auto',
+                                },
                             }}
                         >
                             {creating ? 'Creating…' : 'Create'}
