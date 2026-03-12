@@ -10,20 +10,21 @@ import {
   FlatList,
   SafeAreaView,
   Image,
-  StatusBar,
+  useWindowDimensions,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import * as ImagePicker from 'expo-image-picker';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Button, TextInput, Loading, ErrorMessage } from '../components/common';
 import { registerLawyer, getCities } from '../lib/services';
 import { City } from '../lib/types';
+import { useTheme } from '../lib/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 
 type Props = NativeStackScreenProps<any, 'Register'>;
 
 function isValidEgyptianPhone(phone: string): boolean {
   const cleaned = phone.trim().replace(/\s+/g, '');
-  // Matches 010, 011, 012, 015 followed by 8 digits
-  // Also supports optional +2 or 2 prefix
   const egRegex = /^(\+2|2)?01[0125][0-9]{8}$/;
   return egRegex.test(cleaned);
 }
@@ -37,6 +38,10 @@ function normalizeEgyptianPhone(raw: string): string {
 }
 
 export function RegisterScreen({ navigation }: Props) {
+  const { colors, isDark } = useTheme();
+  const { width } = useWindowDimensions();
+  const isSmallDevice = width < 375;
+
   const [fullName, setFullName] = useState('');
   const [professionalTitle, setProfessionalTitle] = useState('');
   const [syndicateCard, setSyndicateCard] = useState('');
@@ -132,62 +137,62 @@ export function RegisterScreen({ navigation }: Props) {
   if (loadingCities) return <Loading message='Loading cities...' />;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      <ScrollView contentContainerStyle={styles.contentContainer} keyboardShouldPersistTaps='handled'>
-        <Text style={styles.title}>Register</Text>
-        <Text style={styles.subtitle}>Join EgyptLawyers professional network</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <ScrollView contentContainerStyle={[styles.contentContainer, { paddingTop: isSmallDevice ? 30 : 40 }]} keyboardShouldPersistTaps='handled'>
+        <Text style={[styles.title, { color: colors.text, fontSize: isSmallDevice ? 26 : 32 }]}>Register</Text>
+        <Text style={[styles.subtitle, { color: colors.textDim }]}>Join EgyptLawyers professional network</Text>
 
         {error ? <ErrorMessage message={error} onRetry={() => setError('')} /> : null}
 
-        <View style={styles.imageSection}>
-          <TouchableOpacity style={styles.imagePicker} onPress={handlePickImage} disabled={loading}>
+        <View style={[styles.imageSection, { marginBottom: isSmallDevice ? 20 : 32 }]}>
+          <TouchableOpacity style={[styles.imagePicker, { backgroundColor: colors.surface, borderColor: colors.border, width: isSmallDevice ? 80 : 100, height: isSmallDevice ? 80 : 100 }]} onPress={handlePickImage} disabled={loading}>
             {profileImage ? (
               <Image source={{ uri: profileImage }} style={styles.profileImage} />
             ) : (
               <View style={styles.imagePlaceholder}>
-                 <Text style={{ fontSize: 40 }}>👤</Text>
-                 <View style={styles.addIconBadge}>
-                    <Text style={{ fontSize: 16, color: '#fff', fontWeight: 'bold' }}>+</Text>
+                 <Text style={{ fontSize: isSmallDevice ? 30 : 40 }}>👤</Text>
+                 <View style={[styles.addIconBadge, { backgroundColor: colors.primary }]}>
+                    <Ionicons name="add" size={isSmallDevice ? 16 : 20} color="#fff" />
                  </View>
               </View>
             )}
           </TouchableOpacity>
         </View>
 
-        <View style={styles.formCard}>
-          <Text style={styles.fieldLabel}>Full Name *</Text>
+        <View style={[styles.formCard, { backgroundColor: colors.surface, borderColor: colors.border, padding: isSmallDevice ? 20 : 24 }]}>
+          <Text style={[styles.fieldLabel, { color: colors.text }]}>Full Name *</Text>
           <TextInput placeholder='e.g. Mohamed Fayad' value={fullName} onChangeText={setFullName} />
 
-          <Text style={styles.fieldLabel}>Professional Title</Text>
+          <Text style={[styles.fieldLabel, { color: colors.text }]}>Professional Title</Text>
           <TextInput placeholder='e.g. Criminal Lawyer' value={professionalTitle} onChangeText={setProfessionalTitle} />
 
-          <Text style={styles.fieldLabel}>Syndicate Card Number *</Text>
+          <Text style={[styles.fieldLabel, { color: colors.text }]}>Syndicate Card Number *</Text>
           <TextInput placeholder='e.g. 123456' value={syndicateCard} onChangeText={setSyndicateCard} keyboardType='numeric' />
 
-          <Text style={styles.fieldLabel}>WhatsApp Number *</Text>
+          <Text style={[styles.fieldLabel, { color: colors.text }]}>WhatsApp Number *</Text>
           <TextInput placeholder='e.g. 01012345678' value={whatsapp} onChangeText={setWhatsapp} keyboardType='phone-pad' />
 
-          <Text style={styles.fieldLabel}>Password *</Text>
+          <Text style={[styles.fieldLabel, { color: colors.text }]}>Password *</Text>
           <TextInput placeholder='Min. 6 characters' value={password} onChangeText={setPassword} secureTextEntry />
 
-          <Text style={styles.fieldLabel}>Confirm Password *</Text>
+          <Text style={[styles.fieldLabel, { color: colors.text }]}>Confirm Password *</Text>
           <TextInput placeholder='Repeat password' value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
 
-          <Text style={styles.fieldLabel}>City *</Text>
-          <TouchableOpacity style={styles.dropdown} onPress={() => setCityModalVisible(true)}>
-            <Text style={selectedCity ? styles.dropdownValue : styles.dropdownPlaceholder}>
+          <Text style={[styles.fieldLabel, { color: colors.text }]}>City *</Text>
+          <TouchableOpacity style={[styles.dropdown, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={() => setCityModalVisible(true)}>
+            <Text style={selectedCity ? [styles.dropdownValue, { color: colors.text }] : [styles.dropdownPlaceholder, { color: colors.textDim }]}>
               {selectedCity ? `📍 ${selectedCityName}` : 'Select your city'}
             </Text>
-            <Text style={styles.dropdownArrow}>▼</Text>
+            <Ionicons name="chevron-down" size={14} color={colors.textDim} />
           </TouchableOpacity>
 
           <Button title={loading ? 'Registering...' : 'Create Account'} onPress={handleRegister} loading={loading} style={{ marginTop: 25 }} />
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Already have an account? </Text>
+            <Text style={[styles.footerText, { color: colors.textDim }]}>Already have an account? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={styles.linkText}>Login</Text>
+              <Text style={[styles.linkText, { color: colors.primary }]}>Login</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -195,20 +200,21 @@ export function RegisterScreen({ navigation }: Props) {
 
       <Modal visible={cityModalVisible} animationType='slide' transparent>
         <SafeAreaView style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select City</Text>
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Select City</Text>
               <TouchableOpacity onPress={() => { setCityModalVisible(false); setCitySearch(''); }}>
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+                <Text style={[styles.cancelBtnText, { color: colors.primary }]}>Cancel</Text>
               </TouchableOpacity>
             </View>
             
-            <View style={styles.modalSearchContainer}>
+            <View style={[styles.modalSearchContainer, { borderBottomColor: colors.border }]}>
               <TextInput 
                 placeholder="Search your city..." 
+                placeholderTextColor={colors.textDim}
                 value={citySearch} 
                 onChangeText={setCitySearch}
-                style={styles.modalSearchInput}
+                style={[styles.modalSearchInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
               />
             </View>
 
@@ -216,9 +222,9 @@ export function RegisterScreen({ navigation }: Props) {
               data={cities.filter(c => c.name.toLowerCase().includes(citySearch.toLowerCase()))}
               keyExtractor={item => String(item.id)}
               renderItem={({ item }) => (
-                <TouchableOpacity style={styles.cityRow} onPress={() => { setSelectedCity(item.id); setCityModalVisible(false); setCitySearch(''); }}>
-                  <Text style={styles.cityRowName}>📍 {item.name}</Text>
-                  {selectedCity === item.id && <Text style={{color:'#5C7CFA', fontWeight:'bold'}}>✓</Text>}
+                <TouchableOpacity style={[styles.cityRow, { borderBottomColor: colors.border, borderBottomWidth: 1 }]} onPress={() => { setSelectedCity(item.id); setCityModalVisible(false); setCitySearch(''); }}>
+                  <Text style={[styles.cityRowName, { color: colors.text }]}>📍 {item.name}</Text>
+                  {selectedCity === item.id && <Ionicons name="checkmark" size={20} color={colors.primary} />}
                 </TouchableOpacity>
               )}
             />
@@ -233,36 +239,26 @@ export function RegisterScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   contentContainer: {
     padding: 24,
-    paddingTop: 40,
     paddingBottom: 60,
     flexGrow: 1,
   },
   title: {
-    fontSize: 32,
     fontWeight: 'bold',
-    color: '#1E1E1E',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#868E96',
     marginBottom: 32,
   },
   imagePicker: {
     alignSelf: 'center',
-    width: 100,
-    height: 100,
     borderRadius: 50,
-    backgroundColor: '#F8F9FA',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 32,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOpacity: 0.03,
@@ -275,56 +271,37 @@ const styles = StyleSheet.create({
   },
   imagePlaceholder: {
     alignItems: 'center',
-  },
-  imagePlaceholderText: {
-    fontSize: 30,
-  },
-  imagePlaceholderSubText: {
-    fontSize: 10,
-    color: '#ADB5BD',
-    marginTop: 4,
+    justifyContent: 'center',
   },
   formCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 24,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 15,
     elevation: 3,
   },
   fieldLabel: {
-    color: '#495057',
     fontSize: 14,
     marginBottom: 8,
     fontWeight: '600',
     marginTop: 12,
   },
   dropdown: {
-    backgroundColor: '#F8F9FA',
     borderRadius: 12,
     paddingHorizontal: 15,
     paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E9ECEF',
   },
   dropdownValue: {
     flex: 1,
-    color: '#1E1E1E',
     fontSize: 15,
   },
   dropdownPlaceholder: {
     flex: 1,
-    color: '#ADB5BD',
     fontSize: 15,
-  },
-  dropdownArrow: {
-    color: '#ADB5BD',
-    fontSize: 12,
   },
   footer: {
     flexDirection: 'row',
@@ -332,11 +309,9 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   footerText: {
-    color: '#868E96',
     fontSize: 14,
   },
   linkText: {
-    color: '#5C7CFA',
     fontSize: 14,
     fontWeight: 'bold',
   },
@@ -346,7 +321,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     height: '80%',
@@ -356,63 +330,49 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 24,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F3F5',
     alignItems: 'center',
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1E1E1E',
   },
   cancelBtnText: {
-    color: '#5C7CFA',
     fontWeight: 'bold',
     fontSize: 16,
   },
   modalSearchContainer: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F3F5',
   },
   modalSearchInput: {
-    backgroundColor: '#F8F9FA',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 10,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: '#E9ECEF',
   },
   cityRow: {
     flexDirection: 'row',
-    padding: 20,
+    padding: 16,
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   cityRowName: {
     fontSize: 16,
-    color: '#1E1E1E',
-  },
-  separator: {
-    height: 1,
-    backgroundColor: '#F1F3F5',
-    marginLeft: 20,
   },
   imageSection: {
     alignItems: 'center',
-    marginBottom: 32,
   },
   addIconBadge: {
     position: 'absolute',
     bottom: -5,
     right: -5,
-    backgroundColor: '#5C7CFA',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: '#FFF',
   },
 });

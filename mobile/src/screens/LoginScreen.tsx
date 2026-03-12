@@ -1,10 +1,22 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, ScrollView, SafeAreaView, TouchableOpacity, StatusBar, KeyboardAvoidingView, Platform } from 'react-native';
+import { 
+  StyleSheet, 
+  View, 
+  Text, 
+  ScrollView, 
+  SafeAreaView, 
+  TouchableOpacity, 
+  KeyboardAvoidingView, 
+  Platform,
+  useWindowDimensions 
+} from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Button, TextInput, Loading, ErrorMessage } from '../components/common';
 import { useAuth } from '../lib/AuthContext';
 import { loginLawyer, getLawyerProfile } from '../lib/services';
 import { setToken } from '../lib/authToken';
+import { useTheme } from '../lib/ThemeContext';
 
 type Props = NativeStackScreenProps<any, 'Login'>;
 
@@ -24,6 +36,10 @@ function normalizeEgyptianPhone(raw: string): string {
 
 export function LoginScreen({ navigation }: Props) {
   const { signIn } = useAuth();
+  const { colors, isDark } = useTheme();
+  const { width } = useWindowDimensions();
+  const isSmallDevice = width < 375;
+
   const [whatsapp, setWhatsapp] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -52,7 +68,6 @@ export function LoginScreen({ navigation }: Props) {
       await signIn(response.token, profile);
     } catch (err: any) {
       const msg = err.message || '';
-      
       if (msg.includes('pending')) {
         setError('Your account is still pending approval. We will notify you once it is reviewed.');
       } else if (msg.includes('rejected')) {
@@ -62,7 +77,6 @@ export function LoginScreen({ navigation }: Props) {
       } else {
         setError('Invalid WhatsApp number or password. Please try again.');
       }
-      
       await setToken('');
     } finally {
       setLoading(false);
@@ -70,41 +84,41 @@ export function LoginScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
         <ScrollView 
-          contentContainerStyle={styles.contentContainer} 
+          contentContainerStyle={[styles.contentContainer, { paddingTop: isSmallDevice ? 40 : 60 }]} 
           keyboardShouldPersistTaps='handled'
         >
-          <View style={styles.header}>
-            <View style={styles.logoCircle}>
-               <Text style={styles.logoText}>⚖️</Text>
+          <View style={[styles.header, { marginBottom: isSmallDevice ? 30 : 40 }]}>
+            <View style={[styles.logoCircle, { backgroundColor: colors.surface, borderColor: colors.border, width: isSmallDevice ? 70 : 90, height: isSmallDevice ? 70 : 90 }]}>
+               <Text style={{ fontSize: isSmallDevice ? 32 : 44 }}>⚖️</Text>
             </View>
-            <Text style={styles.title}>EgyptLawyers</Text>
-            <Text style={styles.subtitle}>Welcome counselor, please sign in</Text>
+            <Text style={[styles.title, { color: colors.text, fontSize: isSmallDevice ? 26 : 32 }]}>EgyptLawyers</Text>
+            <Text style={[styles.subtitle, { color: colors.textDim }]}>Welcome counselor, please sign in</Text>
           </View>
 
           {error ? <ErrorMessage message={error} onRetry={() => setError('')} /> : null}
 
-          <View style={styles.formCard}>
-            <Text style={styles.fieldLabel}>WhatsApp Number</Text>
+          <View style={[styles.formCard, { backgroundColor: colors.surface, borderColor: colors.border, padding: isSmallDevice ? 20 : 24 }]}>
+            <Text style={[styles.fieldLabel, { color: colors.text }]}>WhatsApp Number</Text>
             <TextInput
               placeholder='e.g. 01012345678'
-              placeholderTextColor="#ADB5BD"
+              placeholderTextColor={colors.textDim}
               value={whatsapp}
               onChangeText={setWhatsapp}
               keyboardType='phone-pad'
               editable={!loading}
             />
 
-            <Text style={styles.fieldLabel}>Password</Text>
+            <Text style={[styles.fieldLabel, { color: colors.text }]}>Password</Text>
             <TextInput
               placeholder='••••••••'
-              placeholderTextColor="#ADB5BD"
+              placeholderTextColor={colors.textDim}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -119,9 +133,9 @@ export function LoginScreen({ navigation }: Props) {
             />
 
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Don't have an account? </Text>
+              <Text style={[styles.footerText, { color: colors.textDim }]}>Don't have an account? </Text>
               <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-                 <Text style={styles.linkText}>Register now</Text>
+                 <Text style={[styles.linkText, { color: colors.primary }]}>Register now</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -134,59 +148,42 @@ export function LoginScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   contentContainer: {
     padding: 24,
-    paddingTop: 60,
     flexGrow: 1,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
   },
   logoCircle: {
-    width: 90,
-    height: 90,
     borderRadius: 45,
-    backgroundColor: '#F8F9FA',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
     shadowColor: '#000',
     shadowOpacity: 0.03,
     shadowRadius: 10,
     elevation: 2,
   },
-  logoText: {
-    fontSize: 44,
-  },
   title: {
-    fontSize: 32,
     fontWeight: 'bold',
-    color: '#1E1E1E',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#868E96',
     textAlign: 'center',
   },
   formCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 24,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 15,
     elevation: 3,
   },
   fieldLabel: {
-    color: '#495057',
     fontSize: 14,
     marginBottom: 8,
     fontWeight: '600',
@@ -198,11 +195,9 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   footerText: {
-    color: '#868E96',
     fontSize: 14,
   },
   linkText: {
-    color: '#5C7CFA',
     fontSize: 14,
     fontWeight: 'bold',
   },

@@ -9,19 +9,26 @@ import {
   TouchableOpacity,
   Image,
   SafeAreaView,
-  StatusBar,
+  useWindowDimensions,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import * as ImagePicker from 'expo-image-picker';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Button, Loading } from '../components/common';
+import { Button, Loading, Card } from '../components/common';
 import { useAuth } from '../lib/AuthContext';
 import { updateLawyerProfile } from '../lib/services';
 import { BASE_URL } from '../lib/config';
+import { useTheme } from '../lib/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 
 type Props = NativeStackScreenProps<any, 'Profile'>;
 
 export function ProfileScreen({ navigation }: Props) {
   const { profile, signOut, refreshProfile, isLoading } = useAuth();
+  const { colors, toggleTheme, isDark } = useTheme();
+  const { width } = useWindowDimensions();
+  const isSmallDevice = width < 375;
+
   const [loggingOut, setLoggingOut] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -103,13 +110,14 @@ export function ProfileScreen({ navigation }: Props) {
   const statusColor = statusLabel === 'Approved' ? '#20C997' : statusLabel === 'Rejected' ? '#FF6B6B' : '#FF9F43';
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      <ScrollView contentContainerStyle={styles.contentContainer}>
-        <View style={styles.profileCard}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <ScrollView contentContainerStyle={[styles.contentContainer, { padding: isSmallDevice ? 16 : 24 }]}>
+        
+        <View style={[styles.profileCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <TouchableOpacity 
             disabled={!isEditing} 
-            style={[styles.avatarContainer, { borderColor: isEditing ? '#5C7CFA' : '#EEEEEE' }]} 
+            style={[styles.avatarContainer, { borderColor: isEditing ? colors.primary : colors.border, backgroundColor: colors.background }]} 
             onPress={handlePickImage}
           >
             {editProfileImage ? (
@@ -117,21 +125,21 @@ export function ProfileScreen({ navigation }: Props) {
             ) : profile.profileImageUrl ? (
               <Image source={{ uri: `${BASE_URL}${profile.profileImageUrl}` }} style={styles.avatarImage} />
             ) : (
-              <Text style={styles.avatarText}>{profile.fullName.charAt(0).toUpperCase()}</Text>
+              <Text style={[styles.avatarText, { color: colors.text }]}>{profile.fullName.charAt(0).toUpperCase()}</Text>
             )}
             {isEditing && <View style={styles.avatarOverlay}><Text style={styles.avatarOverlayText}>EDIT</Text></View>}
           </TouchableOpacity>
 
           {isEditing ? (
             <TextInput
-              style={styles.editInputName}
+              style={[styles.editInputName, { color: colors.primary, borderBottomColor: colors.primary }]}
               value={editFullName}
               onChangeText={setEditFullName}
               placeholder="Full Name"
-              placeholderTextColor="#AAB2C1"
+              placeholderTextColor={colors.textDim}
             />
           ) : (
-            <Text style={styles.fullName}>{profile.fullName}</Text>
+            <Text style={[styles.fullName, { color: colors.text, fontSize: isSmallDevice ? 20 : 24 }]}>{profile.fullName}</Text>
           )}
 
           <View style={[styles.statusBadge, { backgroundColor: statusColor + '15' }]}>
@@ -139,49 +147,49 @@ export function ProfileScreen({ navigation }: Props) {
           </View>
         </View>
 
-        <View style={styles.detailsCard}>
-          <Text style={styles.sectionTitle}>Profile Details</Text>
+        <View style={[styles.detailsCard, { backgroundColor: colors.surface, borderColor: colors.border, padding: isSmallDevice ? 16 : 24 }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Profile Details</Text>
           
           <View style={styles.detailItem}>
-             <Text style={styles.detailLabel}>WhatsApp</Text>
+             <Text style={[styles.detailLabel, { color: colors.textDim }]}>WhatsApp</Text>
              {isEditing ? (
                <TextInput
-                 style={styles.editInput}
+                 style={[styles.editInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
                  value={editWhatsapp}
                  onChangeText={setEditWhatsapp}
                  keyboardType="phone-pad"
                />
              ) : (
-               <Text style={styles.detailValue}>{profile.whatsappNumber}</Text>
+               <Text style={[styles.detailValue, { color: colors.text }]}>{profile.whatsappNumber}</Text>
              )}
           </View>
 
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.detailItem}>
-             <Text style={styles.detailLabel}>Syndicate Number</Text>
-             <Text style={styles.detailValueLocked}>{profile.syndicateCardNumber}</Text>
+             <Text style={[styles.detailLabel, { color: colors.textDim }]}>Syndicate Number</Text>
+             <Text style={[styles.detailValueLocked, { color: colors.textDim }]}>{profile.syndicateCardNumber}</Text>
           </View>
 
           {profile.professionalTitle && (
             <>
-              <View style={styles.divider} />
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
               <View style={styles.detailItem}>
-                 <Text style={styles.detailLabel}>Title</Text>
-                 <Text style={styles.detailValue}>{profile.professionalTitle}</Text>
+                 <Text style={[styles.detailLabel, { color: colors.textDim }]}>Title</Text>
+                 <Text style={[styles.detailValue, { color: colors.text }]}>{profile.professionalTitle}</Text>
               </View>
             </>
           )}
 
           {profile.activeCities && profile.activeCities.length > 0 && (
              <>
-               <View style={styles.divider} />
+               <View style={[styles.divider, { backgroundColor: colors.border }]} />
                <View style={styles.detailItem}>
-                  <Text style={styles.detailLabel}>Active Cities</Text>
+                  <Text style={[styles.detailLabel, { color: colors.textDim }]}>Active Cities</Text>
                   <View style={styles.citiesRow}>
                     {profile.activeCities.map(city => (
-                      <View key={city.id} style={styles.cityChip}>
-                        <Text style={styles.cityChipText}>📍 {city.name}</Text>
+                      <View key={city.id} style={[styles.cityChip, { backgroundColor: isDark ? colors.background : '#E7F5FF' }]}>
+                        <Text style={[styles.cityChipText, { color: isDark ? colors.text : '#228BE6' }]}>📍 {city.name}</Text>
                       </View>
                     ))}
                   </View>
@@ -202,14 +210,13 @@ export function ProfileScreen({ navigation }: Props) {
               <Button 
                 title={loggingOut ? 'Logging out...' : 'Sign Out'} 
                 onPress={handleLogout} 
-                variant='secondary' 
-                style={{ marginTop: 12, borderColor: '#FF6B6B' }} 
+                variant='danger' 
+                style={{ marginTop: 12 }} 
               />
             </>
           )}
         </View>
       </ScrollView>
-
     </SafeAreaView>
   );
 }
@@ -217,15 +224,13 @@ export function ProfileScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
   contentContainer: {
-    padding: 24,
+    flexGrow: 1,
   },
   profileCard: {
     alignItems: 'center',
     marginBottom: 32,
-    backgroundColor: '#FFFFFF',
     borderRadius: 24,
     padding: 24,
     shadowColor: '#000',
@@ -233,13 +238,11 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
   },
   avatarContainer: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#F1F3F5',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
@@ -253,7 +256,6 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 40,
     fontWeight: 'bold',
-    color: '#495057',
   },
   avatarOverlay: {
     position: 'absolute',
@@ -269,17 +271,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   fullName: {
-    fontSize: 24,
     fontWeight: 'bold',
-    color: '#1E1E1E',
     marginBottom: 10,
   },
   editInputName: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#5C7CFA',
     borderBottomWidth: 1,
-    borderBottomColor: '#5C7CFA',
     textAlign: 'center',
     marginBottom: 10,
     minWidth: 180,
@@ -295,21 +293,17 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   detailsCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 24,
-    padding: 24,
     marginBottom: 32,
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1E1E1E',
     marginBottom: 20,
   },
   detailItem: {
@@ -317,34 +311,27 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 11,
-    color: '#868E96',
     marginBottom: 4,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   detailValue: {
     fontSize: 16,
-    color: '#1E1E1E',
     fontWeight: '500',
   },
   detailValueLocked: {
     fontSize: 16,
-    color: '#ADB5BD',
     fontWeight: '500',
   },
   editInput: {
-    backgroundColor: '#F8F9FA',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    color: '#1E1E1E',
     borderWidth: 1,
-    borderColor: '#EEEEEE',
     fontSize: 15,
   },
   divider: {
     height: 1,
-    backgroundColor: '#F1F3F5',
     marginVertical: 16,
   },
   citiesRow: {
@@ -354,13 +341,11 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   cityChip: {
-    backgroundColor: '#E7F5FF',
     borderRadius: 8,
     paddingVertical: 4,
     paddingHorizontal: 10,
   },
   cityChipText: {
-    color: '#228BE6',
     fontSize: 12,
     fontWeight: '500',
   },

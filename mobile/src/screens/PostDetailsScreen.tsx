@@ -9,24 +9,31 @@ import {
   Linking,
   Image,
   SafeAreaView,
-  StatusBar,
   Modal,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Button, TextInput, Loading, ErrorMessage } from '../components/common';
 import { getHelpPostDetails, replyToHelpPost, getLawyerById, rateReply, deleteReply } from '../lib/services';
 import { HelpPostDetails, HelpPostReply, LawyerPublicProfile, Attachment } from '../lib/types';
 import { useAuth } from '../lib/AuthContext';
 import { BASE_URL } from '../lib/config';
+import { useTheme } from '../lib/ThemeContext';
 import * as DocumentPicker from 'expo-document-picker';
+import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 type Props = NativeStackScreenProps<any, 'PostDetails'>;
 
 export function PostDetailsScreen({ route, navigation }: Props) {
   const { id } = route.params as { id: string };
   const { profile } = useAuth();
+  const { colors, isDark } = useTheme();
+  const { width } = useWindowDimensions();
+  const isSmallDevice = width < 375;
+
   const [post, setPost] = useState<HelpPostDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -69,7 +76,7 @@ export function PostDetailsScreen({ route, navigation }: Props) {
       setReplyMessage('');
       setReplyFiles([]);
       await loadPostDetails();
-      Alert.alert('Success', 'Reply posted successfully!');
+      // Alert removed as requested for smoother experience
     } catch (err: any) {
       setError(err.message || 'Failed to post reply');
     } finally {
@@ -160,7 +167,7 @@ export function PostDetailsScreen({ route, navigation }: Props) {
 
   if (loading) return <Loading message='Loading request...' />;
   if (error && !post) return <ErrorMessage message={error} onRetry={loadPostDetails} />;
-  if (!post) return <SafeAreaView style={styles.container}><Text style={styles.errorText}>Post not found</Text></SafeAreaView>;
+  if (!post) return <SafeAreaView style={[styles.container, {backgroundColor: colors.background}]}><Text style={[styles.errorText, {color: colors.error}]}>Post not found</Text></SafeAreaView>;
 
   const renderAttachments = (attachments?: Attachment[]) => {
     if (!attachments || attachments.length === 0) return null;
@@ -169,10 +176,10 @@ export function PostDetailsScreen({ route, navigation }: Props) {
         {attachments.map((att) => (
           <TouchableOpacity 
             key={att.id} 
-            style={styles.attachmentItem}
+            style={[styles.attachmentItem, {backgroundColor: isDark ? colors.surface : '#F1F3F5', borderColor: colors.border}]}
             onPress={() => Linking.openURL(`${BASE_URL}${att.fileUrl}`)}
           >
-            <Text style={styles.attachmentText}>📎 {att.fileUrl.split('.').pop()?.toUpperCase() || 'Attachment'}</Text>
+            <Text style={[styles.attachmentText, {color: colors.text}]}>📎 {att.fileUrl.split('.').pop()?.toUpperCase() || 'Attachment'}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -181,10 +188,10 @@ export function PostDetailsScreen({ route, navigation }: Props) {
 
   const renderReply = ({ item }: { item: HelpPostReply }) => {
     return (
-      <View style={styles.replyCard}>
+      <View style={[styles.replyCard, {backgroundColor: colors.surface, borderLeftColor: colors.primary, borderColor: colors.border}]}>
         <View style={styles.replyHeader}>
           <TouchableOpacity 
-            style={styles.avatarMini} 
+            style={[styles.avatarMini, {backgroundColor: colors.background}]} 
             onPress={() => showLawyerQuickView(item.lawyerId)}
           >
             {item.lawyerProfileImageUrl ? (
@@ -193,43 +200,41 @@ export function PostDetailsScreen({ route, navigation }: Props) {
                 style={styles.avatarImage} 
               />
             ) : (
-              <Text style={styles.avatarText}>{item.lawyerName?.charAt(0)}</Text>
+              <Text style={[styles.avatarText, {color: colors.text}]}>{item.lawyerName?.charAt(0)}</Text>
             )}
           </TouchableOpacity>
           <View style={styles.replyAuthorInfo}>
-            <Text style={styles.replyAuthor}>{item.lawyerName}</Text>
-            <Text style={styles.replyDate}>{new Date(item.createdAtUtc).toLocaleDateString()}</Text>
+            <Text style={[styles.replyAuthor, {color: colors.text, fontSize: isSmallDevice ? 14 : 15}]}>{item.lawyerName}</Text>
+            <Text style={[styles.replyDate, {color: colors.textDim}]}>{new Date(item.createdAtUtc).toLocaleDateString()}</Text>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             {item.rating && (
-              <View style={styles.ratingBadge}>
-                <Text style={styles.ratingBadgeText}>⭐ {item.rating}</Text>
+              <View style={[styles.ratingBadge, {backgroundColor: isDark ? '#3d2b0e' : '#FFF9DB', borderColor: isDark ? '#7a5a1a' : '#FFE066'}]}>
+                <Text style={[styles.ratingBadgeText, {color: isDark ? '#ffd43b' : '#F59F00'}]}>⭐ {item.rating}</Text>
               </View>
             )}
             
-            {/* Delete button if user is post owner */}
             {post?.lawyerId === profile?.id && (
               <TouchableOpacity 
                 onPress={() => handleDeleteReply(item.id)}
                 style={{ marginLeft: 15 }}
               >
-                <Text style={{ fontSize: 18, color: '#FF6B6B' }}>🗑️</Text>
+                <FontAwesome name="trash" size={isSmallDevice ? 18 : 20} color={colors.error} />
               </TouchableOpacity>
             )}
           </View>
         </View>
-        <Text style={styles.replyMessage}>{item.message}</Text>
+        <Text style={[styles.replyMessage, {color: colors.text, opacity: 0.9, fontSize: isSmallDevice ? 13 : 14}]}>{item.message}</Text>
         
         {renderAttachments(item.attachments)}
         
-        {/* Evaluation Logic - Only post owner can evaluate others' replies */}
         {post?.lawyerId === profile?.id && !item.rating && item.lawyerId !== profile?.id && (
-          <View style={styles.evaluationRow}>
-            <Text style={styles.evaluationLabel}>Evaluate assistance:</Text>
+          <View style={[styles.evaluationRow, {borderTopColor: colors.border}]}>
+            <Text style={[styles.evaluationLabel, {color: colors.textDim}]}>Evaluate assistance:</Text>
             <View style={styles.starsRow}>
               {[1, 2, 3, 4, 5].map((star) => (
                 <TouchableOpacity key={star} onPress={() => handleRateReply(item.id, star)}>
-                  <Text style={{ fontSize: 24, marginHorizontal: 2 }}>☆</Text>
+                  <Text style={{ fontSize: isSmallDevice ? 20 : 24, marginHorizontal: 2 }}>☆</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -240,18 +245,18 @@ export function PostDetailsScreen({ route, navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, {backgroundColor: colors.background}]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps='handled'>
-          <View style={styles.postCard}>
+        <ScrollView contentContainerStyle={[styles.scrollContent, {padding: isSmallDevice ? 12 : 16}]} keyboardShouldPersistTaps='handled'>
+          <View style={[styles.postCard, {backgroundColor: colors.surface, borderColor: colors.border}]}>
             <View style={styles.authorRow}>
               <TouchableOpacity 
-                style={styles.avatarMini} 
+                style={[styles.avatarMini, {backgroundColor: colors.background}]} 
                 onPress={() => showLawyerQuickView(post.lawyerId)}
               >
                  {post.lawyerProfileImageUrl ? (
@@ -260,57 +265,57 @@ export function PostDetailsScreen({ route, navigation }: Props) {
                     style={styles.avatarImage} 
                   />
                 ) : (
-                  <Text style={styles.avatarText}>{post.lawyerName?.charAt(0)}</Text>
+                  <Text style={[styles.avatarText, {color: colors.text}]}>{post.lawyerName?.charAt(0)}</Text>
                 )}
               </TouchableOpacity>
               <View>
-                <Text style={styles.postAuthor}>{post.lawyerName}</Text>
-                <Text style={styles.postDate}>{new Date(post.createdAtUtc).toLocaleString()}</Text>
+                <Text style={[styles.postAuthor, {color: colors.text, fontSize: isSmallDevice ? 16 : 18}]}>{post.lawyerName}</Text>
+                <Text style={[styles.postDate, {color: colors.textDim}]}>{new Date(post.createdAtUtc).toLocaleString()}</Text>
               </View>
             </View>
 
-            <Text style={styles.courtName}>⚖️ {post.courtName}</Text>
-            <Text style={styles.description}>{post.description}</Text>
+            <Text style={[styles.courtName, {color: colors.primary, fontSize: isSmallDevice ? 15 : 16}]}>⚖️ {post.courtName}</Text>
+            <Text style={[styles.description, {color: colors.text, fontSize: isSmallDevice ? 14 : 16}]}>{post.description}</Text>
             
             {renderAttachments(post.attachments)}
 
-            <View style={styles.locationRow}>
-               <Text style={styles.locationText}>📍 {post.cityName}</Text>
+            <View style={[styles.locationRow, {borderTopColor: colors.border}]}>
+               <Text style={[styles.locationText, {color: colors.textDim}]}>📍 {post.cityName}</Text>
             </View>
           </View>
 
           <View style={styles.repliesSection}>
-            <Text style={styles.sectionTitle}>Replies ({post.replies?.length || 0})</Text>
+            <Text style={[styles.sectionTitle, {color: colors.text, fontSize: isSmallDevice ? 18 : 20}]}>Replies ({post.replies?.length || 0})</Text>
             {post.replies?.length === 0 ? (
               <View style={styles.emptyReplies}>
-                <Text style={styles.emptyText}>No replies yet.</Text>
+                <Text style={[styles.emptyText, {color: colors.textDim}]}>No replies yet.</Text>
               </View>
             ) : (
               post.replies?.map((r, i) => <View key={r.id || i}>{renderReply({ item: r })}</View>)
             )}
           </View>
 
-          <View style={styles.replyInputSection}>
-            <Text style={styles.replyInputLabel}>Your Reply</Text>
+          <View style={[styles.replyInputSection, {backgroundColor: colors.surface, borderColor: colors.border, padding: isSmallDevice ? 16 : 20}]}>
+            <Text style={[styles.replyInputLabel, {color: colors.text}]}>Your Reply</Text>
             <TextInput
               placeholder="Type your assistance message here..."
-              placeholderTextColor="#AAB2C1"
+              placeholderTextColor={colors.textDim}
               value={replyMessage}
               onChangeText={setReplyMessage}
               multiline
               numberOfLines={4}
-              style={styles.replyInput}
+              style={[styles.replyInput, {backgroundColor: colors.background, borderColor: colors.border, color: colors.text}]}
             />
 
             <View style={styles.replyAttachmentRow}>
               <TouchableOpacity onPress={pickReplyFiles} disabled={replyLoading}>
-                <Text style={styles.addAttachmentText}>+ Attach Document</Text>
+                <Text style={[styles.addAttachmentText, {color: colors.primary}]}>+ Attach Document</Text>
               </TouchableOpacity>
             </View>
 
             {replyFiles.map((file, index) => (
-              <View key={index} style={styles.selectedFileItem}>
-                <Text style={styles.selectedFileName} numberOfLines={1}>{file.name}</Text>
+              <View key={index} style={[styles.selectedFileItem, {backgroundColor: colors.background, borderColor: colors.border}]}>
+                <Text style={[styles.selectedFileName, {color: colors.text}]} numberOfLines={1}>{file.name}</Text>
                 <TouchableOpacity onPress={() => removeReplyFile(index)}>
                   <Text style={styles.removeFileBtn}>✕</Text>
                 </TouchableOpacity>
@@ -327,7 +332,7 @@ export function PostDetailsScreen({ route, navigation }: Props) {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Lawyer Quick View Modal (Enhanced) */}
+      {/* Lawyer Quick View Modal */}
       <Modal
         visible={showQuickView}
         transparent
@@ -335,41 +340,40 @@ export function PostDetailsScreen({ route, navigation }: Props) {
         onRequestClose={() => setShowQuickView(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.quickViewBox}>
+          <View style={[styles.quickViewBox, {backgroundColor: colors.surface, borderBottomColor: colors.border, padding: isSmallDevice ? 20 : 24}]}>
             {selectedLawyer && (
               <View style={styles.quickViewContent}>
-                {/* Image behind name logic - we can layer them or just show them centered */}
-                <View style={styles.modalAvatarContainer}>
+                <View style={[styles.modalAvatarContainer, {borderColor: colors.border, backgroundColor: colors.background}]}>
                    {selectedLawyer.profileImageUrl ? (
                     <Image 
                       source={{ uri: `${BASE_URL}${selectedLawyer.profileImageUrl}` }} 
                       style={styles.avatarLarge} 
                     />
                   ) : (
-                    <View style={[styles.avatarLarge, { backgroundColor: '#F8F9FA' }]}>
-                       <Text style={{ fontSize: 40 }}>👤</Text>
+                    <View style={[styles.avatarLarge, { backgroundColor: colors.background }]}>
+                       <Text style={{ fontSize: isSmallDevice ? 32 : 40 }}>👤</Text>
                     </View>
                   )}
                 </View>
 
-                <Text style={styles.modalLawyerName}>{selectedLawyer.fullName}</Text>
+                <Text style={[styles.modalLawyerName, {color: colors.text, fontSize: isSmallDevice ? 18 : 22}]}>{selectedLawyer.fullName}</Text>
                 {selectedLawyer.professionalTitle && (
-                  <Text style={styles.modalLawyerTitle}>{selectedLawyer.professionalTitle}</Text>
+                  <Text style={[styles.modalLawyerTitle, {color: colors.textDim}]}>{selectedLawyer.professionalTitle}</Text>
                 )}
 
                 <View style={styles.modalInfoRow}>
                   <Text style={{ fontSize: 18 }}>📍</Text>
-                  <Text style={styles.modalInfoText}>
+                  <Text style={[styles.modalInfoText, {color: colors.text}]}>
                     Active in: {selectedLawyer.activeCities?.map(c => c.name).join(', ') || 'N/A'}
                   </Text>
                 </View>
 
                 <View style={styles.modalInfoRow}>
-                   <Text style={styles.modalInfoLabel}>WhatsApp: </Text>
-                   <Text style={styles.modalInfoText}>{selectedLawyer.whatsappNumber}</Text>
+                   <MaterialCommunityIcons name="whatsapp" size={24} color="#25D366" />
+                   <Text style={[styles.modalInfoText, {color: colors.text}]}>{selectedLawyer.whatsappNumber}</Text>
                 </View>
 
-                <View style={styles.modalActions}>
+                <View style={[styles.modalActions, {borderTopColor: colors.border}]}>
                    <TouchableOpacity 
                     style={styles.whatsappAction} 
                     onPress={() => {
@@ -377,15 +381,15 @@ export function PostDetailsScreen({ route, navigation }: Props) {
                         openWhatsApp(selectedLawyer.whatsappNumber, selectedLawyer.fullName);
                     }}
                    >
-                     <Text style={{ fontSize: 24, marginRight: 8 }}>💬</Text>
-                     <Text style={styles.whatsappActionText}>WHATSAPP</Text>
+                     <MaterialCommunityIcons name="whatsapp" size={24} color={colors.primary} style={{marginRight: 8}} />
+                     <Text style={[styles.whatsappActionText, {color: colors.primary}]}>WHATSAPP</Text>
                    </TouchableOpacity>
 
                    <TouchableOpacity 
                     style={styles.closeAction}
                     onPress={() => setShowQuickView(false)}
                    >
-                     <Text style={styles.closeActionText}>CLOSE</Text>
+                     <Text style={[styles.closeActionText, {color: colors.textDim}]}>CLOSE</Text>
                    </TouchableOpacity>
                 </View>
               </View>
@@ -395,7 +399,7 @@ export function PostDetailsScreen({ route, navigation }: Props) {
       </Modal>
 
       {quickViewLoading && (
-        <View style={styles.loadingOverlay}>
+        <View style={[styles.loadingOverlay, {backgroundColor: colors.background + 'B3'}]}>
           <Loading />
         </View>
       )}
@@ -406,13 +410,11 @@ export function PostDetailsScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
   scrollContent: {
-    padding: 16,
+    flexGrow: 1,
   },
   postCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
@@ -421,7 +423,6 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
   },
   authorRow: {
     flexDirection: 'row',
@@ -432,7 +433,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#E9ECEF',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -443,28 +443,20 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   avatarText: {
-    color: '#495057',
     fontWeight: 'bold',
     fontSize: 20,
   },
   postAuthor: {
-    fontSize: 18,
     fontWeight: 'bold',
-    color: '#1E1E1E',
   },
   postDate: {
     fontSize: 12,
-    color: '#868E96',
   },
   courtName: {
-    fontSize: 16,
     fontWeight: 'bold',
-    color: '#5C7CFA',
     marginBottom: 8,
   },
   description: {
-    fontSize: 16,
-    color: '#495057',
     lineHeight: 24,
     marginBottom: 16,
   },
@@ -473,32 +465,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F1F3F5',
   },
   locationText: {
-    color: '#868E96',
     fontSize: 14,
   },
   repliesSection: {
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 20,
     fontWeight: 'bold',
-    color: '#1E1E1E',
     marginBottom: 16,
   },
   replyCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     borderLeftWidth: 4,
-    borderLeftColor: '#5C7CFA',
     shadowColor: '#000',
     shadowOpacity: 0.03,
     shadowRadius: 5,
     elevation: 2,
+    borderWidth: 1,
   },
   replyHeader: {
     flexDirection: 'row',
@@ -509,17 +496,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   replyAuthor: {
-    fontSize: 15,
     fontWeight: 'bold',
-    color: '#1E1E1E',
   },
   replyDate: {
     fontSize: 11,
-    color: '#868E96',
   },
   replyMessage: {
-    fontSize: 14,
-    color: '#495057',
     lineHeight: 20,
   },
   emptyReplies: {
@@ -527,70 +509,55 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   emptyText: {
-    color: '#868E96',
     fontSize: 14,
   },
   replyInputSection: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    padding: 20,
     marginBottom: 30,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
   },
   replyInputLabel: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#1E1E1E',
     marginBottom: 12,
   },
   replyInput: {
-    backgroundColor: '#F8F9FA',
     borderRadius: 12,
     padding: 15,
-    color: '#1E1E1E',
     fontSize: 16,
     minHeight: 100,
     textAlignVertical: 'top',
     borderWidth: 1,
-    borderColor: '#E9ECEF',
   },
   errorText: {
-    color: '#FF6B6B',
     textAlign: 'center',
     marginTop: 50,
   },
   ratingBadge: {
-    backgroundColor: '#FFF9DB',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#FFE066',
   },
   ratingBadgeText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#F59F00',
   },
   evaluationRow: {
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F1F3F5',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   evaluationLabel: {
     fontSize: 13,
-    color: '#868E96',
     fontWeight: '600',
   },
   starsRow: {
     flexDirection: 'row',
   },
-  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -600,36 +567,38 @@ const styles = StyleSheet.create({
   },
   quickViewBox: {
     width: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderRadius: 24,
     overflow: 'hidden',
-    padding: 24,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 10,
+    borderWidth: 1,
   },
   quickViewContent: {
     alignItems: 'center',
   },
   modalAvatarContainer: {
     marginBottom: 16,
-  },
-  avatarLarge: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 1,
+    overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  avatarLarge: {
+    width: '100%',
+    height: '100%',
+  },
   modalLawyerName: {
-    fontSize: 22,
     fontWeight: 'bold',
-    color: '#1E1E1E',
     marginBottom: 4,
     textAlign: 'center',
   },
   modalLawyerTitle: {
     fontSize: 16,
-    color: '#868E96',
     marginBottom: 16,
     textAlign: 'center',
   },
@@ -640,14 +609,8 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'center',
   },
-  modalInfoLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1E1E1E',
-  },
   modalInfoText: {
     fontSize: 16,
-    color: '#495057',
     marginLeft: 8,
   },
   modalActions: {
@@ -656,7 +619,6 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'space-around',
     borderTopWidth: 1,
-    borderTopColor: '#EEEEEE',
     paddingTop: 16,
   },
   whatsappAction: {
@@ -664,7 +626,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   whatsappActionText: {
-    color: '#2185D0',
     fontWeight: '700',
     fontSize: 14,
   },
@@ -672,13 +633,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   closeActionText: {
-    color: '#2185D0',
     fontWeight: '700',
     fontSize: 14,
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255,255,255,0.7)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 999,
@@ -690,18 +649,15 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   attachmentItem: {
-    backgroundColor: '#F1F3F5',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
     marginRight: 8,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#DEE2E6',
   },
   attachmentText: {
     fontSize: 12,
-    color: '#495057',
     fontWeight: '600',
   },
   replyAttachmentRow: {
@@ -710,7 +666,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   addAttachmentText: {
-    color: '#5C7CFA',
     fontSize: 14,
     fontWeight: 'bold',
   },
@@ -718,17 +673,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
     borderRadius: 8,
     padding: 8,
     marginBottom: 8,
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: '#ADB5BD',
   },
   selectedFileName: {
     fontSize: 13,
-    color: '#495057',
     flex: 1,
     marginRight: 10,
   },

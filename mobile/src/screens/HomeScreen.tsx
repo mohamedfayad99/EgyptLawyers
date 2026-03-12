@@ -9,18 +9,26 @@ import {
   TextInput,
   Image,
   SafeAreaView,
-  StatusBar,
+  useWindowDimensions,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Loading, ErrorMessage } from '../components/common';
 import { useAuth } from '../lib/AuthContext';
 import { getHelpPosts, getNotifications } from '../lib/services';
 import { HelpPost } from '../lib/types';
 import { BASE_URL } from '../lib/config';
+import { useTheme } from '../lib/ThemeContext';
+import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 type Props = NativeStackScreenProps<any, 'Home'>;
 
 export function HomeScreen({ navigation }: Props) {
+  const { width } = useWindowDimensions();
+  const isSmallDevice = width < 375;
+  const { profile } = useAuth();
+  const { colors, isDark, toggleTheme } = useTheme();
+  
   const [posts, setPosts] = useState<HelpPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -73,87 +81,111 @@ export function HomeScreen({ navigation }: Props) {
   const renderPostItem = ({ item }: { item: HelpPost }) => {
     return (
       <TouchableOpacity
-        style={styles.card}
+        style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
         onPress={() => handlePostPress(item.id)}
         activeOpacity={0.7}
       >
         <View style={styles.cardHeader}>
           <View style={styles.userInfo}>
-            <View style={styles.avatarMini}>
+            <View style={[styles.avatarMini, { backgroundColor: colors.background }]}>
               {item.lawyerProfileImageUrl ? (
                 <Image 
                   source={{ uri: `${BASE_URL}${item.lawyerProfileImageUrl}` }} 
                   style={styles.avatarImage} 
                 />
               ) : (
-                <Text style={styles.avatarText}>{item.lawyerName?.charAt(0) || '?'}</Text>
+                <Text style={[styles.avatarText, { color: colors.text }]}>{item.lawyerName?.charAt(0) || '?'}</Text>
               )}
             </View>
             <View>
-              <Text style={styles.lawyerName}>{item.lawyerName}</Text>
-              <Text style={styles.postDate}>{new Date(item.createdAtUtc).toLocaleDateString()}</Text>
+              <Text style={[styles.lawyerName, { color: colors.text, fontSize: isSmallDevice ? 14 : 16 }]}>{item.lawyerName}</Text>
+              <Text style={[styles.postDate, { color: colors.textDim }]}>{new Date(item.createdAtUtc).toLocaleDateString()}</Text>
             </View>
           </View>
-          <View style={styles.locationBadge}>
-            <Text style={styles.locationText}>📍 {item.cityName}</Text>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={[styles.locationText, { color: colors.textDim, fontSize: isSmallDevice ? 12 : 13, marginBottom: 2 }]} numberOfLines={1}>
+              📍 {item.cityName}
+            </Text>
+            <Text style={[styles.courtName, { color: colors.primary, fontSize: isSmallDevice ? 12 : 13, marginBottom: 0 }]} numberOfLines={1}>
+              ⚖️ {item.courtName}
+            </Text>
           </View>
         </View>
 
-        <Text style={styles.courtName}>{item.courtName}</Text>
-        <Text style={styles.description} numberOfLines={3}>
+        <Text style={[styles.description, { color: colors.text, opacity: 0.8 }]} numberOfLines={3}>
           {item.description}
         </Text>
 
-        <View style={styles.cardFooter}>
-             <Text style={styles.replyCountText}>💬 {item.replyCount || 0} Replies</Text>
+        <View style={[styles.cardFooter, { borderTopColor: colors.border }]}>
+             <Text style={[styles.replyCountText, { color: colors.textDim }]}>💬 {item.replyCount || 0} Replies</Text>
         </View>
       </TouchableOpacity>
     );
   };
 
-  const { profile } = useAuth();
-
   if (loading && !refreshing) return <Loading message='Loading feed...' />;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <View style={[styles.header, { 
+        backgroundColor: colors.surface, 
+        borderBottomColor: colors.border, 
+        paddingHorizontal: isSmallDevice ? 15 : 20,
+        paddingBottom: isSmallDevice ? 15 : 20,
+        paddingTop: isSmallDevice ? 25 : 30 // Increased spacing from top
+      }]}>
         <View style={styles.headerRow}>
-          <Text style={styles.headerTitle}>EgyptLawyers</Text>
+          <Text style={[styles.headerTitle, { color: colors.text, fontSize: isSmallDevice ? 16 : 18 }]}>EgyptLawyers</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            
+            <TouchableOpacity 
+              style={{ marginRight: isSmallDevice ? 10 : 15 }} 
+              onPress={toggleTheme}
+            >
+               <MaterialCommunityIcons 
+                 name={isDark ? "weather-sunny" : "weather-night"} 
+                 size={isSmallDevice ? 24 : 28} 
+                 color={isDark ? "#FFD43B" : colors.text} 
+               />
+            </TouchableOpacity>
+
             <TouchableOpacity 
               style={styles.notifButton} 
               onPress={() => navigation.navigate('Notifications')}
             >
-               <Text style={{ fontSize: 24 }}>🔔</Text>
-               {hasUnread && <View style={styles.notifBadge} />}
+               <Ionicons 
+                 name="notifications-outline" 
+                 size={isSmallDevice ? 24 : 28} 
+                 color={colors.text} 
+               />
+               {hasUnread && <View style={[styles.notifBadge, { borderColor: colors.surface }]} />}
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={{ marginLeft: 15 }} 
+              style={{ marginLeft: isSmallDevice ? 10 : 15 }} 
               onPress={() => navigation.navigate('ProfileTab')}
             >
                {profile?.profileImageUrl ? (
                  <Image 
                     source={{ uri: `${BASE_URL}${profile.profileImageUrl}` }} 
-                    style={{ width: 36, height: 36, borderRadius: 18 }} 
+                    style={{ width: isSmallDevice ? 32 : 36, height: isSmallDevice ? 32 : 36, borderRadius: isSmallDevice ? 16 : 18 }} 
                   />
                ) : (
-                 <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#E9ECEF', justifyContent: 'center', alignItems: 'center' }}>
-                    <Text style={{ fontSize: 16 }}>👤</Text>
+                 <View style={{ width: isSmallDevice ? 32 : 36, height: isSmallDevice ? 32 : 36, borderRadius: isSmallDevice ? 16 : 18, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{ fontSize: isSmallDevice ? 14 : 16 }}>👤</Text>
                  </View>
                )}
             </TouchableOpacity>
           </View>
         </View>
         
-        <View style={styles.searchContainer}>
-          <Text style={styles.searchIcon}>🔍</Text>
+        <View style={[styles.searchContainer, { backgroundColor: colors.background, height: isSmallDevice ? 40 : 45 }]}>
+          <Ionicons name="search" size={isSmallDevice ? 18 : 20} color={colors.textDim} style={{ marginRight: 10 }} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.text }]}
             placeholder="Search lawyers, cities, courts..."
-            placeholderTextColor="#AAB2C1"
+            placeholderTextColor={colors.textDim}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
@@ -166,11 +198,11 @@ export function HomeScreen({ navigation }: Props) {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#5C7CFA" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>{error || 'No requests found'}</Text>
+            <Text style={[styles.emptyText, { color: colors.textDim }]}>{error || 'No requests found'}</Text>
             {error ? <ErrorMessage message={error} onRetry={loadPosts} /> : null}
           </View>
         }
@@ -182,13 +214,9 @@ export function HomeScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
   header: {
-    padding: 20,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
   },
   headerRow: {
     flexDirection: 'row',
@@ -197,9 +225,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   headerTitle: {
-    fontSize: 24,
     fontWeight: 'bold',
-    color: '#1E1E1E',
   },
   notifButton: {
     padding: 5,
@@ -213,23 +239,16 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: '#FF6B6B',
     borderWidth: 2,
-    borderColor: '#FFFFFF',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F1F3F5',
     borderRadius: 12,
     paddingHorizontal: 15,
   },
-  searchIcon: {
-    marginRight: 10,
-    fontSize: 16,
-  },
   searchInput: {
     flex: 1,
-    height: 45,
-    color: '#1E1E1E',
+    height: '100%',
     fontSize: 16,
   },
   listContent: {
@@ -237,7 +256,6 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   card: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
@@ -246,6 +264,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 3,
+    borderWidth: 1,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -261,7 +280,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#E9ECEF',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
@@ -272,51 +290,42 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   avatarText: {
-    color: '#495057',
     fontWeight: 'bold',
     fontSize: 18,
   },
   lawyerName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#1E1E1E',
   },
   postDate: {
     fontSize: 12,
-    color: '#868E96',
   },
   locationBadge: {
-    backgroundColor: '#E7F5FF',
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 8,
   },
   locationText: {
-    color: '#228BE6',
     fontSize: 11,
     fontWeight: '600',
   },
   courtName: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#5C7CFA',
     marginBottom: 6,
   },
   description: {
     fontSize: 14,
-    color: '#495057',
     lineHeight: 20,
     marginBottom: 12,
   },
   cardFooter: {
     borderTopWidth: 1,
-    borderTopColor: '#F1F3F5',
     paddingTop: 10,
     flexDirection: 'row',
     justifyContent: 'flex-end',
   },
   replyCountText: {
-    color: '#868E96',
     fontSize: 13,
     fontWeight: '500',
   },
@@ -325,7 +334,6 @@ const styles = StyleSheet.create({
     marginTop: 50,
   },
   emptyText: {
-    color: '#868E96',
     fontSize: 16,
   },
 });
