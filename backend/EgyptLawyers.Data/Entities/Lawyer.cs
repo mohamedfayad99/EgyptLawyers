@@ -15,6 +15,9 @@ public sealed class Lawyer
     [MaxLength(100)]
     public string SyndicateCardNumber { get; set; } = null!;
 
+    [MaxLength(14)] // National ID in Egypt is 14 digits
+    public string? NationalIdNumber { get; set; }
+
     [MaxLength(32)]
     public string WhatsappNumber { get; set; } = null!;
 
@@ -27,6 +30,9 @@ public sealed class Lawyer
 
     [MaxLength(1000)]
     public string? ProfileImageUrl { get; set; }
+
+    [MaxLength(1000)]
+    public string? IdCardImageUrl { get; set; }
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;

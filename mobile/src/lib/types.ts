@@ -1,4 +1,4 @@
-﻿export type City = { id: number; name: string };
+export type City = { id: number; name: string };
 export type Court = { id: number; name: string; cityId: number };
 
 export type Attachment = {
@@ -12,11 +12,13 @@ export type LawyerProfile = {
   fullName: string;
   professionalTitle?: string | null;
   syndicateCardNumber: string;
+  nationalIdNumber?: string | null;
   whatsappNumber: string;
   verificationStatus: string | number;
   isSuspended: boolean;
   activeCities?: City[];
   profileImageUrl?: string;
+  idCardImageUrl?: string;
 };
 
 export type LawyerPublicProfile = {
@@ -24,10 +26,12 @@ export type LawyerPublicProfile = {
   fullName: string;
   professionalTitle?: string | null;
   syndicateCardNumber: string;
+  nationalIdNumber?: string | null;
   whatsappNumber: string;
   verificationStatus: string | number;
   activeCities: City[];
   profileImageUrl?: string;
+  idCardImageUrl?: string;
 };
 
 export type HelpPost = {

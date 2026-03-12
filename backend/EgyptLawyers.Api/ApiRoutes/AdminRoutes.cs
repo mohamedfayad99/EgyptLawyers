@@ -47,9 +47,12 @@ public static class AdminRoutes
                     x.FullName,
                     x.ProfessionalTitle,
                     x.SyndicateCardNumber,
+                    x.NationalIdNumber,
                     x.WhatsappNumber,
                     x.VerificationStatus,
                     x.IsSuspended,
+                    x.ProfileImageUrl,
+                    x.IdCardImageUrl,
                     x.CreatedAtUtc,
                     ActiveCities = x.ActiveCities.Select(c => c.City.Name).ToList()
                 })

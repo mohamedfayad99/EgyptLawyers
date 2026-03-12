@@ -34,12 +34,19 @@ export function ProfileScreen({ navigation }: Props) {
   const [saving, setSaving] = useState(false);
 
   const [editFullName, setEditFullName] = useState('');
+  const [editProfessionalTitle, setEditProfessionalTitle] = useState('');
+  const [editSyndicateNumber, setEditSyndicateNumber] = useState('');
+  const [editNationalId, setEditNationalId] = useState('');
   const [editWhatsapp, setEditWhatsapp] = useState('');
   const [editProfileImage, setEditProfileImage] = useState<string | null>(null);
+  const [editIdCardImage, setEditIdCardImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile) {
       setEditFullName(profile.fullName);
+      setEditProfessionalTitle(profile.professionalTitle || '');
+      setEditSyndicateNumber(profile.syndicateCardNumber || '');
+      setEditNationalId(profile.nationalIdNumber || '');
       setEditWhatsapp(profile.whatsappNumber);
     }
   }, [profile, isEditing]);
@@ -58,16 +65,32 @@ export function ProfileScreen({ navigation }: Props) {
     }
   };
 
+  const handlePickIdImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.5,
+      base64: true,
+    });
+    
+    if (!result.canceled && result.assets[0].base64) {
+      setEditIdCardImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+    }
+  };
+
   const handleSaveProfile = async () => {
     if (!profile) return;
     try {
       setSaving(true);
       await updateLawyerProfile({
         fullName: editFullName,
+        professionalTitle: editProfessionalTitle || undefined,
+        syndicateCardNumber: editSyndicateNumber || undefined,
+        nationalIdNumber: editNationalId || undefined,
         whatsappNumber: editWhatsapp,
         activeCityIds: profile.activeCities ? profile.activeCities.map(c => c.id) : [],
         profileImageBase64: editProfileImage || undefined,
-        professionalTitle: profile.professionalTitle || undefined,
+        idCardImageBase64: editIdCardImage || undefined,
       });
 
       await refreshProfile();
@@ -99,15 +122,6 @@ export function ProfileScreen({ navigation }: Props) {
   };
 
   if (isLoading || !profile) return <Loading message='Loading profile...' />;
-
-  const statusLabel = (() => {
-    const s = profile.verificationStatus;
-    if (s === 1 || s === 'Approved' || s === 'approved') return 'Approved';
-    if (s === 2 || s === 'Rejected' || s === 'rejected') return 'Rejected';
-    return 'Pending';
-  })();
-
-  const statusColor = statusLabel === 'Approved' ? '#20C997' : statusLabel === 'Rejected' ? '#FF6B6B' : '#FF9F43';
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -141,10 +155,6 @@ export function ProfileScreen({ navigation }: Props) {
           ) : (
             <Text style={[styles.fullName, { color: colors.text, fontSize: isSmallDevice ? 20 : 24 }]}>{profile.fullName}</Text>
           )}
-
-          <View style={[styles.statusBadge, { backgroundColor: statusColor + '15' }]}>
-            <Text style={[styles.statusText, { color: statusColor }]}>{statusLabel}</Text>
-          </View>
         </View>
 
         <View style={[styles.detailsCard, { backgroundColor: colors.surface, borderColor: colors.border, padding: isSmallDevice ? 16 : 24 }]}>
@@ -165,21 +175,82 @@ export function ProfileScreen({ navigation }: Props) {
           </View>
 
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
+ 
+          <View style={styles.detailItem}>
+             <Text style={[styles.detailLabel, { color: colors.textDim }]}>Professional Title</Text>
+             {isEditing ? (
+               <TextInput
+                 style={[styles.editInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
+                 value={editProfessionalTitle}
+                 onChangeText={setEditProfessionalTitle}
+                 placeholder="e.g. Criminal Lawyer"
+                 placeholderTextColor={colors.textDim}
+               />
+             ) : (
+               <Text style={[styles.detailValue, { color: colors.text }]}>{profile.professionalTitle || '-'}</Text>
+             )}
+          </View>
+
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.detailItem}>
              <Text style={[styles.detailLabel, { color: colors.textDim }]}>Syndicate Number</Text>
-             <Text style={[styles.detailValueLocked, { color: colors.textDim }]}>{profile.syndicateCardNumber}</Text>
+             {isEditing ? (
+               <TextInput
+                 style={[styles.editInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
+                 value={editSyndicateNumber}
+                 onChangeText={setEditSyndicateNumber}
+                 keyboardType="numeric"
+               />
+             ) : (
+               <Text style={[styles.detailValue, { color: colors.text }]}>{profile.syndicateCardNumber}</Text>
+             )}
           </View>
 
-          {profile.professionalTitle && (
-            <>
-              <View style={[styles.divider, { backgroundColor: colors.border }]} />
-              <View style={styles.detailItem}>
-                 <Text style={[styles.detailLabel, { color: colors.textDim }]}>Title</Text>
-                 <Text style={[styles.detailValue, { color: colors.text }]}>{profile.professionalTitle}</Text>
-              </View>
-            </>
-          )}
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          <View style={styles.detailItem}>
+             <Text style={[styles.detailLabel, { color: colors.textDim }]}>National ID</Text>
+             {isEditing ? (
+               <TextInput
+                 style={[styles.editInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
+                 value={editNationalId}
+                 onChangeText={setEditNationalId}
+                 keyboardType="numeric"
+                 maxLength={14}
+               />
+             ) : (
+               <Text style={[styles.detailValue, { color: colors.text }]}>{profile.nationalIdNumber || '-'}</Text>
+             )}
+          </View>
+
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          <View style={styles.detailItem}>
+             <Text style={[styles.detailLabel, { color: colors.textDim }]}>ID Card / Syndicate Card Photo</Text>
+             <TouchableOpacity 
+               disabled={!isEditing} 
+               style={[styles.idCardPicker, { backgroundColor: colors.background, borderColor: colors.border }]} 
+               onPress={handlePickIdImage}
+             >
+               {editIdCardImage ? (
+                 <Image source={{ uri: editIdCardImage }} style={styles.idCardPreview} />
+               ) : profile.idCardImageUrl ? (
+                 <Image source={{ uri: `${BASE_URL}${profile.idCardImageUrl}` }} style={styles.idCardPreview} />
+               ) : (
+                 <View style={styles.idCardPlaceholder}>
+                   <Ionicons name="camera-outline" size={24} color={colors.textDim} />
+                   <Text style={{ color: colors.textDim, marginTop: 4 }}>No Photo Uploaded</Text>
+                 </View>
+               )}
+               {isEditing && (
+                 <View style={styles.idCardOverlay}>
+                   <Ionicons name="camera" size={20} color="#fff" />
+                   <Text style={styles.idCardOverlayText}>CHANGE PHOTO</Text>
+                 </View>
+               )}
+             </TouchableOpacity>
+          </View>
 
           {profile.activeCities && profile.activeCities.length > 0 && (
              <>
@@ -202,7 +273,7 @@ export function ProfileScreen({ navigation }: Props) {
           {isEditing ? (
             <>
               <Button title={saving ? 'Saving...' : 'Save Changes'} onPress={handleSaveProfile} loading={saving} />
-              <Button title="Cancel" onPress={() => { setIsEditing(false); setEditProfileImage(null); }} variant="secondary" style={{ marginTop: 12 }} />
+              <Button title="Cancel" onPress={() => { setIsEditing(false); setEditProfileImage(null); setEditIdCardImage(null); }} variant="secondary" style={{ marginTop: 12 }} />
             </>
           ) : (
             <>
@@ -351,5 +422,41 @@ const styles = StyleSheet.create({
   },
   actionSection: {
     marginBottom: 40,
+  },
+  idCardPicker: {
+    height: 150,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+    marginTop: 8,
+    position: 'relative',
+  },
+  idCardPreview: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  idCardPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  idCardOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  idCardOverlayText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+    marginTop: 4,
   },
 });

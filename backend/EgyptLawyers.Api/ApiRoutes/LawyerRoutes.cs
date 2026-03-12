@@ -41,6 +41,7 @@ public static class LawyerRoutes
                 FullName = req.FullName.Trim(),
                 ProfessionalTitle = string.IsNullOrWhiteSpace(req.ProfessionalTitle) ? null : req.ProfessionalTitle.Trim(),
                 SyndicateCardNumber = syndicate,
+                NationalIdNumber = string.IsNullOrWhiteSpace(req.NationalIdNumber) ? null : req.NationalIdNumber.Trim(),
                 WhatsappNumber = whatsapp,
                 VerificationStatus = LawyerVerificationStatus.Pending,
                 PasswordHash = "temp",
@@ -55,6 +56,7 @@ public static class LawyerRoutes
             foreach (var cityId in cityIds)
                 db.LawyerCities.Add(new LawyerCity { LawyerId = lawyer.Id, CityId = cityId });
 
+            // Handle Profile Image
             if (!string.IsNullOrWhiteSpace(req.ProfileImageBase64))
             {
                 try
@@ -68,6 +70,24 @@ public static class LawyerRoutes
                     var fileName = $"{lawyer.Id}.jpg";
                     await File.WriteAllBytesAsync(Path.Combine(dir, fileName), bytes);
                     lawyer.ProfileImageUrl = $"/profile_images/{fileName}";
+                }
+                catch { /* Ignore invalid base64 */ }
+            }
+
+            // Handle ID Card Image
+            if (!string.IsNullOrWhiteSpace(req.IdCardImageBase64))
+            {
+                try
+                {
+                    var base64Data = req.IdCardImageBase64.Contains(",") 
+                        ? req.IdCardImageBase64.Split(',')[1] 
+                        : req.IdCardImageBase64;
+                    var bytes = Convert.FromBase64String(base64Data);
+                    var dir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "id_cards");
+                    if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                    var fileName = $"{lawyer.Id}_id.jpg";
+                    await File.WriteAllBytesAsync(Path.Combine(dir, fileName), bytes);
+                    lawyer.IdCardImageUrl = $"/id_cards/{fileName}";
                 }
                 catch { /* Ignore invalid base64 */ }
             }
@@ -122,10 +142,12 @@ public static class LawyerRoutes
                     x.FullName,
                     x.ProfessionalTitle,
                     x.SyndicateCardNumber,
+                    x.NationalIdNumber,
                     x.WhatsappNumber,
                     x.VerificationStatus,
                     x.IsSuspended,
                     x.ProfileImageUrl,
+                    x.IdCardImageUrl,
                     ActiveCities = x.ActiveCities.Select(c => new { c.City.Id, c.City.Name }).ToList()
                 })
                 .FirstOrDefaultAsync();
@@ -143,9 +165,11 @@ public static class LawyerRoutes
                     x.FullName,
                     x.ProfessionalTitle,
                     x.SyndicateCardNumber,
+                    x.NationalIdNumber,
                     x.WhatsappNumber,
                     x.VerificationStatus,
                     x.ProfileImageUrl,
+                    x.IdCardImageUrl,
                     ActiveCities = x.ActiveCities.Select(c => new { c.City.Id, c.City.Name }).ToList()
                 })
                 .FirstOrDefaultAsync();
@@ -179,6 +203,8 @@ public static class LawyerRoutes
 
             lawyer.FullName = req.FullName.Trim();
             lawyer.ProfessionalTitle = string.IsNullOrWhiteSpace(req.ProfessionalTitle) ? null : req.ProfessionalTitle.Trim();
+            lawyer.SyndicateCardNumber = string.IsNullOrWhiteSpace(req.SyndicateCardNumber) ? lawyer.SyndicateCardNumber : req.SyndicateCardNumber.Trim();
+            lawyer.NationalIdNumber = string.IsNullOrWhiteSpace(req.NationalIdNumber) ? lawyer.NationalIdNumber : req.NationalIdNumber.Trim();
             lawyer.WhatsappNumber = whatsapp;
             lawyer.UpdatedAtUtc = DateTime.UtcNow;
 
@@ -199,6 +225,23 @@ public static class LawyerRoutes
                     var fileName = $"{lawyer.Id}.jpg";
                     await File.WriteAllBytesAsync(Path.Combine(dir, fileName), bytes);
                     lawyer.ProfileImageUrl = $"/profile_images/{fileName}";
+                }
+                catch { /* Ignore invalid base64 */ }
+            }
+
+            if (!string.IsNullOrWhiteSpace(req.IdCardImageBase64))
+            {
+                try
+                {
+                    var base64Data = req.IdCardImageBase64.Contains(",") 
+                        ? req.IdCardImageBase64.Split(',')[1] 
+                        : req.IdCardImageBase64;
+                    var bytes = Convert.FromBase64String(base64Data);
+                    var dir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "id_cards");
+                    if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                    var fileName = $"{lawyer.Id}_id.jpg";
+                    await File.WriteAllBytesAsync(Path.Combine(dir, fileName), bytes);
+                    lawyer.IdCardImageUrl = $"/id_cards/{fileName}";
                 }
                 catch { /* Ignore invalid base64 */ }
             }

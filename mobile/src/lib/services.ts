@@ -6,20 +6,24 @@ export async function registerLawyer(data: {
   fullName: string;
   professionalTitle?: string;
   syndicateCardNumber: string;
+  nationalIdNumber?: string;
   whatsappNumber: string;
   password: string;
   activeCityIds: number[];
   profileImageBase64?: string;
+  idCardImageBase64?: string;
 }) {
   try {
     const res = await api.post('/lawyers/register', {
       fullName: data.fullName,
       professionalTitle: data.professionalTitle || null,
       syndicateCardNumber: data.syndicateCardNumber,
+      nationalIdNumber: data.nationalIdNumber,
       whatsappNumber: data.whatsappNumber,
       password: data.password,
       activeCityIds: data.activeCityIds,
       profileImageBase64: data.profileImageBase64,
+      idCardImageBase64: data.idCardImageBase64,
     });
     return res.data;
   } catch (e) {
@@ -51,17 +55,23 @@ export async function getLawyerProfile(): Promise<LawyerProfile> {
 export async function updateLawyerProfile(data: {
   fullName: string;
   professionalTitle?: string;
+  syndicateCardNumber?: string;
+  nationalIdNumber?: string;
   whatsappNumber: string;
   activeCityIds: number[];
   profileImageBase64?: string;
+  idCardImageBase64?: string;
 }) {
   try {
     const res = await api.put('/lawyers/me', {
       fullName: data.fullName,
       professionalTitle: data.professionalTitle || null,
+      syndicateCardNumber: data.syndicateCardNumber,
+      nationalIdNumber: data.nationalIdNumber,
       whatsappNumber: data.whatsappNumber,
       activeCityIds: data.activeCityIds,
       profileImageBase64: data.profileImageBase64,
+      idCardImageBase64: data.idCardImageBase64,
     });
     return res.data;
   } catch (e) {

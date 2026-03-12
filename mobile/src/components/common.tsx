@@ -77,6 +77,8 @@ interface TextInputProps {
   placeholderTextColor?: string;
   style?: any;
   keyboardType?: any;
+  maxLength?: number;
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
 }
 
 export function TextInput({

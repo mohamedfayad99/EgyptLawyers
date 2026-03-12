@@ -45,10 +45,12 @@ export function RegisterScreen({ navigation }: Props) {
   const [fullName, setFullName] = useState('');
   const [professionalTitle, setProfessionalTitle] = useState('');
   const [syndicateCard, setSyndicateCard] = useState('');
+  const [nationalId, setNationalId] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [idCardImage, setIdCardImage] = useState<string | null>(null);
 
   const [cities, setCities] = useState<City[]>([]);
   const [selectedCity, setSelectedCity] = useState<number | null>(null);
@@ -90,9 +92,26 @@ export function RegisterScreen({ navigation }: Props) {
     }
   };
 
+  const handlePickIdImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.5,
+      base64: true,
+    });
+    
+    if (!result.canceled && result.assets[0].base64) {
+      setIdCardImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+    }
+  };
+
   const handleRegister = async () => {
     if (!fullName.trim() || !syndicateCard.trim() || !whatsapp.trim() || !password.trim()) {
       setError('Please fill in all required fields');
+      return;
+    }
+    if (!idCardImage) {
+      setError('Please upload a photo of your Syndicate Card or ID for verification');
       return;
     }
     if (!isValidEgyptianPhone(whatsapp)) {
@@ -116,10 +135,12 @@ export function RegisterScreen({ navigation }: Props) {
         fullName: fullName.trim(),
         professionalTitle: professionalTitle.trim() || undefined,
         syndicateCardNumber: syndicateCard.trim(),
+        nationalIdNumber: nationalId.trim() || undefined,
         whatsappNumber: normalizeEgyptianPhone(whatsapp),
         password,
         activeCityIds: [selectedCity],
         profileImageBase64: profileImage || undefined,
+        idCardImageBase64: idCardImage || undefined,
       });
 
       Alert.alert(
@@ -169,6 +190,24 @@ export function RegisterScreen({ navigation }: Props) {
 
           <Text style={[styles.fieldLabel, { color: colors.text }]}>Syndicate Card Number *</Text>
           <TextInput placeholder='e.g. 123456' value={syndicateCard} onChangeText={setSyndicateCard} keyboardType='numeric' />
+
+          <Text style={[styles.fieldLabel, { color: colors.text }]}>National ID (Optional)</Text>
+          <TextInput placeholder='14 characters' value={nationalId} onChangeText={setNationalId} keyboardType='numeric' maxLength={14} />
+
+          <Text style={[styles.fieldLabel, { color: colors.text }]}>ID Card / Syndicate Card Photo (for verification) *</Text>
+          <TouchableOpacity 
+            style={[styles.idCardPicker, { backgroundColor: colors.background, borderColor: colors.border }]} 
+            onPress={handlePickIdImage}
+          >
+            {idCardImage ? (
+              <Image source={{ uri: idCardImage }} style={styles.idCardPreview} />
+            ) : (
+              <View style={styles.idCardPlaceholder}>
+                <Ionicons name="camera-outline" size={24} color={colors.textDim} />
+                <Text style={{ color: colors.textDim, marginTop: 4 }}>Upload Photo</Text>
+              </View>
+            )}
+          </TouchableOpacity>
 
           <Text style={[styles.fieldLabel, { color: colors.text }]}>WhatsApp Number *</Text>
           <TextInput placeholder='e.g. 01012345678' value={whatsapp} onChangeText={setWhatsapp} keyboardType='phone-pad' />
@@ -374,5 +413,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#FFF',
+  },
+  idCardPicker: {
+    height: 120,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  idCardPreview: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  idCardPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
