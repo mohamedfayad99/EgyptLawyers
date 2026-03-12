@@ -1,59 +1,37 @@
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { registerDevice } from './services';
 
+// Configure how notifications behave when the app is in the foreground
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
+
 /**
  * Returns true when the app is running inside Expo Go.
- * Expo Go dropped remote push notification support in SDK 53.
+ * SDK 53+ Expo Go does not support remote push notifications on Android.
  */
 function isRunningInExpoGo(): boolean {
   return Constants.appOwnership === 'expo';
 }
 
-/**
- * Lazy-load expo-notifications only if NOT in Expo Go.
- * This prevents the SDK 53+ error warning from showing up in Expo Go.
- */
-const getExpoNotifications = () => {
-  if (isRunningInExpoGo() || Platform.OS === 'web') return null;
-  try {
-    return require('expo-notifications');
-  } catch (e) {
-    return null;
-  }
-};
+export async function registerForPushNotifications(): Promise<string | undefined> {
+  if (Platform.OS === 'web') return;
 
-// Configure how notifications behave when the app is in the foreground
-const Notifications = getExpoNotifications();
-if (Notifications) {
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: true,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    }),
-  });
-}
-
-/**
- * Requests notification permissions from the OS, obtains the Expo push token,
- * and registers it with our backend so the server can target this device.
- *
- * ⚠️  This is a no-op when running inside Expo Go (SDK 53+).
- */
-export async function registerForPushNotifications(): Promise<void> {
-  const Notifications = getExpoNotifications();
-  if (!Notifications) {
-    if (isRunningInExpoGo() && Platform.OS !== 'web') {
-      console.log('[Push] Running in Expo Go — remote push notifications are disabled to avoid SDK errors.');
-    }
+  if (!Device.isDevice) {
+    console.log('[Push] Must use physical device for Push Notifications');
     return;
   }
 
   try {
-    // 1. Request permission
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
@@ -63,39 +41,56 @@ export async function registerForPushNotifications(): Promise<void> {
     }
 
     if (finalStatus !== 'granted') {
-      console.log('[Push] Permission not granted by user');
+      console.log('[Push] Failed to get push token for push notification!');
       return;
     }
 
-    // 2. Get the Expo push token for this device
-    const tokenData = await Notifications.getExpoPushTokenAsync();
-    const expoPushToken = tokenData.data;
+    // Project ID is required for Expo Push Token in SDK 49+
+    const projectId =
+      Constants?.expoConfig?.extra?.eas?.projectId ??
+      Constants?.easConfig?.projectId;
 
-    // 3. Register the token with our backend
-    await registerDevice(expoPushToken, Platform.OS);
+    if (!projectId) {
+      console.warn('[Push] Project ID not found in app.json. Please ensure you have run "eas build:configure".');
+    }
 
-    console.log('[Push] Registered device token:', expoPushToken);
-  } catch (err) {
-    // Non-blocking – never throw to callers
-    console.warn('[Push] Failed to register for push notifications:', err);
+    const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+    console.log('[Push] Registered device token:', token);
+
+    // Register with backend
+    await registerDevice(token, Platform.OS);
+
+    if (Platform.OS === 'android') {
+      Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+      });
+    }
+
+    return token;
+  } catch (e) {
+    console.warn('[Push] Error during push notification registration:', e);
+    return;
   }
 }
 
 /**
  * Adds a listener that fires when the user TAPS a notification.
- * Returns an unsubscribe function — call it when cleaning up.
+ * Returns an unsubscribe function.
  */
 export function addNotificationResponseListener(
   onTap: (postId: string) => void,
 ): () => void {
-  const Notifications = getExpoNotifications();
-  if (!Notifications) return () => {};
-  
-  const sub = Notifications.addNotificationResponseReceivedListener((response: any) => {
+  const sub = Notifications.addNotificationResponseReceivedListener((response) => {
     const data = response.notification.request.content.data as any;
     if (data?.postId) {
       onTap(String(data.postId));
     }
   });
-  return () => sub.remove();
+
+  return () => {
+    sub.remove();
+  };
 }

@@ -90,7 +90,11 @@ export async function getLawyerById(id: string): Promise<LawyerPublicProfile> {
 
 export async function registerDevice(deviceToken: string, platform?: string) {
   try {
-    await api.post('/lawyers/devices', { deviceToken, platform });
+    const platformValue = platform?.toLowerCase() === 'ios' ? 1 : platform?.toLowerCase() === 'android' ? 2 : 0;
+    await api.post('/lawyers/devices', { 
+      DeviceToken: deviceToken, 
+      Platform: platformValue 
+    });
   } catch (e) {
     // Silently fail – push notifications are a non-blocking feature
     console.warn('Device registration failed:', e);

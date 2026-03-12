@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "322169196716",
+    "project_id": "egyptlawyers-749d9",
+    "storage_bucket": "egyptlawyers-749d9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:322169196716:android:3990715da5926679268f09",
+        "android_client_info": {
+          "package_name": "com.egyptlawyers.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBvxXKQ4snYzNQmn0Ktv29WC3nKHyM5grg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
