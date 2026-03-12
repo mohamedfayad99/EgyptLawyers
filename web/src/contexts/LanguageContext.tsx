@@ -103,6 +103,26 @@ const translations = {
     lawyersSubtitle: 'Approved lawyers only',
     pendingSubtitle: 'Manage lawyer registrations',
     postsSubtitle: 'Help posts submitted by lawyers',
+
+    // Lawyer Profile Drawer
+    lawyerProfile: 'Lawyer Profile',
+    viewDetails: 'View Details',
+    contactInfo: 'Contact Information',
+    professionalIdInfo: 'Professional & Identification',
+    nationalIdNumber: 'National ID Number',
+    idCardImage: 'ID Card Image',
+    noImageProvided: 'No image provided.',
+    updated: 'Updated',
+    suspended: 'Suspended',
+    active: 'Active',
+    failedToLoadProfile: 'Unable to load lawyer profile.',
+    retry: 'Retry',
+    uploadedDocuments: 'Uploaded Documents',
+    profileImage: 'Profile Image',
+    personalInfo: 'Personal Information',
+    download: 'Download',
+    attachments: 'Attachments',
+    failedToUpdateStatus: 'Failed to update lawyer status.',
   },
   ar: {
     // Sidebar / nav
@@ -204,6 +224,26 @@ const translations = {
     lawyersSubtitle: 'المحامون المعتمدون فقط',
     pendingSubtitle: 'إدارة طلبات الموافقة',
     postsSubtitle: 'المنشورات المقدمة من المحامين',
+
+    // Lawyer Profile Drawer
+    lawyerProfile: 'ملف المحامي',
+    viewDetails: 'عرض التفاصيل',
+    contactInfo: 'معلومات التواصل',
+    professionalIdInfo: 'المعلومات المهنية والتعريفية',
+    nationalIdNumber: 'رقم الهوية الوطنية',
+    idCardImage: 'صورة بطاقة الهوية',
+    noImageProvided: 'لم يتم تحميل صورة.',
+    updated: 'آخر تحديث',
+    suspended: 'موقوف',
+    active: 'نشط',
+    failedToLoadProfile: 'فشل تحميل ملف المحامي.',
+    retry: 'إعادة المحاولة',
+    uploadedDocuments: 'المستندات المرفوعة',
+    profileImage: 'صورة الشخصية',
+    personalInfo: 'المعلومات الشخصية',
+    download: 'تنزيل',
+    attachments: 'المرفقات',
+    failedToUpdateStatus: 'فشل في تحديث حالة المحامي.',
   },
 } as const;
 

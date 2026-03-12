@@ -2,12 +2,27 @@ import { useEffect, useState, useCallback } from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions, Button,
     Typography, Box, Stack, Divider, CircularProgress, Alert, IconButton,
-    Chip
+    Chip, Grid, Card, CardActionArea, CardMedia, Modal
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import CloseIcon from '@mui/icons-material/Close';
+import DownloadIcon from '@mui/icons-material/Download';
+import DescriptionIcon from '@mui/icons-material/Description';
 import { useLang } from '../../contexts/LanguageContext';
-import { getHelpPost, deleteHelpPost, approveHelpPost, rejectHelpPost, type Comment, type HelpPost } from '../../admin/services/helpPostService';
+import { getHelpPost, deleteHelpPost, approveHelpPost, rejectHelpPost, type Comment, type HelpPost, type Attachment } from '../../admin/services/helpPostService';
 import ConfirmDialog from './ConfirmDialog';
+
+// Helper to get image URL cleaning up any /api suffix from base URL
+const getImageUrl = (path?: string | null) => {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+
+    let base = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5215";
+    base = base.replace(/\/api$/, '').replace(/\/$/, '');
+
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${base}${cleanPath}`;
+};
 
 interface PostDetailsModalProps {
     open: boolean;
@@ -24,12 +39,12 @@ export default function PostDetailsModal({ open, post, onClose, onDeleteSuccess,
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [moderating, setModerating] = useState(false);
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
     const { t } = useLang();
 
     const [fullPost, setFullPost] = useState<HelpPost | null>(null);
 
     const isPending = post?.status === 0 || String(post?.status).toLowerCase() === 'pending';
-    const isOpen = post?.status === 3 || String(post?.status).toLowerCase() === 'open';
 
     const fetchPostDetails = useCallback(async () => {
         if (!post) return;
@@ -102,6 +117,69 @@ export default function PostDetailsModal({ open, post, onClose, onDeleteSuccess,
         }
     };
 
+    const renderAttachments = (attachments?: Attachment[]) => {
+        if (!attachments || attachments.length === 0) return null;
+
+        return (
+            <Box sx={{ mt: 4 }}>
+                <Typography variant="overline" color="textSecondary" sx={{ fontWeight: 700, mb: 2, display: 'block' }}>
+                    {t('uploadedDocuments') || 'ATTACHMENTS'}
+                </Typography>
+                <Grid container spacing={2}>
+                    {attachments.map((att) => {
+                        const isImage = att.fileType.toLowerCase().includes('image') || 
+                                       ['jpg', 'jpeg', 'png', 'webp'].some(ext => att.fileUrl.toLowerCase().endsWith(ext));
+                        const url = getImageUrl(att.fileUrl);
+
+                        return (
+                            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={att.id}>
+                                <Card sx={{ 
+                                    height: '100%', 
+                                    border: '1px solid rgba(0,0,0,0.08)',
+                                    borderRadius: 2,
+                                    overflow: 'hidden',
+                                    transition: 'all 0.2s',
+                                    '&:hover': {
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                        transform: 'translateY(-2px)'
+                                    }
+                                }}>
+                                    {isImage ? (
+                                        <CardActionArea onClick={() => setPreviewImage(url)}>
+                                            <CardMedia
+                                                component="img"
+                                                height="150"
+                                                image={url}
+                                                alt="Attachment"
+                                                sx={{ objectFit: 'cover' }}
+                                            />
+                                        </CardActionArea>
+                                    ) : (
+                                        <Box sx={{ p: 2, height: 150, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                                            <DescriptionIcon sx={{ fontSize: 40, color: 'text.secondary' }} />
+                                            <Typography variant="caption" sx={{ textAlign: 'center', wordBreak: 'break-all', px: 1 }}>
+                                                {att.fileType.toUpperCase()}
+                                            </Typography>
+                                            <Button 
+                                                size="small" 
+                                                component="a" 
+                                                href={url} 
+                                                target="_blank" 
+                                                startIcon={<DownloadIcon />}
+                                            >
+                                                {t('download') || 'Download'}
+                                            </Button>
+                                        </Box>
+                                    )}
+                                </Card>
+                            </Grid>
+                        );
+                    })}
+                </Grid>
+            </Box>
+        );
+    };
+
     const renderReplies = (items: Comment[], level = 0) => {
         if (items.length === 0 && level === 0) {
             return (
@@ -124,6 +202,24 @@ export default function PostDetailsModal({ open, post, onClose, onDeleteSuccess,
                 <Typography variant="body2" sx={{ mt: 0.5, bgcolor: level > 0 ? 'rgba(0,0,0,0.02)' : 'transparent', p: level > 0 ? 1 : 0, borderRadius: 1 }}>
                     {comment.message || comment.text}
                 </Typography>
+                {comment.attachments && comment.attachments.length > 0 && (
+                    <Box sx={{ mt: 1 }}>
+                        <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                            {comment.attachments.map(att => (
+                                <Chip 
+                                    key={att.id}
+                                    size="small" 
+                                    label={att.fileType} 
+                                    component="a" 
+                                    href={getImageUrl(att.fileUrl)} 
+                                    target="_blank" 
+                                    clickable 
+                                    icon={<DownloadIcon />}
+                                />
+                            ))}
+                        </Stack>
+                    </Box>
+                )}
                 {comment.replies && comment.replies.length > 0 && (
                     <Box sx={{ mt: 1 }}>
                         {renderReplies(comment.replies, level + 1)}
@@ -148,14 +244,34 @@ export default function PostDetailsModal({ open, post, onClose, onDeleteSuccess,
                     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
                     {post && (
-                        <Box sx={{ mb: 4 }}>
-                            <GridItem label={t('description')} value={fullPost?.description || post.description} isLongText />
-                            <Stack direction="row" spacing={4} sx={{ mt: 2 }} flexWrap="wrap">
-                                <GridItem label={t('city')} value={fullPost?.cityName || post.cityName} />
-                                <GridItem label={t('court')} value={fullPost?.courtName || post.courtName} />
-                                <GridItem label={t('created')} value={new Date(fullPost?.createdAtUtc || post.createdAtUtc).toLocaleString()} />
-                                <GridItem label={t('lawyers')} value={fullPost?.lawyerName || post.lawyerName} />
-                            </Stack>
+                        <Box sx={{ mb: 2 }}>
+                            {/* Section 1: Post Description */}
+                            <Box sx={{ mb: 4 }}>
+                                <Typography variant="overline" color="textSecondary" sx={{ fontWeight: 700, mb: 1, display: 'block' }}>
+                                    {t('description') || 'DESCRIPTION'}
+                                </Typography>
+                                <Typography variant="body1" sx={{ fontWeight: 500, whiteSpace: 'pre-wrap', color: 'text.primary' }}>
+                                    {fullPost?.description || post.description}
+                                </Typography>
+                            </Box>
+
+                            <Grid container spacing={2} sx={{ mb: 4, p: 2, bgcolor: 'rgba(0,0,0,0.02)', borderRadius: 2 }}>
+                                <Grid size={{ xs: 6, sm: 3 }}>
+                                    <GridItem label={t('city')} value={fullPost?.cityName || post.cityName} noMargin />
+                                </Grid>
+                                <Grid size={{ xs: 6, sm: 3 }}>
+                                    <GridItem label={t('court')} value={fullPost?.courtName || post.courtName} noMargin />
+                                </Grid>
+                                <Grid size={{ xs: 6, sm: 3 }}>
+                                    <GridItem label={t('lawyers')} value={fullPost?.lawyerName || post.lawyerName} noMargin />
+                                </Grid>
+                                <Grid size={{ xs: 6, sm: 3 }}>
+                                    <GridItem label={t('created')} value={new Date(fullPost?.createdAtUtc || post.createdAtUtc).toLocaleDateString()} noMargin />
+                                </Grid>
+                            </Grid>
+
+                            {/* Section 3: Attachments */}
+                            {renderAttachments(fullPost?.attachments)}
                         </Box>
                     )}
 
@@ -173,42 +289,38 @@ export default function PostDetailsModal({ open, post, onClose, onDeleteSuccess,
                         )}
                     </Box>
                 </DialogContent>
-                <DialogActions sx={{ p: 2, px: 3 }}>
-                    {isPending && (
-                        <Stack direction="row" spacing={1} sx={{ width: '100%', justifyContent: 'flex-end' }}>
-                            <Button
-                                onClick={handleApprove}
-                                color="primary"
-                                variant="contained"
-                                disabled={moderating || deleting}
-                            >
-                                {t('approve')}
-                            </Button>
-                            <Button
-                                onClick={handleReject}
-                                color="error"
-                                variant="outlined"
-                                disabled={moderating || deleting}
-                            >
-                                {t('reject')}
-                            </Button>
-                            <Button onClick={onClose} variant="outlined" sx={{ minWidth: 100 }}>
-                                {t('close')}
-                            </Button>
-                        </Stack>
-                    )}
-
-                    {isOpen && (
-                        <Button onClick={onClose} variant="outlined" sx={{ minWidth: 100 }}>
+                <DialogActions sx={{ p: 3, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+                    <Stack direction="row" spacing={2} sx={{ width: '100%', justifyContent: 'flex-end' }}>
+                        {isPending && (
+                            <>
+                                <Button
+                                    onClick={handleApprove}
+                                    color="primary"
+                                    variant="contained"
+                                    disabled={moderating || deleting}
+                                    sx={{ minWidth: 120, borderRadius: 2, fontWeight: 700, bgcolor: 'var(--color-primary)' }}
+                                >
+                                    {moderating ? <CircularProgress size={20} color="inherit" /> : t('approve')}
+                                </Button>
+                                <Button
+                                    onClick={handleReject}
+                                    color="error"
+                                    variant="outlined"
+                                    disabled={moderating || deleting}
+                                    sx={{ minWidth: 120, borderRadius: 2, fontWeight: 700 }}
+                                >
+                                    {t('reject')}
+                                </Button>
+                            </>
+                        )}
+                        <Button 
+                            onClick={onClose} 
+                            variant="outlined" 
+                            sx={{ minWidth: 100, borderRadius: 2, color: 'text.secondary', borderColor: 'divider' }}
+                        >
                             {t('close')}
                         </Button>
-                    )}
-
-                    {!isPending && !isOpen && (
-                        <Button onClick={onClose} variant="outlined" sx={{ minWidth: 100 }}>
-                            {t('close')}
-                        </Button>
-                    )}
+                    </Stack>
                 </DialogActions>
             </Dialog>
 
@@ -221,21 +333,48 @@ export default function PostDetailsModal({ open, post, onClose, onDeleteSuccess,
                 onConfirm={handleDelete}
                 onCancel={() => setConfirmDelete(false)}
             />
+
+            {/* Image Preview Modal */}
+            <Modal
+                open={!!previewImage}
+                onClose={() => setPreviewImage(null)}
+                sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2 }}
+            >
+                <Box sx={{ 
+                    position: 'relative', 
+                    maxWidth: '90vw', 
+                    maxHeight: '90vh', 
+                    bgcolor: 'background.paper', 
+                    boxShadow: 24, 
+                    p: 1, 
+                    borderRadius: 2,
+                    display: 'flex',
+                    flexDirection: 'column'
+                }}>
+                    <IconButton 
+                        onClick={() => setPreviewImage(null)}
+                        sx={{ position: 'absolute', right: -16, top: -16, bgcolor: 'white', '&:hover': { bgcolor: '#f5f5f5' }, boxShadow: 2 }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+                    <Box component="img" src={previewImage || ''} sx={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain', borderRadius: 1 }} />
+                </Box>
+            </Modal>
         </>
     );
 }
 
-function GridItem({ label, value, isCode = false, isLongText = false }: { label: string; value?: string; isCode?: boolean; isLongText?: boolean }) {
+function GridItem({ label, value, isCode = false, isLongText = false, noMargin = false }: { label: string; value?: string; isCode?: boolean; isLongText?: boolean; noMargin?: boolean }) {
     return (
-        <Box sx={{ mb: isLongText ? 0 : 2, minWidth: isLongText ? '100%' : 120 }}>
-            <Typography variant="overline" color="textSecondary" sx={{ display: 'block', lineHeight: 1.5 }}>
+        <Box sx={{ mb: noMargin ? 0 : isLongText ? 0 : 2, minWidth: isLongText ? '100%' : 'auto' }}>
+            <Typography variant="overline" color="textSecondary" sx={{ display: 'block', lineHeight: 1.5, fontWeight: 700 }}>
                 {label}
             </Typography>
             <Typography
                 variant="body2"
                 sx={{
                     fontWeight: 500,
-                    whiteSpace: isLongText ? 'pre-wrap' : 'nowrap',
+                    whiteSpace: isLongText ? 'pre-wrap' : 'normal',
                     fontFamily: isCode ? 'monospace' : 'inherit',
                     fontSize: isCode ? '0.75rem' : '0.875rem'
                 }}

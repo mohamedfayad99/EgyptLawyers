@@ -12,6 +12,8 @@ import {
 } from '../../admin/services/lawyerService';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { useLang } from '../../contexts/LanguageContext';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import { useNavigate } from 'react-router-dom';
 
 type LawyerRow = Lawyer & Record<string, unknown>;
 
@@ -28,6 +30,7 @@ export default function PendingApprovalsPage() {
     const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
     const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'rejected' | 'blocked'>('all');
     const { t } = useLang();
+    const navigate = useNavigate();
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -175,7 +178,16 @@ export default function PendingApprovalsPage() {
                 const isRejected = row.verificationStatus === 'Rejected' || String(row.verificationStatus) === '2';
 
                 return (
-                    <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                    <Stack direction="row" spacing={0.5} justifyContent="flex-end" onClick={(e) => e.stopPropagation()}>
+                        <Tooltip title={t('viewDetails') || 'View Details'}>
+                            <IconButton
+                                size="small"
+                                color="info"
+                                onClick={() => navigate(`/admin/pending-approvals/${row.id}`)}
+                            >
+                                <VisibilityIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
                         <Tooltip title={t('approve')}>
                             <IconButton
                                 size="small"
@@ -217,6 +229,7 @@ export default function PendingApprovalsPage() {
                 searchPlaceholder={t('searchLawyers')}
                 emptyMessage={t('noPending')}
                 getRowKey={(row) => row.id}
+                onRowClick={(row) => navigate(`/admin/pending-approvals/${row.id}`)}
                 toolbar={
                     <FormControl size="small" sx={{ 
                         minWidth: 150,
@@ -252,6 +265,8 @@ export default function PendingApprovalsPage() {
                 onConfirm={executeAction}
                 onCancel={() => setConfirmAction(null)}
             />
+
+
         </Stack>
     );
 }
