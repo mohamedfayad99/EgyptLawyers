@@ -18,16 +18,26 @@ public static class AdminSeedService
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        if (await db.AdminUsers.AnyAsync(ct))
-            return;
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+        var existingAdmin = await db.AdminUsers.FirstOrDefaultAsync(x => x.Email == normalizedEmail, ct);
 
-        var hasher = new PasswordHasher<AdminUser>();
+        if (existingAdmin != null)
+        {
+            // Optional: Update password if needed, or just return
+            var hasher = new PasswordHasher<AdminUser>();
+            existingAdmin.PasswordHash = hasher.HashPassword(existingAdmin, password);
+            db.AdminUsers.Update(existingAdmin);
+            await db.SaveChangesAsync(ct);
+            return;
+        }
+
+        var hasherNew = new PasswordHasher<AdminUser>();
         var admin = new AdminUser
         {
-            Email = email.Trim().ToLowerInvariant(),
+            Email = normalizedEmail,
             PasswordHash = "temp"
         };
-        admin.PasswordHash = hasher.HashPassword(admin, password);
+        admin.PasswordHash = hasherNew.HashPassword(admin, password);
 
         db.AdminUsers.Add(admin);
         await db.SaveChangesAsync(ct);
