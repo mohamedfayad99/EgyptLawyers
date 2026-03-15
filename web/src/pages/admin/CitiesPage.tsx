@@ -9,10 +9,13 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import AdminTable, { type Column } from '../../components/admin/AdminTable';
-import { getCities, createCity, updateCity, deleteCity, type City } from '../../admin/services/cityService';
+import { getDetailedCities, createCity, updateCity, deleteCity, type CityDetailed } from '../../admin/services/cityService';
+import PeopleIcon from '@mui/icons-material/People';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import { Chip } from '@mui/material';
 
 export default function CitiesPage() {
-    const [cities, setCities] = useState<(City & Record<string, unknown>)[]>([]);
+    const [cities, setCities] = useState<CityDetailed[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [info, setInfo] = useState<string | null>(null);
@@ -29,8 +32,8 @@ export default function CitiesPage() {
         setLoading(true);
         setError(null);
         try {
-            const data = await getCities();
-            setCities(data as (City & Record<string, unknown>)[]);
+            const data = await getDetailedCities();
+            setCities(data);
         } catch (e: unknown) {
             const err = e as { response?: { data?: { message?: string } } };
             setError(err?.response?.data?.message ?? 'Failed to load cities');
@@ -91,10 +94,10 @@ export default function CitiesPage() {
         }
     }
 
-    const columns: Column<City & Record<string, unknown>>[] = [
+    const columns: Column<CityDetailed>[] = [
         {
             header: 'ID',
-            accessor: 'id' as keyof (City & Record<string, unknown>),
+            accessor: 'id',
             width: 80,
             render: (row) => (
                 <Typography sx={{ color: 'rgba(var(--color-text-rgb),0.6)', fontSize: '0.875rem' }}>
@@ -104,7 +107,7 @@ export default function CitiesPage() {
         },
         {
             header: 'City Name',
-            accessor: 'name' as keyof (City & Record<string, unknown>),
+            accessor: 'name',
             render: (row) => (
                 editingId === row.id ? (
                     <TextField
@@ -117,15 +120,55 @@ export default function CitiesPage() {
                     />
                 ) : (
                     <Stack direction="row" alignItems="center" spacing={1}>
-                        <LocationCityIcon sx={{ fontSize: 18, color: 'rgba(var(--color-text-rgb),0.5)' }} />
+                        <LocationCityIcon sx={{ fontSize: 18, color: 'var(--color-accent)' }} />
                         <Typography sx={{ fontWeight: 600, fontSize: '0.875rem' }}>{row.name}</Typography>
                     </Stack>
                 )
             ),
         },
         {
+            header: 'Lawyers',
+            accessor: 'lawyersCount',
+            width: 150,
+            render: (row) => (
+                <Chip
+                    icon={<PeopleIcon sx={{ fontSize: '16px !important' }} />}
+                    label={row.lawyersCount}
+                    variant="outlined"
+                    size="small"
+                    sx={{ 
+                        borderRadius: '8px',
+                        fontWeight: 600,
+                        borderColor: 'rgba(var(--color-accent-rgb), 0.2)',
+                        color: 'var(--color-text)',
+                        '& .MuiChip-icon': { color: 'var(--color-accent)' }
+                    }}
+                />
+            ),
+        },
+        {
+            header: 'Courts',
+            accessor: 'courtsCount',
+            width: 150,
+            render: (row) => (
+                <Chip
+                    icon={<AccountBalanceIcon sx={{ fontSize: '16px !important' }} />}
+                    label={row.courtsCount}
+                    variant="outlined"
+                    size="small"
+                    sx={{ 
+                        borderRadius: '8px',
+                        fontWeight: 600,
+                        borderColor: 'rgba(var(--color-primary-rgb), 0.2)',
+                        color: 'var(--color-text)',
+                        '& .MuiChip-icon': { color: 'var(--color-primary)' }
+                    }}
+                />
+            ),
+        },
+        {
             header: 'Actions',
-            accessor: 'id' as keyof (City & Record<string, unknown>),
+            accessor: 'id',
             width: 120,
             render: (row) => (
                 <Stack direction="row" spacing={1}>

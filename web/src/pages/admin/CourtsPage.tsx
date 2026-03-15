@@ -10,13 +10,14 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import AdminTable, { type Column } from '../../components/admin/AdminTable';
-import { getCourts, createCourt, updateCourt, deleteCourt, type Court } from '../../admin/services/courtService';
+import { getDetailedCourts, createCourt, updateCourt, deleteCourt, type CourtDetailed } from '../../admin/services/courtService';
 import { getCities, type City } from '../../admin/services/cityService';
-
-type CourtRow = Court & { cityName?: string } & Record<string, unknown>;
+import PeopleIcon from '@mui/icons-material/People';
+import ArticleIcon from '@mui/icons-material/Article';
+import { Chip } from '@mui/material';
 
 export default function CourtsPage() {
-    const [courts, setCourts] = useState<CourtRow[]>([]);
+    const [courts, setCourts] = useState<CourtDetailed[]>([]);
     const [cities, setCities] = useState<City[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -38,20 +39,15 @@ export default function CourtsPage() {
         try {
             const data = await getCities();
             setCities(data);
-        } catch { /* ignore — cities filter will be empty */ }
+        } catch { /* ignore */ }
     }
 
     async function loadCourts() {
         setLoading(true);
         setError(null);
         try {
-            const cityParam = filterCityId === '' ? undefined : filterCityId;
-            const data = await getCourts(cityParam);
-            // enrich with city name
-            const cityMap = new Map(cities.map((c) => [c.id, c.name]));
-            setCourts(
-                (data as CourtRow[]).map((c) => ({ ...c, cityName: cityMap.get(c.cityId) ?? `City #${c.cityId}` })),
-            );
+            const data = await getDetailedCourts();
+            setCourts(data);
         } catch (e: unknown) {
             const err = e as { response?: { data?: { message?: string } } };
             setError(err?.response?.data?.message ?? 'Failed to load courts');
@@ -61,7 +57,12 @@ export default function CourtsPage() {
     }
 
     useEffect(() => { loadCities(); }, []);
-    useEffect(() => { if (cities.length >= 0) loadCourts(); }, [filterCityId, cities]);
+    useEffect(() => { loadCourts(); }, []);
+
+    // Local filtering for performance since we have detailed counts
+    const filteredCourts = filterCityId === '' 
+        ? courts 
+        : courts.filter(c => c.cityId === filterCityId);
 
     async function handleUpdate(id: number) {
         if (!editName.trim() || editCityId === '') return;
@@ -94,10 +95,10 @@ export default function CourtsPage() {
         }
     }
 
-    const columns: Column<CourtRow>[] = [
+    const columns: Column<CourtDetailed>[] = [
         {
             header: 'ID',
-            accessor: 'id' as keyof CourtRow,
+            accessor: 'id',
             width: 80,
             render: (row) => (
                 <Typography sx={{ color: 'rgba(var(--color-text-rgb),0.6)', fontSize: '0.875rem' }}>
@@ -107,7 +108,7 @@ export default function CourtsPage() {
         },
         {
             header: 'Court Name',
-            accessor: 'name' as keyof CourtRow,
+            accessor: 'name',
             render: (row) => (
                 editingId === row.id ? (
                     <TextField
@@ -120,7 +121,7 @@ export default function CourtsPage() {
                     />
                 ) : (
                     <Stack direction="row" alignItems="center" spacing={1}>
-                        <AccountBalanceIcon sx={{ fontSize: 18, color: 'rgba(var(--color-text-rgb),0.5)' }} />
+                        <AccountBalanceIcon sx={{ fontSize: 18, color: 'var(--color-primary)' }} />
                         <Typography sx={{ fontWeight: 600, fontSize: '0.875rem' }}>{row.name}</Typography>
                     </Stack>
                 )
@@ -128,7 +129,7 @@ export default function CourtsPage() {
         },
         {
             header: 'City',
-            accessor: 'cityName' as keyof CourtRow,
+            accessor: 'cityName',
             render: (row) => (
                 editingId === row.id ? (
                     <TextField
@@ -143,13 +144,53 @@ export default function CourtsPage() {
                         ))}
                     </TextField>
                 ) : (
-                    <Typography sx={{ fontSize: '0.875rem' }}>{row.cityName}</Typography>
+                    <Typography sx={{ fontSize: '0.875rem', fontWeight: 500 }}>{row.cityName}</Typography>
                 )
             ),
         },
         {
+            header: 'Lawyers',
+            accessor: 'lawyersCount',
+            width: 120,
+            render: (row) => (
+                <Chip
+                    icon={<PeopleIcon sx={{ fontSize: '16px !important' }} />}
+                    label={row.lawyersCount}
+                    variant="outlined"
+                    size="small"
+                    sx={{ 
+                        borderRadius: '8px',
+                        fontWeight: 600,
+                        borderColor: 'rgba(var(--color-accent-rgb), 0.2)',
+                        color: 'var(--color-text)',
+                        '& .MuiChip-icon': { color: 'var(--color-accent)' }
+                    }}
+                />
+            ),
+        },
+        {
+            header: 'Posts',
+            accessor: 'postsCount',
+            width: 120,
+            render: (row) => (
+                <Chip
+                    icon={<ArticleIcon sx={{ fontSize: '16px !important' }} />}
+                    label={row.postsCount}
+                    variant="outlined"
+                    size="small"
+                    sx={{ 
+                        borderRadius: '8px',
+                        fontWeight: 600,
+                        borderColor: 'rgba(var(--color-primary-rgb), 0.2)',
+                        color: 'var(--color-text)',
+                        '& .MuiChip-icon': { color: 'var(--color-primary)' }
+                    }}
+                />
+            ),
+        },
+        {
             header: 'Actions',
-            accessor: 'id' as keyof CourtRow,
+            accessor: 'id',
             width: 120,
             render: (row) => (
                 <Stack direction="row" spacing={1}>
@@ -211,7 +252,7 @@ export default function CourtsPage() {
 
             <AdminTable
                 columns={columns}
-                data={courts}
+                data={filteredCourts}
                 loading={loading}
                 error={error}
                 onClearError={() => setError(null)}

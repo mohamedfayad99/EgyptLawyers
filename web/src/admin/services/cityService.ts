@@ -1,9 +1,15 @@
 import { api } from '../../api/client';
 
 export type City = { id: number; name: string };
+export type CityDetailed = City & { lawyersCount: number; courtsCount: number };
 
 export async function getCities(): Promise<City[]> {
   const res = await api.get('/api/cities');
+  return res.data;
+}
+
+export async function getDetailedCities(): Promise<CityDetailed[]> {
+  const res = await api.get('/api/admin/cities/details');
   return res.data;
 }
 

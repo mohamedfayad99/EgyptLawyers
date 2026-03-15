@@ -64,8 +64,7 @@ export default function AdminSidebar({
     <Box
       sx={{
         height: "100%",
-        bgcolor: "var(--color-surface)",
-        borderRight: "1px solid var(--color-border)",
+        bgcolor: "var(--color-sidebar-bg)",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
@@ -79,7 +78,7 @@ export default function AdminSidebar({
         sx={{
           px: collapsed && !isMobile ? 1.5 : 2.5,
           height: 64,
-          borderBottom: "1px solid var(--color-border)",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
           justifyContent: collapsed && !isMobile ? "center" : "flex-start",
         }}
       >
@@ -87,25 +86,27 @@ export default function AdminSidebar({
           sx={{
             width: 36,
             height: 36,
-            borderRadius: "50%",
-            bgcolor: "var(--color-primary)",
+            borderRadius: "10px",
+            bgcolor: "var(--color-accent)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
+            boxShadow: "0 4px 12px rgba(34, 197, 94, 0.3)",
           }}
         >
           <BalanceIcon
-            sx={{ fontSize: 20, color: "var(--color-background)" }}
+            sx={{ fontSize: 20, color: "#fff" }}
           />
         </Box>
         {(!collapsed || isMobile) && (
           <Typography
             sx={{
-              color: "var(--color-text)",
+              color: "var(--color-sidebar-text)",
               fontWeight: 800,
-              fontSize: "0.95rem",
+              fontSize: "1rem",
               whiteSpace: "nowrap",
+              letterSpacing: "0.5px",
             }}
           >
             {t("adminPanel")}
@@ -114,7 +115,7 @@ export default function AdminSidebar({
       </Stack>
 
       {/* Nav items */}
-      <List sx={{ flex: 1, pt: 2, px: 1 }}>
+      <List sx={{ flex: 1, pt: 3, px: 1.5 }}>
         {navItems.map((item) => {
           const active = isActive(item.path);
           return (
@@ -125,28 +126,33 @@ export default function AdminSidebar({
                 if (isMobile) onClose();
               }}
               sx={{
-                borderRadius: 2,
-                mb: 0.5,
+                borderRadius: "12px",
+                mb: 0.8,
                 px: collapsed && !isMobile ? 1.5 : 2,
-                py: 1.2,
+                py: 1.4,
                 justifyContent:
                   collapsed && !isMobile ? "center" : "flex-start",
                 bgcolor: active
-                  ? "rgba(var(--color-primary-rgb),0.1)"
+                  ? "var(--color-sidebar-item-active)"
                   : "transparent",
+                color: active
+                  ? "#fff"
+                  : "rgba(255, 255, 255, 0.6)",
+                transition: "all 0.2s ease-in-out",
                 "&:hover": {
-                  bgcolor: active
-                    ? "rgba(var(--color-primary-rgb),0.15)"
-                    : "rgba(var(--color-primary-rgb),0.05)",
+                  bgcolor: "var(--color-sidebar-item-hover)",
+                  color: "#fff",
+                  transform: collapsed ? "none" : "translateX(4px)",
                 },
+                "& .MuiListItemIcon-root": {
+                   color: active ? "var(--color-accent)" : "inherit",
+                }
               }}
             >
               <ListItemIcon
                 sx={{
-                  minWidth: collapsed && !isMobile ? 0 : 40,
-                  color: active
-                    ? "var(--color-primary)"
-                    : "var(--color-secondary-text)",
+                  minWidth: collapsed && !isMobile ? 0 : 38,
+                  color: "inherit",
                   justifyContent: "center",
                 }}
               >
@@ -157,10 +163,8 @@ export default function AdminSidebar({
                   primary={t(item.labelKey)}
                   primaryTypographyProps={{
                     fontWeight: active ? 700 : 500,
-                    fontSize: "0.875rem",
-                    color: active
-                      ? "var(--color-primary)"
-                      : "var(--color-secondary-text)",
+                    fontSize: "0.9rem",
+                    color: "inherit",
                     textAlign: "left",
                   }}
                 />
@@ -174,17 +178,20 @@ export default function AdminSidebar({
       {!isMobile && (
         <Box
           sx={{
-            p: 1.5,
-            borderTop: "1px solid var(--color-border)",
+            p: 2,
+            borderTop: "1px solid rgba(255, 255, 255, 0.05)",
           }}
         >
           <IconButton
             onClick={onToggleCollapse}
             sx={{
               width: "100%",
-              color: "var(--color-secondary-text)",
-              borderRadius: 2,
-              "&:hover": { bgcolor: "rgba(var(--color-primary-rgb), 0.05)" },
+              color: "rgba(255, 255, 255, 0.5)",
+              borderRadius: "10px",
+              "&:hover": { 
+                bgcolor: "var(--color-sidebar-item-hover)",
+                color: "#fff"
+              },
             }}
           >
             <ChevronLeftIcon

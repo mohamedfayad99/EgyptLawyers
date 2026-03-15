@@ -172,6 +172,39 @@ public static class AdminRoutes
             return Results.Ok(new { court.Id, court.Name, court.CityId });
         }).WithTags("Admin");
 
+        admin.MapGet("/cities/details", async (AppDbContext db) =>
+        {
+            var cities = await db.Cities
+                .OrderBy(x => x.Name)
+                .Select(c => new
+                {
+                    c.Id,
+                    c.Name,
+                    LawyersCount = db.LawyerCities.Count(lc => lc.CityId == c.Id),
+                    CourtsCount = db.Courts.Count(court => court.CityId == c.Id)
+                })
+                .ToListAsync();
+            return Results.Ok(cities);
+        }).WithTags("Admin");
+
+        admin.MapGet("/courts/details", async (AppDbContext db) =>
+        {
+            var courts = await db.Courts
+                .Include(c => c.City)
+                .OrderBy(x => x.Name)
+                .Select(c => new
+                {
+                    c.Id,
+                    c.Name,
+                    c.CityId,
+                    CityName = c.City.Name,
+                    LawyersCount = db.LawyerCities.Count(lc => lc.CityId == c.CityId),
+                    PostsCount = db.HelpPosts.Count(hp => hp.CourtId == c.Id)
+                })
+                .ToListAsync();
+            return Results.Ok(courts);
+        }).WithTags("Admin");
+
         // --- Management Routes for Cities ---
 
         admin.MapPut("/cities/{id:int}", async (int id, CreateCityRequest req, AppDbContext db) =>

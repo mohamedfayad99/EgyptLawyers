@@ -31,49 +31,51 @@ export default function AdminTopBar({ title = 'Dashboard', onMenuClick }: AdminT
             position="sticky"
             elevation={0}
             sx={{
-                bgcolor: 'var(--color-background)',
-                borderBottom: '1px solid var(--color-surface)',
+                bgcolor: 'var(--color-sidebar-bg)', // Using the same dark color as sidebar
+                borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                color: '#fff',
             }}
         >
             <Toolbar sx={{ height: 64 }}>
                 {isMobile && (
-                    <IconButton onClick={onMenuClick} sx={{ mr: 1, ml: 0, color: 'var(--color-primary-dark)' }}>
+                    <IconButton onClick={onMenuClick} sx={{ mr: 1, ml: 0, color: '#fff' }}>
                         <MenuIcon />
                     </IconButton>
                 )}
 
-                <Typography variant="h6" sx={{ fontWeight: 700, color: 'var(--color-text)', flex: 1 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#fff', flex: 1, letterSpacing: '0.5px' }}>
                     {title}
                 </Typography>
 
-                <Stack direction="row" alignItems="center" spacing={1}>
+                <Stack direction="row" alignItems="center" spacing={1.5}>
                     <Button
                         onClick={() => navigate('/')}
-                        startIcon={<PublicIcon />}
                         sx={{
-                            color: 'var(--color-primary)',
+                            color: 'rgba(255, 255, 255, 0.7)',
                             textTransform: 'none',
                             fontWeight: 600,
-                            mr: 2,
+                            mr: 1,
                             px: 2,
-                            borderRadius: '8px',
+                            borderRadius: '10px',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
                             '&:hover': {
-                                bgcolor: 'rgba(var(--color-primary-rgb), 0.08)',
+                                bgcolor: 'rgba(255, 255, 255, 0.05)',
+                                color: '#fff',
+                                borderColor: 'rgba(255, 255, 255, 0.2)',
                             },
                         }}
                     >
-                        {!isMobile && t('View Website', 'انتقل للموقع')}
+                        {t('View Website', 'انتقل للموقع')}
                     </Button>
 
                     <IconButton
                         onClick={toggleTheme}
                         sx={{
-                            color: 'var(--color-primary-dark)',
-                            bgcolor: 'var(--color-surface)',
-                            borderRadius: '8px',
+                            color: mode === 'dark' ? 'var(--color-accent)' : '#fff',
+                            bgcolor: 'rgba(255, 255, 255, 0.05)',
+                            borderRadius: '10px',
                             p: 1,
-                            mr: 1,
-                            '&:hover': { bgcolor: 'rgba(var(--color-primary-rgb), 0.1)' },
+                            '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' },
                         }}
                     >
                         {mode === 'dark' ? <LightModeIcon sx={{ fontSize: 20 }} /> : <DarkModeIcon sx={{ fontSize: 20 }} />}
@@ -83,12 +85,13 @@ export default function AdminTopBar({ title = 'Dashboard', onMenuClick }: AdminT
                         onClick={logout}
                         startIcon={<LogoutIcon />}
                         sx={{
-                            color: 'rgba(var(--color-text-rgb),0.7)',
+                            color: 'rgba(255, 255, 255, 0.5)',
                             textTransform: 'none',
                             fontWeight: 500,
+                            borderRadius: '10px',
                             '&:hover': {
-                                bgcolor: 'rgba(239, 68, 68, 0.08)',
-                                color: '#ef4444',
+                                bgcolor: 'rgba(239, 68, 68, 0.1)',
+                                color: '#f87171', // Reddish for logout
                             },
                         }}
                     >
