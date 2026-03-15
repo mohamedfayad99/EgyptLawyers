@@ -1,5 +1,11 @@
 import { api } from '../../api/client';
 
+export type Attachment = {
+  id: string;
+  fileUrl: string;
+  fileType: string;
+};
+
 export type HelpPost = {
   id: string;
   cityId: number;
@@ -13,6 +19,7 @@ export type HelpPost = {
   lawyerName?: string;
   lawyerWhatsapp?: string;
   replies?: Comment[];
+  attachments?: Attachment[];
 };
 
 export type Comment = {
@@ -23,6 +30,7 @@ export type Comment = {
   lawyerName?: string;
   createdAtUtc: string;
   replies?: Comment[];
+  attachments?: Attachment[];
 };
 
 export async function getHelpPosts(cityId?: number, courtId?: number): Promise<HelpPost[]> {

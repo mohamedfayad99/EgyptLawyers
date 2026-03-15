@@ -12,6 +12,7 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import AdminLoginPage from './pages/admin/AdminLoginPage'
 import UserManagementPage from './pages/admin/UserManagementPage'
 import PendingApprovalsPage from './pages/admin/PendingApprovalsPage'
+import LawyerDetailsPage from './pages/admin/LawyerDetailsPage'
 
 import CitiesPage from './pages/admin/CitiesPage'
 import CourtsPage from './pages/admin/CourtsPage'
@@ -128,7 +129,9 @@ function MainApp() {
             >
               <Route index element={<AdminDashboardPage />} />
               <Route path="lawyers" element={<UserManagementPage />} />
+              <Route path="lawyers/:id" element={<LawyerDetailsPage />} />
               <Route path="pending-approvals" element={<PendingApprovalsPage />} />
+              <Route path="pending-approvals/:id" element={<LawyerDetailsPage />} />
               <Route path="cities" element={<CitiesPage />} />
               <Route path="courts" element={<CourtsPage />} />
               <Route path="posts" element={<PostsPage />} />

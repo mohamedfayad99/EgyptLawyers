@@ -9,13 +9,22 @@ export type Lawyer = {
   verificationStatus: 'Pending' | 'Approved' | 'Rejected' | number;
   isSuspended: boolean;
   createdAtUtc: string;
+  updatedAtUtc?: string | null;
   activeCities?: string[];
+  nationalIdNumber?: string | null;
+  profileImageUrl?: string | null;
+  idCardImageUrl?: string | null;
 };
 
 export async function getLawyers(status?: string): Promise<Lawyer[]> {
   const res = await api.get('/api/admin/lawyers', {
     params: status ? { status } : {},
   });
+  return res.data;
+}
+
+export async function getLawyer(id: string): Promise<Lawyer> {
+  const res = await api.get(`/api/admin/lawyers/${id}`);
   return res.data;
 }
 

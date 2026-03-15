@@ -12,6 +12,8 @@ import {
 } from '../../admin/services/lawyerService';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { useLang } from '../../contexts/LanguageContext';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import { useNavigate } from 'react-router-dom';
 
 type LawyerRow = Lawyer & Record<string, unknown>;
 
@@ -21,6 +23,7 @@ export default function UserManagementPage() {
     const [error, setError] = useState<string | null>(null);
     const [confirmBlock, setConfirmBlock] = useState<Lawyer | null>(null);
     const { t } = useLang();
+    const navigate = useNavigate();
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -84,7 +87,20 @@ export default function UserManagementPage() {
             header: t('actions'),
             align: 'right' as const,
             render: (row) => (
-                <Stack direction="row" spacing={1} justifyContent="flex-end">
+                <Stack direction="row" spacing={1} justifyContent="flex-end" onClick={(e) => e.stopPropagation()}>
+                    <Tooltip title={t('viewDetails') || 'View Details'}>
+                        <IconButton
+                            size="small"
+                            color="info"
+                            onClick={() => navigate(`/admin/lawyers/${row.id}`)}
+                            sx={{
+                                bgcolor: 'rgba(2, 136, 209, 0.04)',
+                                '&:hover': { bgcolor: 'rgba(2, 136, 209, 0.08)' }
+                            }}
+                        >
+                            <VisibilityIcon fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
                     <Tooltip title={row.isSuspended ? t('unblock') : t('block')}>
                         <IconButton
                             size="small"
@@ -95,7 +111,8 @@ export default function UserManagementPage() {
                                 '&:hover': { bgcolor: row.isSuspended ? 'rgba(76, 175, 80, 0.08)' : 'rgba(211, 47, 47, 0.08)' }
                             }}
                         >
-                            {row.isSuspended ? <CheckCircleIcon fontSize="small" /> : <BlockIcon fontSize="small" />}
+                            <CheckCircleIcon fontSize="small" sx={{ display: row.isSuspended ? 'block' : 'none' }} />
+                            <BlockIcon fontSize="small" sx={{ display: row.isSuspended ? 'none' : 'block' }} />
                         </IconButton>
                     </Tooltip>
                 </Stack>
@@ -152,6 +169,7 @@ export default function UserManagementPage() {
                 searchPlaceholder={t('searchLawyers')}
                 emptyMessage={t('noLawyers')}
                 getRowKey={(row) => row.id}
+                onRowClick={(row) => navigate(`/admin/lawyers/${row.id}`)}
             />
 
             <ConfirmDialog
@@ -163,6 +181,8 @@ export default function UserManagementPage() {
                 onConfirm={executeBlock}
                 onCancel={() => setConfirmBlock(null)}
             />
+
+
         </Stack>
     );
 }

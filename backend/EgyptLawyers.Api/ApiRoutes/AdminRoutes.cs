@@ -54,11 +54,39 @@ public static class AdminRoutes
                     x.ProfileImageUrl,
                     x.IdCardImageUrl,
                     x.CreatedAtUtc,
+                    x.UpdatedAtUtc,
                     ActiveCities = x.ActiveCities.Select(c => c.City.Name).ToList()
                 })
                 .ToListAsync();
 
             return Results.Ok(lawyers);
+        }).WithTags("Admin");
+
+        admin.MapGet("/lawyers/{id:guid}", async (Guid id, AppDbContext db) =>
+        {
+            var lawyer = await db.Lawyers
+                .AsNoTracking()
+                .Include(x => x.ActiveCities).ThenInclude(x => x.City)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.FullName,
+                    x.ProfessionalTitle,
+                    x.SyndicateCardNumber,
+                    x.NationalIdNumber,
+                    x.WhatsappNumber,
+                    x.VerificationStatus,
+                    x.IsSuspended,
+                    x.ProfileImageUrl,
+                    x.IdCardImageUrl,
+                    x.CreatedAtUtc,
+                    x.UpdatedAtUtc,
+                    ActiveCities = x.ActiveCities.Select(c => c.City.Name).ToList()
+                })
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (lawyer is null) return Results.NotFound();
+            return Results.Ok(lawyer);
         }).WithTags("Admin");
 
         admin.MapPatch("/lawyers/{id:guid}/approve", async (Guid id, AppDbContext db) =>
